@@ -1,0 +1,18 @@
+package com.tanfed.inventry.model;
+
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class JV_Array_Data {
+
+	private Long id;
+	private Double amount;
+	private String drOrCr;
+	private String mainHead;
+	private String subHead;
+}
