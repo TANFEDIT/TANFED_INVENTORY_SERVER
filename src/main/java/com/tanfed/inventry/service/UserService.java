@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import com.tanfed.inventry.model.Office;
 
 
-@FeignClient(name = "USER-SERVICE", url = "http://localhost:8081")
+@FeignClient(name = "USER-SERVICE", url = "${USER_SERVICE_URL}")
 public interface UserService {
 	
 	@GetMapping("/auth/getofficelist")

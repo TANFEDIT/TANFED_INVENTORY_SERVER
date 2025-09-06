@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.tanfed.inventry.model.*;
 
 
-@FeignClient(name = "BASICINFO-SERVICE", url = "http://localhost:8082")
+@FeignClient(name = "BASICINFO-SERVICE", url = "${SHARED_API_URL}")
 public interface MasterService {
 
 	@GetMapping("/api/inventrymaster/fetchtpconfiglist")

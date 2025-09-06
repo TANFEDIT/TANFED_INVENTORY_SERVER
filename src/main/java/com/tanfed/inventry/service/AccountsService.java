@@ -17,7 +17,7 @@ import com.tanfed.inventry.model.SupplierAdvance;
 import com.tanfed.inventry.model.VoucherApproval;
 import com.tanfed.inventry.model.Vouchers;
 
-@FeignClient(name = "ACCOUNTS-SERVICE", url = "http://localhost:8083")
+@FeignClient(name = "ACCOUNTS-SERVICE", url = "${ACCOUNTS_API_URL}")
 public interface AccountsService {
 
 	@PostMapping("/api/accounts/accvouchers/{formType}")
