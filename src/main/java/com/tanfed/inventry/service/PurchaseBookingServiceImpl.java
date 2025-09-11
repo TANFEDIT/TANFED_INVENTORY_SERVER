@@ -168,7 +168,9 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 							List<PurchaseOrder> poDataHandler = poService.getPoData();
 
 							data.setPoMonthList(
-									poDataHandler.stream().filter(item -> item.getProductName().equals(productName))
+									poDataHandler.stream()
+											.filter(item -> item.getProductName().equals(productName)
+													&& item.getVoucherStatus().equals("Approved"))
 											.map(PurchaseOrder::getDate)
 											.map(date -> String.format("%s %04d",
 													date.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH),
@@ -186,6 +188,7 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 														&& itemData.getIsPurchaseBooked().equals(false));
 										return item.getProductName().equals(productName)
 												&& item.getPurchaseOrderType().equals(poType) && month.equals(poMonth)
+												&& item.getVoucherStatus().equals("Approved")
 												&& item.getGrnData().size() > 0 && grnMatch;
 									}).map(PurchaseOrder::getPoNo).collect(Collectors.toList());
 

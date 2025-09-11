@@ -67,6 +67,42 @@ public class OpeningStock {
 	private String godownName;
 	
 	private Double qtyAvlForDc;
+
+	private String b2bModeofSupply;
+	
+	private String b2bCollectionMode;
+	
+	private Double incentivePaccs;
+	
+	private Double salesmanIncentive;
+	
+	private Double secretoryIncentive;
+	
+	private Double b2bBasicPrice;
+	
+	private Double b2bCgst;
+	
+	private Double b2bSgst;
+	
+	private Double b2bMrp;
+	
+	private Double b2bNetTotal;
+	
+	private Double marginToPaccs;
+	
+	private Double paccsMarginGst;
+	
+	private Double b2cBasicPrice;
+	
+	private Double b2cCgst;
+	
+	private Double b2cSgst;
+	
+	private Double b2cMrp;
+	
+	private Double b2cNetTotal;
+	
+	private Double b2cDiscount;
 	
     @PrePersist
     protected void onCreate() {

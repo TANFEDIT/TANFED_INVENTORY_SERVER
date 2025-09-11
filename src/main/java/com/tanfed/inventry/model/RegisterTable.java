@@ -44,6 +44,9 @@ public class RegisterTable {
 	
 	private String receivedBags;
 	private Double receivedQty;
-	
+	private Double basicPrice;
+	private Double cgst;
+	private Double sgst;
+	private Double total;
 	private String billNo;
 }

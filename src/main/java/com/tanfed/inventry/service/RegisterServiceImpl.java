@@ -10,6 +10,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -63,7 +64,7 @@ public class RegisterServiceImpl implements RegisterService {
 					item.getDcWdnRoNo(), item.getSupplierDocDate(), null, null, null, null, item.getAckDate(),
 					item.getFirstPointIfmsId(), null, null, item.getProductName(), null, item.getPacking(),
 					item.getMaterialSuppliedBags(), item.getMaterialSuppliedQuantity(), item.getMaterialReceivedBags(),
-					item.getMaterialReceivedQuantity(), item.getBillNo()))
+					item.getMaterialReceivedQuantity(), null, null, null, null, item.getBillNo()))
 					.sorted(Comparator.comparing(RegisterTable::getGrnDate)).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception(e);
@@ -103,7 +104,8 @@ public class RegisterServiceImpl implements RegisterService {
 					item.getDcNo(), item.getDate(), item.getInvoiceNo(), item.getDate(), null, item.getIfmsId(),
 					item.getNameOfInstitution(), item.getDistrict(), null,
 					item.getTableData().stream().map(m -> m.getProductName()).collect(Collectors.toList()), null,
-					item.getTotalNoOfBags().toString(), item.getTotalQty(), null, null, null))
+					item.getTotalNoOfBags().toString(), item.getTotalQty(), null, null, item.getTotalBasicValue(),
+					item.getTotalCgstValue(), item.getTotalSgstValue(), item.getNetInvoiceAdjustment(), null))
 					.sorted(Comparator.comparing(RegisterTable::getInvoiceDate)).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception(e);
@@ -144,7 +146,8 @@ public class RegisterServiceImpl implements RegisterService {
 				Double qty = item.getGtnTableData().stream().mapToDouble(sum -> sum.getQty()).sum();
 				return new RegisterTable(item.getGodownName(), null, null, null, item.getGtnNo(), item.getDate(), null,
 						null, null, null, null, null, null, null, null, null, item.getProductName(), null,
-						item.getGtnTableData().get(0).getPacking(), bags.toString(), qty, null, null, null);
+						item.getGtnTableData().get(0).getPacking(), bags.toString(), qty, null, null, null, null, null,
+						null, null);
 			}).sorted(Comparator.comparing(RegisterTable::getGtnDate)).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception(e);
@@ -184,7 +187,7 @@ public class RegisterServiceImpl implements RegisterService {
 						return new RegisterTable(item.getGodownName(), item.getDestination(), null, null,
 								item.getGtnNo(), item.getDate(), null, null, null, null, null, null, null, null, null,
 								null, item.getProductName(), null, item.getGtnTableData().get(0).getPacking(), null,
-								null, bags.toString(), qty, null);
+								null, bags.toString(), qty, null, null, null, null, null);
 					}).sorted(Comparator.comparing(RegisterTable::getGtnDate)).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception(e);
@@ -219,45 +222,49 @@ public class RegisterServiceImpl implements RegisterService {
 			LocalDate date = fromDate;
 			while (!date.isAfter(toDate)) {
 				final LocalDate currentDate = date;
-				int n = 1;
 				ClosingStockTable cb;
-				do {
-					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(officeName, productName,
-							currentDate.minusDays(n++));
-				} while (cb == null);
-				Double ob = currentDate.equals(LocalDate.of(2025, 4, 1)) ? openingStockRepo
-						.findByOfficeNameAndProductNameAndAsOn(officeName, productName, date).getQuantity()
-						: cb.getBalance();
+				logger.info(productName);
+				logger.info(officeName);
+				logger.info("{}", currentDate);
+				Double ob;
+				if (currentDate.equals(LocalDate.of(2025, 4, 1))) {
+					ob = openingStockRepo.findByOfficeNameAndProductNameAndAsOn(officeName, productName, currentDate)
+							.getQuantity();
+				} else {
+					int n = 1;
+					do {
+						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(officeName, productName,
+								currentDate.minusDays(n++));
+						if (n == 32) {
+							throw new Exception("No Balance Found!");
+						}
+					} while (cb == null);
+					ob = cb.getBalance();
+				}
 				double receipt = grnList.stream()
-						.filter(item -> "Approved".equals(item.getVoucherStatus()) && godownName.isEmpty() ? true
-								: item.getGodownName().equals(godownName) && productName.equals(item.getProductName())
-										&& currentDate.equals(item.getDate()))
+						.filter(item -> "Approved".equals(item.getVoucherStatus())
+								&& (godownName.isEmpty() || item.getGodownName().equals(godownName))
+								&& productName.equals(item.getProductName()) && currentDate.equals(item.getDate()))
 						.mapToDouble(GRN::getMaterialReceivedQuantity).sum();
 
 				double otherReceipt = gtnList.stream()
 						.filter(item -> "Approved".equals(item.getVoucherStatus()) && "Receipt".equals(item.getGtnFor())
-								&& godownName.isEmpty()
-										? true
-										: item.getGodownName().equals(godownName)
-												&& productName.equals(item.getProductName())
-												&& currentDate.equals(item.getDate()))
+								&& (godownName.isEmpty() || item.getGodownName().equals(godownName))
+								&& productName.equals(item.getProductName()) && currentDate.equals(item.getDate()))
 						.flatMapToDouble(
 								item -> item.getGtnTableData().stream().mapToDouble(GtnTableData::getReceivedQty))
 						.sum();
 
 				double otherIssue = gtnList.stream()
 						.filter(item -> "Approved".equals(item.getVoucherStatus()) && "Issue".equals(item.getGtnFor())
-								&& godownName.isEmpty()
-										? true
-										: item.getGodownName().equals(godownName)
-												&& productName.equals(item.getProductName())
-												&& currentDate.equals(item.getDate()))
+								&& (godownName.isEmpty() || item.getGodownName().equals(godownName))
+								&& productName.equals(item.getProductName()) && currentDate.equals(item.getDate()))
 						.flatMapToDouble(item -> item.getGtnTableData().stream().mapToDouble(GtnTableData::getQty))
 						.sum();
 
 				double issue = dcList.stream()
 						.filter(item -> "Approved".equals(item.getVoucherStatus()) && currentDate.equals(item.getDate())
-								&& godownName.isEmpty() ? true : item.getGodownName().equals(godownName))
+								&& (godownName.isEmpty() || item.getGodownName().equals(godownName)))
 						.flatMapToDouble(item -> item.getDcTableData().stream()
 								.filter(data -> productName.equals(data.getProductName()))
 								.mapToDouble(DcTableData::getQty))
@@ -770,10 +777,15 @@ public class RegisterServiceImpl implements RegisterService {
 			purchaseDayBookQty.setDirect(data.getValue().getDirect());
 			purchaseDayBookQty.setBuffer(data.getValue().getBuffer());
 			purchaseDayBookQty.setTotal(data.getValue().getDirect() + data.getValue().getBuffer());
-			purchaseDayBookQty.setGrnData(obj.getGrnTableData().stream()
+			List<PurchaseDayBookQtyGrnData> grnDataWithoutGrouping = obj.getGrnTableData().stream()
 					.filter(item -> item.getRegion().equals(data.getValue().getRegion())).map(item -> {
 						return mapGrnData(item);
-					}).collect(Collectors.toList()));
+					}).collect(Collectors.toList());
+					purchaseDayBookQty.setGrnData(grnDataWithoutGrouping.stream()
+							.collect(Collectors.toMap(PurchaseDayBookQtyGrnData::getGrnNo,
+									Function.identity(),
+									(existing, replacement) -> existing
+					)).values().stream().toList());
 			list.add(purchaseDayBookQty);
 		});
 		return list;

@@ -20,7 +20,7 @@ public class DespatchAdviceRegisterTable {
 	private String district;
 	private String godownName;
 	private Map<String, Double> productAndQty;
-	private List<String> dcNo;
+	private List<String> dcNoList;
 	
 	private LocalDate clearedOn;
 }

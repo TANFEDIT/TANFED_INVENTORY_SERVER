@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.tanfed.inventry.entity.GTN;
+import com.tanfed.inventry.entity.Invoice;
 import com.tanfed.inventry.model.TableDataForDc;
 
 import lombok.AllArgsConstructor;
@@ -17,6 +18,7 @@ import lombok.NoArgsConstructor;
 public class DataForGtn {
 
 	private Set<String> godownNameList;
+	private Set<String> suppliedGodownNameList;
 	private Set<String> productNameList;
 	private String productCategory;
 	private String productGroup;
@@ -29,6 +31,8 @@ public class DataForGtn {
 	private Set<String> designationList;
 	private List<String> gtnNoList;
 	private List<String> rrNoList;
+	private List<String> invoiceNoList;
+	private Invoice invoice;
 	private LocalDate rrDate;
 	private GTN gtnData;
 	private String transporterName;
@@ -42,4 +46,5 @@ public class DataForGtn {
 	private String fromIfmsId;
 	private String toIfmsId;
 	private String buyerGstNo;
+	private List<GTN> gtnSalesReturn;
 }

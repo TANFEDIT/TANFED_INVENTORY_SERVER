@@ -106,7 +106,7 @@ public class GTN {
 	
 	private String loadingCharges;
 	
-	
+	private String jvNo;
 	
 
 	

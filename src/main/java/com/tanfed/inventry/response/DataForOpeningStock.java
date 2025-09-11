@@ -14,6 +14,7 @@ public class DataForOpeningStock {
 
 	private List<String> productNameList;
 	private Set<String> godownNameList;
+	private List<String> supplyModeList;
 	private String supplierName;
 	private String supplierGst;
 	private String standardUnits;

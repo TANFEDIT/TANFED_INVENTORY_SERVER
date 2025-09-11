@@ -56,9 +56,9 @@ public class SettlementsOfBillsHandler {
 	private TcService tcService;
 
 	@PostMapping("/savesupplierinvoice")
-	public ResponseEntity<String> saveSupplierInvoiceHandler(@RequestPart String obj,
+	public ResponseEntity<String> saveSupplierInvoiceHandler(@RequestPart String obj, @RequestPart String jvs,
 			@RequestParam MultipartFile[] files, @RequestHeader("Authorization") String jwt) throws Exception {
-		return supplierInvoiceService.saveSupplierInvoice(obj, files, jwt);
+		return supplierInvoiceService.saveSupplierInvoice(obj, files, jwt, jvs);
 	}
 
 	@PostMapping("/savepurchasebooking")
@@ -126,12 +126,12 @@ public class SettlementsOfBillsHandler {
 
 	@GetMapping("/fetchdataforsupplierinvoice")
 	public DataForSupplierInvoice getDataForSupplierInvoiceHandler(@RequestParam String activity,
-			@RequestParam String monthOfSupply, @RequestParam String supplierName, @RequestParam String productName,
-			@RequestParam String poMonth, @RequestParam String poNo, @RequestParam String officeName,
-			@RequestParam String invoiceNumber, @RequestParam String invoiceNo,
-			@RequestHeader("Authorization") String jwt) throws Exception {
+			@RequestParam String termsMonth, @RequestParam String termsNo, @RequestParam String monthOfSupply,
+			@RequestParam String supplierName, @RequestParam String productName, @RequestParam String poMonth,
+			@RequestParam String poNo, @RequestParam String officeName, @RequestParam String invoiceNumber,
+			@RequestParam String invoiceNo, @RequestHeader("Authorization") String jwt) throws Exception {
 		return supplierInvoiceService.getDataForSupplierInvoice(activity, jwt, supplierName, monthOfSupply, productName,
-				poMonth, poNo, officeName, invoiceNumber, invoiceNo);
+				poMonth, poNo, officeName, termsMonth, termsNo, invoiceNumber, invoiceNo);
 
 	}
 
@@ -283,13 +283,7 @@ public class SettlementsOfBillsHandler {
 	@PutMapping("/updategrnattach")
 	public ResponseEntity<String> updateGrnAttachQtyHandler(@RequestBody GrnAttachDto obj) throws Exception {
 		try {
-			ResponseEntity<String> siGrnAttach = supplierInvoiceService.updateSupplierInvoiceQtyForGrnAttach(obj);
-			ResponseEntity<String> updateGrnAttachQty = grnService.updateGrnAttachQty(obj);
-			if (siGrnAttach.getStatusCode().equals(updateGrnAttachQty.getStatusCode())) {
-				return new ResponseEntity<String>("Updated Successfully!", HttpStatus.ACCEPTED);
-			} else {
-				return null;
-			}
+			return grnService.updateGrnAttachQty(obj);
 		} catch (Exception e) {
 			throw new Exception(e);
 		}

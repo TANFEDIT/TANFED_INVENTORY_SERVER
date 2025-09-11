@@ -223,8 +223,10 @@ public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
 				});
 				cmg.setJvNoList(jvNoList);
 			}
-			accountsService.updateAvlQtyAndAmountHandler(obj.getSupplierAdvanceNo(), obj.getCurrentAdvanceQty(),
-					obj.getCalculatedTotal());
+			if(obj.getAdvanceAdjOptions().equals("Yes")) {
+				accountsService.updateAvlQtyAndAmountHandler(obj.getSupplierAdvanceNo(), obj.getCurrentAdvanceQty(),
+						obj.getCalculatedTotal());				
+			}
 			updatePB(obj.getCheckMemoNo());
 			cmg.setVoucherStatus("Pending");
 			cmg.setEmpId(Arrays.asList(empId));

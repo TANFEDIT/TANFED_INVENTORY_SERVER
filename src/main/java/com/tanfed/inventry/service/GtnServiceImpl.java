@@ -21,14 +21,17 @@ import com.tanfed.inventry.config.JwtTokenValidator;
 import com.tanfed.inventry.entity.ClosingStockTable;
 import com.tanfed.inventry.entity.GRN;
 import com.tanfed.inventry.entity.GTN;
+import com.tanfed.inventry.entity.Invoice;
 import com.tanfed.inventry.entity.OutwardBatch;
 import com.tanfed.inventry.model.BuyerFirmInfo;
 import com.tanfed.inventry.model.ContractorChargesData;
 import com.tanfed.inventry.model.ContractorInfo;
 import com.tanfed.inventry.model.GodownInfo;
 import com.tanfed.inventry.model.GrnQtyUpdateForDc;
+import com.tanfed.inventry.model.JournalVoucher;
 import com.tanfed.inventry.model.ProductMaster;
 import com.tanfed.inventry.model.TableDataForDc;
+import com.tanfed.inventry.model.Vouchers;
 import com.tanfed.inventry.repository.ClosingStockTableRepo;
 import com.tanfed.inventry.repository.GtnRepo;
 import com.tanfed.inventry.repository.OutwardBatchRepo;
@@ -252,8 +255,8 @@ public class GtnServiceImpl implements GtnService {
 	@Override
 	public DataForGtn getDataForGtn(String officeName, String productName, String activity, String gtnFor, String rrNo,
 			LocalDate date, String transactionFor, String jwt, String godownName, String toRegion, String issuedGtnNo,
-			String destination, String transportCharges, String loadingCharges, String unloadingCharges)
-			throws Exception {
+			String destination, String transportCharges, String loadingCharges, String unloadingCharges, String month,
+			String suppliedGodown, String invoiceNo) throws Exception {
 		try {
 			DataForGtn data = new DataForGtn();
 
@@ -269,10 +272,16 @@ public class GtnServiceImpl implements GtnService {
 						destination, transportCharges, loadingCharges, unloadingCharges, rrNo);
 				break;
 			case "Receipt":
-				handleReceiptGTN(data, officeName, transactionFor, issuedGtnNo, jwt);
+				handleReceiptGTN(data, officeName, transactionFor, issuedGtnNo, month, suppliedGodown, invoiceNo, jwt,
+						godownName);
 				break;
 			}
-
+			if (hasText(month)) {
+				data.setGtnSalesReturn(gtnRepo.findByOfficeName(officeName).stream()
+						.filter(item -> item.getGtnFor().equals("Receipt")
+								&& item.getTransactionFor().equals("Sales Return") && item.getJvNo() != null)
+						.collect(Collectors.toList()));
+			}
 			return data;
 		} catch (Exception e) {
 			throw new Exception("Error in getDataForGtn: " + e.getMessage(), e);
@@ -341,9 +350,41 @@ public class GtnServiceImpl implements GtnService {
 		}
 	}
 
+	@Autowired
+	private InvoiceService invoiceService;
+
 	private void handleReceiptGTN(DataForGtn data, String officeName, String transactionFor, String issuedGtnNo,
-			String jwt) throws Exception {
+			String month, String suppliedGodown, String invoiceNo, String jwt, String godownName) throws Exception {
 		if (hasText(transactionFor)) {
+
+			if (transactionFor.equals("Sales Return") && hasText(month)) {
+				List<Invoice> invoiceList = invoiceService.getInvoiceDataByOffficeName(officeName).stream()
+						.filter(item -> {
+							return String.format("%s%s%04d", item.getDate().getMonth(), " ", item.getDate().getYear())
+									.equals(month) && item.getVoucherStatus().equals("Approved");
+						}).collect(Collectors.toList());
+				Invoice invoice = null;
+				data.setSuppliedGodownNameList(
+						invoiceList.stream().map(item -> item.getGodownName()).collect(Collectors.toSet()));
+				if (hasText(suppliedGodown)) {
+					data.setInvoiceNoList(
+							invoiceList.stream().map(item -> item.getInvoiceNo()).collect(Collectors.toList()));
+					if (hasText(invoiceNo)) {
+						invoice = invoiceService.getInvoiceDataByInvoiceNo(invoiceNo);
+						data.setInvoice(invoice);
+					}
+				}
+				data.setGodownNameList(grnService.getGodownNameList(jwt, officeName));
+				if (hasText(godownName)) {
+					ContractorInfo contractorInfo = getContractor(jwt, officeName, godownName);
+					ContractorChargesData contractorChargesData = contractorInfo.getChargesData()
+							.get(contractorInfo.getChargesData().size() - 1);
+					calculateCharges(data, jwt, officeName, godownName, invoice.getNameOfInstitution(),
+							contractorChargesData);
+					data.setTransporterName(contractorInfo.getContractFirm());
+					data.setUnloadingChargesPerQty(contractorChargesData.getUnloadingCharges());
+				}
+			}
 			List<String> gtnNoList = new ArrayList<>();
 			if (transactionFor.contains("Other Region")) {
 				gtnNoList = fetchGtnNoList(gtnRepo.findByToRegion(officeName), transactionFor, officeName);
@@ -657,7 +698,7 @@ public class GtnServiceImpl implements GtnService {
 					LocalDate date = gtn.getDate().minusDays(n++);
 					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(region, gtn.getProductName(),
 							date);
-					if (date.equals(LocalDate.of(2025, 4, 1))) {
+					if (date.equals(LocalDate.of(2025, 4, 1)) && cb == null) {
 						closingStockTableRepo.save(new ClosingStockTable(null, region, gtn.getDate(),
 								gtn.getProductName(), gtn.getGodownName(),
 								gtn.getGtnTableData().stream().mapToDouble(item -> item.getReceivedQty()).sum()));
@@ -679,4 +720,25 @@ public class GtnServiceImpl implements GtnService {
 		}
 	}
 
+	@Autowired
+	private AccountsService accountsService;
+
+	public ResponseEntity<String> updateJvForSalesReturn(String gtnNo, JournalVoucher jv, String jwt) throws Exception {
+		try {
+			Vouchers voucher = new Vouchers();
+			voucher.setJournalVoucherData(jv);
+			ResponseEntity<String> responseEntity = accountsService.saveAccountsVouchersHandler("journalVoucher",
+					voucher, jwt);
+			String responseString = responseEntity.getBody();
+			String prefix = "JV Number : ";
+			int index = responseString.indexOf(prefix);
+			String jvNo = responseString.substring(index + prefix.length()).trim();
+			GTN gtn = gtnRepo.findByGtnNo(gtnNo).get();
+			gtn.setJvNo(jvNo);
+			gtnRepo.save(gtn);
+			return new ResponseEntity<String>("Updated Successfully!", HttpStatus.ACCEPTED);
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
 }

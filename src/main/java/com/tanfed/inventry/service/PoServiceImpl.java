@@ -202,7 +202,7 @@ public class PoServiceImpl implements PoService {
 	private void setTermsData(DataForPo data, String termsMonth, String termsNo, String activity, String productName,
 			LocalDate date) throws Exception {
 		if (!termsMonth.isEmpty() && termsMonth != null) {
-			data.setTermsNoList(termsPriceService.fetchTermsByMonth(termsMonth, activity, productName, date));
+			data.setTermsNoList(termsPriceService.fetchTermsByMonth(termsMonth, activity, productName, date, "PO"));
 			if (!termsNo.isEmpty() && termsNo != null) {
 				data.setTermsPrice(termsPriceService.fetchTermsByTermsNo(termsNo));
 			}

@@ -150,7 +150,7 @@ public class InvoiceCollectionHandler {
 	}
 
 	@PostMapping("/savefundtransfer")
-	@PreAuthorize("hasAnyRole('ROLE_SUPERADMIN', 'ROLE_ESTADMIN', 'ROLE_ROUSER', 'ROLE_ROADMIN')")
+	@PreAuthorize("hasAnyRole('ROLE_SUPERADMIN', 'ROLE_ESTADMIN', 'ROLE_ROUSER', 'ROLE_ROADMIN', 'ROLE_ACCADMIN')")
 	public ResponseEntity<String> saveFundTransferHandler(@RequestBody FundTransferDto obj,
 			@RequestHeader("Authorization") String jwt) throws Exception {
 		return invoiceCollectionService.saveFundTransfer(obj, jwt);

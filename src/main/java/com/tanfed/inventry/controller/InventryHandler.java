@@ -145,13 +145,14 @@ public class InventryHandler {
 
 	@GetMapping("/fetchdataforgtn")
 	public DataForGtn fetchDataForGtnHandler(@RequestParam String officeName, String productName, String activity,
-			String gtnFor,
+			String gtnFor, String month, String suppliedGodown, String invoiceNo,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date, String rrNo,
 			String transactionFor, String godownName, String toRegion, String issuedGtnNo, String destination,
 			String transportCharges, String loadingCharges, String unloadingCharges,
 			@RequestHeader("Authorization") String jwt) throws Exception {
 		return gtnService.getDataForGtn(officeName, productName, activity, gtnFor, rrNo, date, transactionFor, jwt,
-				godownName, toRegion, issuedGtnNo, destination, transportCharges, loadingCharges, unloadingCharges);
+				godownName, toRegion, issuedGtnNo, destination, transportCharges, loadingCharges, unloadingCharges,
+				month, suppliedGodown, invoiceNo);
 	}
 
 	@GetMapping("/fetchdatafordespatchadvice")
@@ -375,11 +376,9 @@ public class InventryHandler {
 		data.setSupplierNameList(masterService.getProductDataHandler(jwt).stream()
 				.filter(item -> !item.getSupplierName().startsWith("TANFED")).map(ProductMaster::getSupplierName)
 				.collect(Collectors.toSet()));
-		if (!supplierName.isEmpty() && supplierName != null) {
-			data.setProductNameList(masterService.getProductDataHandler(jwt).stream()
-					.filter(item -> item.getSupplierName().equals(supplierName)).map(ProductMaster::getProductName)
-					.collect(Collectors.toSet()));
-		}
+		data.setProductNameList(masterService.getProductDataHandler(jwt).stream()
+				.filter(item -> (item.getSupplierName().equals(supplierName) || supplierName.isEmpty()))
+				.map(ProductMaster::getProductName).collect(Collectors.toSet()));
 		if (!month.isEmpty() || (fromDate != null && toDate != null)) {
 			switch (formType) {
 			case "receiptRegister": {

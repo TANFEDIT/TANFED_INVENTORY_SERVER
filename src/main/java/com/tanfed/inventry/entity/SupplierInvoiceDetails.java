@@ -18,52 +18,60 @@ public class SupplierInvoiceDetails {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
-	private String invoiceNumber;
-	
-	private Double invoiceQty;
-	
+
+	private String voucherStatus;
+
+	private List<String> designation;
+
+	private LocalDate approvedDate;
+
 	private Double invoiceQtyAvlForGrnAttach;
+
+	private List<String> empId;
 	
-	private LocalDate createdAt = LocalDate.now();
-	
-	private LocalDate invoiceDate;
-	
-	private Double invoiceValue;
 	private LocalDate date;
-	
-	private Double basicPrice;
-	
-	private Double gst;
-	
-	private Double margin;
-	
-	private Double gstOnMargin;
-	
-	private Double mrp;
-	
+
+	private LocalDate createdAt = LocalDate.now();
+
+	private String invoiceNumber;
+
+	private Double invoiceQty;
+
+
+	private LocalDate invoiceDate;
+
+	private Double totalInvoiceValue;
+
+	private Double toalBasicPrice;
+
+	private Double totalCgstValue;
+
+	private Double totalSgstValue;
+
 	private String monthOfSupply;
+
+	private String termsMonth;
+	
+	private String termsNo;
 	
 	private String activity;
-	
+
 	private String productName;
-	
+
 	private String supplierName;
-	
+
 	private String supplierGst;
-	
+
 	private String filename;
-	
+
 	private String filetype;
-	
+
 	@Lob
 	@Column(length = 1000000)
 	private byte[] filedata;
-	
-	private String voucherStatus;
-	
-	private String designation;
-	
-	private List<String> empId;
-	private LocalDate approvedDate;
+
+	private String netJv;
+
+	private String taxJv;
+
 }

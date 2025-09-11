@@ -61,6 +61,9 @@ public class GrnServiceImpl implements GrnService {
 
 	@Autowired
 	private OpeningStockService openingStockService;
+	
+	@Autowired
+	private SupplierInvoiceService supplierInvoiceService;
 
 	@Autowired
 	ObjectMapper mapper;
@@ -377,7 +380,7 @@ public class GrnServiceImpl implements GrnService {
 	@Override
 	public ResponseEntity<String> updateGrnAttachQty(GrnAttachDto obj) throws Exception {
 		try {
-			logger.info("RmngBkngQty : {}", obj.getCurrentBookingQty());
+			
 			Double BookngQty = obj.getCurrentBookingQty();
 
 			for (String temp : obj.getGrnNo()) {
@@ -406,7 +409,9 @@ public class GrnServiceImpl implements GrnService {
 					grn.setSupplierInvoiceNo(grn.getSupplierInvoiceNo() + ", " + obj.getInvoiceNo());
 				}
 				grnRepo.save(grn);
+				logger.info("RmngBkngQty : {}", obj.getCurrentBookingQty());
 			}
+			supplierInvoiceService.updateSupplierInvoiceQtyForGrnAttach(obj.getInvoiceNo(), BookngQty);
 			return new ResponseEntity<String>("Updated Successfully!", HttpStatus.ACCEPTED);
 
 		} catch (Exception e) {

@@ -3,6 +3,7 @@ package com.tanfed.inventry.service;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import com.tanfed.inventry.entity.OpeningStock;
 import com.tanfed.inventry.entity.OutwardBatch;
 import com.tanfed.inventry.model.GrnQtyUpdateForDc;
 import com.tanfed.inventry.model.ProductMaster;
+import com.tanfed.inventry.model.Terms_Price_Config;
 import com.tanfed.inventry.repository.OpeningStockRepo;
 import com.tanfed.inventry.repository.OutwardBatchRepo;
 import com.tanfed.inventry.response.DataForOpeningStock;
@@ -96,6 +98,9 @@ public class OpeningStockServiceImpl implements OpeningStockService {
 					data.setSupplierGst(productMaster.getSupplierGst());
 					data.setSupplierName(productMaster.getSupplierName());
 					data.setPacking(productMaster.getPacking());
+					data.setSupplyModeList(masterService.getTerms_Price_ConfigListHandler(jwt).stream()
+							.filter(item -> item.getActivity().equals(activity)).map(Terms_Price_Config::getSupplyMode)
+							.filter(Objects::nonNull).collect(Collectors.toList()));
 
 				}
 			}

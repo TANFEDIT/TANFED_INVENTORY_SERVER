@@ -407,7 +407,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 						.getSupplierInvoiceByInvoiceNumber(invoiceNo);
 				data.setInvoiceDate(supplierInvoiceDetails.getInvoiceDate());
 				data.setGst(supplierInvoiceDetails.getSupplierGst());
-				data.setInvoiceValue(supplierInvoiceDetails.getInvoiceValue());
+				data.setInvoiceValue(supplierInvoiceDetails.getTotalInvoiceValue());
 				data.setName(supplierInvoiceDetails.getSupplierName());
 			}
 			return data;

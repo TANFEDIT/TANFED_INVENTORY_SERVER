@@ -23,7 +23,7 @@ public interface TermsPriceService {
 	
 	public Set<String> fetchApprovedTermsMonth(String activity, String productName) throws Exception;
 	
-	public List<String> fetchTermsByMonth(String termsMonth, String activity, String productName, LocalDate date) throws Exception;
+	public List<String> fetchTermsByMonth(String termsMonth, String activity, String productName, LocalDate date, String type) throws Exception;
 	
 	public TermsPrice fetchTermsByTermsNo(String termsNo) throws Exception;
 }

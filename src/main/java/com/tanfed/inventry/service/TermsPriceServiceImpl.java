@@ -162,15 +162,15 @@ public class TermsPriceServiceImpl implements TermsPriceService {
 	}
 
 	@Override
-	public List<String> fetchTermsByMonth(String termsMonth, String activity, String productName, LocalDate date)
-			throws Exception {
+	public List<String> fetchTermsByMonth(String termsMonth, String activity, String productName, LocalDate date,
+			String type) throws Exception {
 		try {
 			return termsPriceRepo.findByTermsForMonth(termsMonth).stream()
 					.filter(item -> termsMonth.equals(item.getMasterData().getTermsForMonth())
 							&& activity.equals(item.getMasterData().getActivity())
 							&& productName.equals(item.getMasterData().getProductName()))
-					.filter(item -> !date.isBefore(item.getMasterData().getValidFrom())
-							&& !date.isAfter(item.getMasterData().getValidTo()))
+					.filter(item -> type.equals("PO") ? (!date.isBefore(item.getMasterData().getValidFrom())
+							&& !date.isAfter(item.getMasterData().getValidTo())) : true)
 					.map(item -> item.getTermsNo()).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception(e);
