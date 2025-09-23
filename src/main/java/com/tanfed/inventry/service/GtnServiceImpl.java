@@ -31,6 +31,7 @@ import com.tanfed.inventry.model.GrnQtyUpdateForDc;
 import com.tanfed.inventry.model.JournalVoucher;
 import com.tanfed.inventry.model.ProductMaster;
 import com.tanfed.inventry.model.TableDataForDc;
+import com.tanfed.inventry.model.VoucherApproval;
 import com.tanfed.inventry.model.Vouchers;
 import com.tanfed.inventry.repository.ClosingStockTableRepo;
 import com.tanfed.inventry.repository.GtnRepo;
@@ -65,9 +66,12 @@ public class GtnServiceImpl implements GtnService {
 			obj.setGtnNo(gtnNo);
 			obj.setVoucherStatus("Pending");
 			obj.setEmpId(Arrays.asList(empId));
-			obj.getGtnTableData().forEach(temp -> {
-				temp.setQtyAvlForDc(temp.getReceivedQty());
-			});
+
+			if(!obj.getTransactionFor().equals("Sales Return")) {
+				obj.getGtnTableData().forEach(temp -> {
+					temp.setQtyAvlForDc(temp.getReceivedQty());
+				});				
+			}
 //			GTN gtn = calculateCharges(obj);
 			gtnRepo.save(obj);
 			return new ResponseEntity<String>("Created Successfully!" + "\n GTN No :" + gtnNo, HttpStatus.CREATED);
@@ -260,12 +264,6 @@ public class GtnServiceImpl implements GtnService {
 		try {
 			DataForGtn data = new DataForGtn();
 
-			if (!hasText(officeName))
-				return data;
-
-			if (!hasText(activity) || !hasText(gtnFor))
-				return data;
-
 			switch (gtnFor) {
 			case "Issue":
 				handleIssueGTN(data, officeName, productName, activity, transactionFor, jwt, godownName, toRegion, date,
@@ -279,7 +277,9 @@ public class GtnServiceImpl implements GtnService {
 			if (hasText(month)) {
 				data.setGtnSalesReturn(gtnRepo.findByOfficeName(officeName).stream()
 						.filter(item -> item.getGtnFor().equals("Receipt")
-								&& item.getTransactionFor().equals("Sales Return") && item.getJvNo() != null)
+								&& item.getTransactionFor().equals("Sales Return") && item.getJvNo() == null
+								&& String.format("%s%s%04d", item.getDate().getMonth(), " ", item.getDate().getYear())
+								.equals(month))
 						.collect(Collectors.toList()));
 			}
 			return data;
@@ -698,7 +698,7 @@ public class GtnServiceImpl implements GtnService {
 					LocalDate date = gtn.getDate().minusDays(n++);
 					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(region, gtn.getProductName(),
 							date);
-					if (date.equals(LocalDate.of(2025, 4, 1)) && cb == null) {
+					if (date.equals(LocalDate.of(2025, 3, 30)) && cb == null) {
 						closingStockTableRepo.save(new ClosingStockTable(null, region, gtn.getDate(),
 								gtn.getProductName(), gtn.getGodownName(),
 								gtn.getGtnTableData().stream().mapToDouble(item -> item.getReceivedQty()).sum()));
@@ -723,6 +723,7 @@ public class GtnServiceImpl implements GtnService {
 	@Autowired
 	private AccountsService accountsService;
 
+	@Override
 	public ResponseEntity<String> updateJvForSalesReturn(String gtnNo, JournalVoucher jv, String jwt) throws Exception {
 		try {
 			Vouchers voucher = new Vouchers();
@@ -737,6 +738,20 @@ public class GtnServiceImpl implements GtnService {
 			gtn.setJvNo(jvNo);
 			gtnRepo.save(gtn);
 			return new ResponseEntity<String>("Updated Successfully!", HttpStatus.ACCEPTED);
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
+	
+
+	@Override
+	public void updateJVStatusInAcc(String jvNo, String status, String jwt) throws Exception {
+		try {
+			Vouchers vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher",
+					jvNo, jwt);
+			VoucherApproval data = new VoucherApproval(status,
+					String.valueOf(vouchers.getJournalVoucherData().getId()), "journalVoucher");
+			accountsService.voucherApprovalHandler(data, jwt);
 		} catch (Exception e) {
 			throw new Exception(e);
 		}

@@ -42,4 +42,6 @@ public interface InvoiceService {
 	public List<Invoice> getInvoiceDataFromDateOfficeName(String officeName, LocalDate Date) throws Exception;
 	
 	public Invoice getInvoiceDataByInvoiceNo(String invoiceNo) throws Exception;
+	
+	public void approveNonCCInvoice(String invoiceNo) throws Exception;
 }

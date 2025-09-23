@@ -323,6 +323,17 @@ public class InventryHandler {
 		invoiceService.revertNonCCInvoice(null, jwt, adjv);
 	}
 
+	@PutMapping("/approvenonccinvoice")
+	public void approveNonCCInvoiceHandler(@RequestParam String invoiceNo) throws Exception {
+		invoiceService.approveNonCCInvoice(invoiceNo);
+	}
+
+	@PutMapping("/updatejvforsalesreturn/{gtnNo}")
+	public ResponseEntity<String> updateJvForSalesReturnHandler(@PathVariable String gtnNo,
+			@RequestBody JournalVoucher jv, @RequestHeader("Authorization") String jwt) throws Exception {
+		return gtnService.updateJvForSalesReturn(gtnNo, jv, jwt);
+	}
+
 	@Autowired
 	private FilterInventryDataService filterInventryDataService;
 

@@ -1,12 +1,13 @@
-package com.tanfed.inventry.entity;
+package com.tanfed.inventry.dto;
 
 import java.time.LocalDate;
 import java.util.List;
 
+import com.tanfed.inventry.entity.Invoice;
 import com.tanfed.inventry.model.GtnInvoiceData;
 import com.tanfed.inventry.model.GtnTableData;
+import com.tanfed.inventry.model.JournalVoucher;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,15 +15,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table
-public class GTN {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+public class GtnDTO {
 	
-	private LocalDate createdAt = LocalDate.now();
+	private Long id;
 	
 	private String gtnNo;
 	
@@ -95,32 +90,28 @@ public class GTN {
 	private String movementDocDate;
 	
 	private String vehicleNo;
-
-	
 	
 	private String issuedGtnNo;
 	
 	private String buyerName;
+	
 	private String buyerDistrict;
+	
 	private String buyerGstNo;
+	
 	private String transportCharges;
 	
 	private String loadingCharges;
 	
-	private String jvNo;
+	private JournalVoucher jv;
 	
 	private String invoiceNo;
 	
-	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "gtn")
 	private List<GtnInvoiceData> invoiceTableData;
 	
-	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "gtn")
 	private List<GtnTableData> gtnTableData;
 	
-	@ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "invoice_id", nullable = false)
 	private Invoice invoice;
 	
 	private Boolean billEntry;
-	
 }

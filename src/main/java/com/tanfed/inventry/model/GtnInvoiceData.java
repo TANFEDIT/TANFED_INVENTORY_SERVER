@@ -1,6 +1,5 @@
 package com.tanfed.inventry.model;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tanfed.inventry.entity.GTN;
 
@@ -20,24 +19,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Table
-public class GtnTableData {
-
+public class GtnInvoiceData {
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
-	private String outwardBatchNo;
-	private Double mrp;
+
+	private String grnNo;
+	private String productName;
+	private Double basicPrice;
+	private Double cgstAmount;
+	private Double sgstAmount;
 	private Double qty;
-	private Double bags;
-	private Double receivedBags;
-	private Double receivedQty;
-	private String packing;
-	private String standardUnits;
-	private Double QtyAvlForDc;
-	private String collectionMode;
-	private String termsNo;
-	
+	private Double returnQty;
+
 	@ManyToOne
 	@JoinColumn(name = "gtn")
 	@JsonIgnore

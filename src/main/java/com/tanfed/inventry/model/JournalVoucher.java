@@ -31,7 +31,7 @@ public class JournalVoucher {
 	
 	private String financialYear;
 
-	private String jvNo;
+	private String voucherNo;
 	
 	private String jvType;
 	

@@ -618,7 +618,7 @@ public class GrnServiceImpl implements GrnService {
 					LocalDate date = grn.getDate().minusDays(n++);
 					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(grn.getOfficeName(),
 							grn.getProductName(), date);
-					if (date.equals(LocalDate.of(2025, 4, 1))) {
+					if (date.equals(LocalDate.of(2025, 3, 30))) {
 						closingStockTableRepo.save(new ClosingStockTable(null, grn.getOfficeName(), grn.getDate(),
 								grn.getProductName(), grn.getGodownName(), grn.getMaterialReceivedQuantity()));
 						break;

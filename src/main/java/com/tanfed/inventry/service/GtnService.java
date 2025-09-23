@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.tanfed.inventry.entity.GTN;
 import com.tanfed.inventry.model.GrnQtyUpdateForDc;
+import com.tanfed.inventry.model.JournalVoucher;
 import com.tanfed.inventry.model.TableDataForDc;
 import com.tanfed.inventry.response.DataForGtn;
 
@@ -39,4 +40,8 @@ public interface GtnService {
 	public void updateClosingBalanceIssue(GTN gtn) throws Exception;
 
 	public void updateClosingBalanceReceipt(GTN gtn) throws Exception;
+	
+	public void updateJVStatusInAcc(String jvNo, String status, String jwt) throws Exception;
+
+	public ResponseEntity<String> updateJvForSalesReturn(String gtnNo, JournalVoucher jv, String jwt) throws Exception;
 }

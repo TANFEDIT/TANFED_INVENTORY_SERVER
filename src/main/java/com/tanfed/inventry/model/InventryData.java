@@ -2,6 +2,7 @@ package com.tanfed.inventry.model;
 
 import java.util.List;
 
+import com.tanfed.inventry.dto.GtnDTO;
 import com.tanfed.inventry.entity.*;
 
 import lombok.AllArgsConstructor;
@@ -21,7 +22,7 @@ public class InventryData {
 	
 	private GTN gtnData;
 	private List<GTN> gtn;
-	
+	private List<GtnDTO> salesReturn;
 	private DespatchAdvice despatchAdviceData;
 	private List<DespatchAdvice> despatchAdvice;
 	

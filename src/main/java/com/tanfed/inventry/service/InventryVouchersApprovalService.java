@@ -232,6 +232,28 @@ public class InventryVouchersApprovalService {
 				gtnRepo.save(gtn);
 				return designation;
 			}
+			case "salesReturn": {
+				GTN gtn = gtnRepo.findById(Long.valueOf(obj.getId())).orElse(null);
+
+				designation = userService.getNewDesignation(empId);
+				oldDesignation = gtn.getDesignation();
+
+				gtn.setVoucherStatus(obj.getVoucherStatus());
+				gtn.getEmpId().add(empId);
+				gtn.setBillEntry(false);
+				gtnService.updateJVStatusInAcc(gtn.getJvNo(), obj.getVoucherStatus(), jwt);
+				if (obj.getVoucherStatus().equals("Approved")) {
+					gtn.setApprovedDate(LocalDate.now());
+					gtnService.updateClosingBalanceReceipt(gtn);
+				}
+				if (oldDesignation == null) {
+					gtn.setDesignation(Arrays.asList(designation));
+				} else {
+					gtn.getDesignation().add(designation);
+				}
+				gtnRepo.save(gtn);
+				return designation;
+			}
 			case "despatchAdvice": {
 				DespatchAdvice despatchAdvice = despatchAdviceRepo.findById(Long.valueOf(obj.getId())).orElse(null);
 

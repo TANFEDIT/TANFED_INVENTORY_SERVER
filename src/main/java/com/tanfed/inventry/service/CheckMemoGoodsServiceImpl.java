@@ -122,7 +122,7 @@ public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
 									.getAccountsVoucherByVoucherNoHandler("journalVoucher", item, jwt)
 									.getJournalVoucherData();
 							if (journalVoucher.getJvFor().equals("Net Purchase Value")) {
-								data.setPurchaseJvNo(journalVoucher.getJvNo());
+								data.setPurchaseJvNo(journalVoucher.getVoucherNo());
 								data.setJvQty(journalVoucher.getDerivedQty());
 							}
 						} catch (Exception e) {

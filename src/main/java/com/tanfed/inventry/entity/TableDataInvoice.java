@@ -66,6 +66,6 @@ public class TableDataInvoice {
 	 
 	private String supplierName;
 	
-	 
+	private String standardUnits;
 	private Double total;
 }

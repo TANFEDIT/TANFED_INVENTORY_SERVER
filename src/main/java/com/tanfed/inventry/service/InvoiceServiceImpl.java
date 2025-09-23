@@ -436,7 +436,18 @@ public class InvoiceServiceImpl implements InvoiceService {
 			throw new Exception(e);
 		}
 	}
-
+	
+	@Override
+	public void approveNonCCInvoice(String invoiceNo) throws Exception {
+		try {
+				Invoice invoice = invoiceRepo.findByInvoiceNo(invoiceNo).get();
+				invoice.setAdjReceiptStatus("Approved");
+				invoiceRepo.save(invoice);
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
+	
 	@Override
 	public List<Invoice> getInvoiceDataFromDateOfficeName(String officeName, LocalDate date) throws Exception {
 		try {

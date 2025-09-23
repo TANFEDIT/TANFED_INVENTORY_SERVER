@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.tanfed.inventry.dto.CheckMemoGoodsDto;
+import com.tanfed.inventry.dto.GtnDTO;
 import com.tanfed.inventry.dto.TcCheckMemoDto;
 import com.tanfed.inventry.entity.*;
 import com.tanfed.inventry.model.*;
@@ -114,6 +115,7 @@ public class FilterInventryDataService {
 						termsPriceList.addAll(filteredLst);
 					}
 				}
+				termsPriceList.sort(Comparator.comparing(TermsPrice::getId).reversed());
 				data.setTermsAndPrice(termsPriceList);
 				return data;
 			}
@@ -148,6 +150,7 @@ public class FilterInventryDataService {
 						openingStockList.addAll(filteredLst);
 					}
 				}
+				openingStockList.sort(Comparator.comparing(OpeningStock::getId).reversed());
 				data.setOpeningStock(openingStockList);
 				return data;
 			}
@@ -183,6 +186,7 @@ public class FilterInventryDataService {
 						poRequestList.addAll(filteredLst);
 					}
 				}
+				poRequestList.sort(Comparator.comparing(PoRequest::getId).reversed());
 				data.setPoRequest(poRequestList);
 				return data;
 			}
@@ -217,11 +221,7 @@ public class FilterInventryDataService {
 						purchaseOrderList.addAll(filteredLst);
 					}
 				}
-//				List<PoAndTermsObj> obj = new ArrayList<PoAndTermsObj>();
-//				purchaseOrderList.forEach(item -> {
-//					TermsPrice termsPrice = termsPriceRepo.findByTermsNo(item.getTermsNo()).get();
-//					obj.add(new PoAndTermsObj(item, termsPrice));
-//				});
+				purchaseOrderList.sort(Comparator.comparing(PurchaseOrder::getId).reversed());
 				data.setPurchaseOrder(purchaseOrderList);
 				return data;
 			}
@@ -256,6 +256,7 @@ public class FilterInventryDataService {
 						grnList.addAll(filteredLst);
 					}
 				}
+				grnList.sort(Comparator.comparing(GRN::getId).reversed());
 				data.setGrn(grnList);
 				return data;
 			}
@@ -266,6 +267,7 @@ public class FilterInventryDataService {
 				if (fromDate != null && toDate != null) {
 					filteredLst = gtnService.getGtnDataByOffficeName(officeName).stream()
 							.filter(item -> (item.getVoucherStatus().equals(voucherStatus) || voucherStatus.isEmpty())
+									&& !item.getTransactionFor().equals("Sales Return")
 									&& (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
 									&& !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate))
 							.collect(Collectors.toList());
@@ -273,7 +275,8 @@ public class FilterInventryDataService {
 				if (voucherStatus.equals("Pending")) {
 					if (fromDate == null && toDate == null) {
 						gtnList.addAll(gtnRepo.findPendingDataByOfficeName(officeName).stream()
-								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor())))
+								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
+										&& !item.getTransactionFor().equals("Sales Return"))
 								.collect(Collectors.toList()));
 					} else if (fromDate != null && toDate != null) {
 						gtnList.addAll(filteredLst);
@@ -282,7 +285,8 @@ public class FilterInventryDataService {
 				if (voucherStatus.equals("Approved")) {
 					if (fromDate == null && toDate == null) {
 						gtnList.addAll(gtnRepo.findApprovedDataByOfficeName(officeName).stream()
-								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor())))
+								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
+										&& !item.getTransactionFor().equals("Sales Return"))
 								.collect(Collectors.toList()));
 					} else if (fromDate != null && toDate != null) {
 						gtnList.addAll(filteredLst);
@@ -291,16 +295,74 @@ public class FilterInventryDataService {
 				if (voucherStatus.isEmpty()) {
 					if (fromDate == null && toDate == null) {
 						gtnList.addAll(gtnRepo.findPendingDataByOfficeName(officeName).stream()
-								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor())))
+								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
+										&& !item.getTransactionFor().equals("Sales Return"))
 								.collect(Collectors.toList()));
 						gtnList.addAll(gtnRepo.findApprovedDataByOfficeName(officeName).stream()
-								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor())))
+								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
+										&& !item.getTransactionFor().equals("Sales Return"))
 								.collect(Collectors.toList()));
 					} else if (fromDate != null && toDate != null) {
 						gtnList.addAll(filteredLst);
 					}
 				}
+				gtnList.sort(Comparator.comparing(GTN::getId).reversed());
 				data.setGtn(gtnList);
+				return data;
+			}
+			case "salesReturn": {
+				List<GtnDTO> gtnList = new ArrayList<GtnDTO>();
+				List<GtnDTO> filteredLst = null;
+				logger.info("gtnFor {}", gtnFor);
+				if (fromDate != null && toDate != null) {
+					filteredLst = gtnService.getGtnDataByOffficeName(officeName).stream()
+							.filter(item -> (item.getVoucherStatus().equals(voucherStatus) || voucherStatus.isEmpty())
+									&& item.getTransactionFor().equals("Sales Return")
+									&& (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
+									&& !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate))
+							.map(item -> mapGtnToDto(item, jwt))
+							.collect(Collectors.toList());
+				}
+				if (voucherStatus.equals("Pending")) {
+					if (fromDate == null && toDate == null) {
+						gtnList.addAll(gtnRepo.findPendingDataByOfficeName(officeName).stream()
+								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
+										&& item.getTransactionFor().equals("Sales Return"))
+								.map(item -> mapGtnToDto(item, jwt))
+								.collect(Collectors.toList()));
+					} else if (fromDate != null && toDate != null) {
+						gtnList.addAll(filteredLst);
+					}
+				}
+				if (voucherStatus.equals("Approved")) {
+					if (fromDate == null && toDate == null) {
+						gtnList.addAll(gtnRepo.findApprovedDataByOfficeName(officeName).stream()
+								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
+										&& item.getTransactionFor().equals("Sales Return"))
+								.map(item -> mapGtnToDto(item, jwt))
+								.collect(Collectors.toList()));
+					} else if (fromDate != null && toDate != null) {
+						gtnList.addAll(filteredLst);
+					}
+				}
+				if (voucherStatus.isEmpty()) {
+					if (fromDate == null && toDate == null) {
+						gtnList.addAll(gtnRepo.findPendingDataByOfficeName(officeName).stream()
+								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
+										&& item.getTransactionFor().equals("Sales Return"))
+								.map(item -> mapGtnToDto(item, jwt))
+								.collect(Collectors.toList()));
+						gtnList.addAll(gtnRepo.findApprovedDataByOfficeName(officeName).stream()
+								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
+										&& item.getTransactionFor().equals("Sales Return"))
+								.map(item -> mapGtnToDto(item, jwt))
+								.collect(Collectors.toList()));
+					} else if (fromDate != null && toDate != null) {
+						gtnList.addAll(filteredLst);
+					}
+				}
+				gtnList.sort(Comparator.comparing(GtnDTO::getId).reversed());
+				data.setSalesReturn(gtnList);
 				return data;
 			}
 			case "despatchAdvice": {
@@ -334,6 +396,7 @@ public class FilterInventryDataService {
 						despatchAdviceList.addAll(filteredLst);
 					}
 				}
+				despatchAdviceList.sort(Comparator.comparing(DespatchAdvice::getId).reversed());
 				data.setDespatchAdvice(despatchAdviceList);
 				return data;
 			}
@@ -403,6 +466,7 @@ public class FilterInventryDataService {
 						invoiceList.addAll(filteredLst);
 					}
 				}
+				invoiceList.sort(Comparator.comparing(Invoice::getId).reversed());
 				data.setInvoice(invoiceList);
 				return data;
 			}
@@ -440,6 +504,7 @@ public class FilterInventryDataService {
 					}
 				});
 				collect.removeAll(toRemovePo);
+				collect.sort(Comparator.comparing(PurchaseOrder::getId).reversed());
 				data.setPurchaseOrderRO(collect);
 				return data;
 			}
@@ -560,6 +625,7 @@ public class FilterInventryDataService {
 						purchaseOrderList.addAll(filteredLst);
 					}
 				}
+				purchaseOrderList.sort(Comparator.comparing(PurchaseOrder::getId).reversed());
 				data.setSupplierInvoice(purchaseOrderList);
 				return data;
 			}
@@ -619,6 +685,7 @@ public class FilterInventryDataService {
 						purchaseBookingList.addAll(filteredLst);
 					}
 				}
+				purchaseBookingList.sort(Comparator.comparing(PurchaseBookingDto::getId).reversed());
 				data.setPurchaseBooking(purchaseBookingList);
 				return data;
 			}
@@ -677,6 +744,7 @@ public class FilterInventryDataService {
 						checkMemoGoodsList.addAll(filteredLst);
 					}
 				}
+				checkMemoGoodsList.sort(Comparator.comparing(CheckMemoGoodsDto::getId).reversed());
 				data.setCheckMemoGoods(checkMemoGoodsList);
 				return data;
 			}
@@ -712,6 +780,7 @@ public class FilterInventryDataService {
 						invoiceList.addAll(filteredLst);
 					}
 				}
+				invoiceList.sort(Comparator.comparing(TcBillEntry::getId).reversed());
 				data.setTcBillEntry(invoiceList);
 				return data;
 			}
@@ -772,6 +841,7 @@ public class FilterInventryDataService {
 						invoiceList.addAll(filteredLst);
 					}
 				}
+				invoiceList.sort(Comparator.comparing(TcCheckMemoDto::getId).reversed());
 				data.setTcCheckMemo(invoiceList);
 				return data;
 			}
@@ -807,6 +877,7 @@ public class FilterInventryDataService {
 						invoiceList.addAll(filteredLst);
 					}
 				}
+				invoiceList.sort(Comparator.comparing(MpaBillEntry::getId).reversed());
 				data.setMpaBillEntry(invoiceList);
 				return data;
 			}
@@ -869,6 +940,7 @@ public class FilterInventryDataService {
 						invoiceList.addAll(filteredLst);
 					}
 				}
+				invoiceList.sort(Comparator.comparing(MpaCheckMemoDto::getId).reversed());
 				data.setMpaCheckMemo(invoiceList);
 				return data;
 			}
@@ -880,6 +952,33 @@ public class FilterInventryDataService {
 		}
 	}
 
+	private GtnDTO mapGtnToDto(GTN gtn, String jwt) {
+			try {
+				JournalVoucher jv;
+				if (gtn.getJvNo() != null) {
+					Vouchers vouchers;
+				vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", gtn.getJvNo(),
+						jwt);
+				jv = vouchers.getJournalVoucherData();
+				} else {
+					jv = null;
+				}
+				return new GtnDTO(gtn.getId(), gtn.getGtnNo(), gtn.getOfficeName(), gtn.getVoucherStatus(),
+						gtn.getDesignation(), gtn.getEmpId(), gtn.getApprovedDate(), gtn.getFromIfmsId(), gtn.getToIfmsId(),
+						gtn.getDate(), gtn.getActivity(), gtn.getGtnFor(), gtn.getTransactionFor(), gtn.getProductCategory(),
+						gtn.getProductGroup(), gtn.getProductName(), gtn.getSupplierGst(), gtn.getSupplierName(),
+						gtn.getGodownName(), gtn.getToRegion(), gtn.getDestination(), gtn.getTransporterName(),
+						gtn.getTotalUnloadingCharges(), gtn.getTransportChargesValue(), gtn.getTransportChargesPerQty(),
+						gtn.getKm(), gtn.getLoadingChargesValue(), gtn.getLoadingChargesPerQty(), gtn.getRrNo(),
+						gtn.getMovementDocDate(), gtn.getVehicleNo(), gtn.getIssuedGtnNo(), gtn.getBuyerName(),
+						gtn.getBuyerDistrict(), gtn.getBuyerGstNo(), gtn.getTransportCharges(), gtn.getLoadingCharges(), jv,
+						gtn.getInvoiceNo(), gtn.getInvoiceTableData(), gtn.getGtnTableData(), gtn.getInvoice(),
+						gtn.getBillEntry());
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+	}
 	private PurchaseBookingDto mapPbDataToDto(PurchaseBooking item, String jwt) throws Exception {
 		List<JournalVoucher> jvData = new ArrayList<JournalVoucher>();
 		item.getJvList().forEach(jvNo -> {
