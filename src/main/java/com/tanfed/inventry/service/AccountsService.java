@@ -39,5 +39,5 @@ public interface AccountsService {
 
 	@PutMapping("/api/billsaccounts/updatesupplieradvance/{supplierAdvanceNo}")
 	public void updateAvlQtyAndAmountHandler(@PathVariable String supplierAdvanceNo, @RequestParam double qty,
-			@RequestParam double amount) throws Exception;
+			@RequestParam double amount, @RequestHeader("Authorization") String jwt) throws Exception;
 }
