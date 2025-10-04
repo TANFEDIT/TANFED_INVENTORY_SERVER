@@ -49,6 +49,9 @@ public class FilterInventryDataService {
 	private PurchaseOrderRepo purchaseOrderRepo;
 
 	@Autowired
+	private SalesReturnRepo salesReturnRepo;
+
+	@Autowired
 	private GrnService grnService;
 
 	@Autowired
@@ -315,48 +318,33 @@ public class FilterInventryDataService {
 				List<GtnDTO> filteredLst = null;
 				logger.info("gtnFor {}", gtnFor);
 				if (fromDate != null && toDate != null) {
-					filteredLst = gtnService.getGtnDataByOffficeName(officeName).stream()
+					filteredLst = salesReturnRepo.findByOfficeName(officeName).stream()
 							.filter(item -> (item.getVoucherStatus().equals(voucherStatus) || voucherStatus.isEmpty())
-									&& item.getTransactionFor().equals("Sales Return")
-									&& (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
 									&& !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate))
-							.map(item -> mapGtnToDto(item, jwt))
-							.collect(Collectors.toList());
+							.map(item -> mapSalesReturnToDto(item, jwt)).collect(Collectors.toList());
 				}
 				if (voucherStatus.equals("Pending")) {
 					if (fromDate == null && toDate == null) {
-						gtnList.addAll(gtnRepo.findPendingDataByOfficeName(officeName).stream()
-								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
-										&& item.getTransactionFor().equals("Sales Return"))
-								.map(item -> mapGtnToDto(item, jwt))
-								.collect(Collectors.toList()));
+						gtnList.addAll(salesReturnRepo.findPendingDataByOfficeName(officeName).stream()
+								.map(item -> mapSalesReturnToDto(item, jwt)).collect(Collectors.toList()));
 					} else if (fromDate != null && toDate != null) {
 						gtnList.addAll(filteredLst);
 					}
 				}
 				if (voucherStatus.equals("Approved")) {
 					if (fromDate == null && toDate == null) {
-						gtnList.addAll(gtnRepo.findApprovedDataByOfficeName(officeName).stream()
-								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
-										&& item.getTransactionFor().equals("Sales Return"))
-								.map(item -> mapGtnToDto(item, jwt))
-								.collect(Collectors.toList()));
+						gtnList.addAll(salesReturnRepo.findApprovedDataByOfficeName(officeName).stream()
+								.map(item -> mapSalesReturnToDto(item, jwt)).collect(Collectors.toList()));
 					} else if (fromDate != null && toDate != null) {
 						gtnList.addAll(filteredLst);
 					}
 				}
 				if (voucherStatus.isEmpty()) {
 					if (fromDate == null && toDate == null) {
-						gtnList.addAll(gtnRepo.findPendingDataByOfficeName(officeName).stream()
-								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
-										&& item.getTransactionFor().equals("Sales Return"))
-								.map(item -> mapGtnToDto(item, jwt))
-								.collect(Collectors.toList()));
-						gtnList.addAll(gtnRepo.findApprovedDataByOfficeName(officeName).stream()
-								.filter(item -> (gtnFor == null || gtnFor.isEmpty() || gtnFor.equals(item.getGtnFor()))
-										&& item.getTransactionFor().equals("Sales Return"))
-								.map(item -> mapGtnToDto(item, jwt))
-								.collect(Collectors.toList()));
+						gtnList.addAll(salesReturnRepo.findPendingDataByOfficeName(officeName).stream()
+								.map(item -> mapSalesReturnToDto(item, jwt)).collect(Collectors.toList()));
+						gtnList.addAll(salesReturnRepo.findApprovedDataByOfficeName(officeName).stream()
+								.map(item -> mapSalesReturnToDto(item, jwt)).collect(Collectors.toList()));
 					} else if (fromDate != null && toDate != null) {
 						gtnList.addAll(filteredLst);
 					}
@@ -952,33 +940,29 @@ public class FilterInventryDataService {
 		}
 	}
 
-	private GtnDTO mapGtnToDto(GTN gtn, String jwt) {
-			try {
-				JournalVoucher jv;
-				if (gtn.getJvNo() != null) {
-					Vouchers vouchers;
-				vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", gtn.getJvNo(),
+	private GtnDTO mapSalesReturnToDto(SalesReturn salesReturn, String jwt) {
+		try {
+			JournalVoucher jv;
+			if (salesReturn.getJvNo() != null) {
+				Vouchers vouchers;
+				vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", salesReturn.getJvNo(),
 						jwt);
 				jv = vouchers.getJournalVoucherData();
-				} else {
-					jv = null;
-				}
-				return new GtnDTO(gtn.getId(), gtn.getGtnNo(), gtn.getOfficeName(), gtn.getVoucherStatus(),
-						gtn.getDesignation(), gtn.getEmpId(), gtn.getApprovedDate(), gtn.getFromIfmsId(), gtn.getToIfmsId(),
-						gtn.getDate(), gtn.getActivity(), gtn.getGtnFor(), gtn.getTransactionFor(), gtn.getProductCategory(),
-						gtn.getProductGroup(), gtn.getProductName(), gtn.getSupplierGst(), gtn.getSupplierName(),
-						gtn.getGodownName(), gtn.getToRegion(), gtn.getDestination(), gtn.getTransporterName(),
-						gtn.getTotalUnloadingCharges(), gtn.getTransportChargesValue(), gtn.getTransportChargesPerQty(),
-						gtn.getKm(), gtn.getLoadingChargesValue(), gtn.getLoadingChargesPerQty(), gtn.getRrNo(),
-						gtn.getMovementDocDate(), gtn.getVehicleNo(), gtn.getIssuedGtnNo(), gtn.getBuyerName(),
-						gtn.getBuyerDistrict(), gtn.getBuyerGstNo(), gtn.getTransportCharges(), gtn.getLoadingCharges(), jv,
-						gtn.getInvoiceNo(), gtn.getInvoiceTableData(), gtn.getGtnTableData(), gtn.getInvoice(),
-						gtn.getBillEntry());
-			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
+			} else {
+				jv = null;
 			}
+			return new GtnDTO(salesReturn.getId(), salesReturn.getCreatedAt(), salesReturn.getOfficeName(),
+					salesReturn.getVoucherStatus(), salesReturn.getDesignation(), salesReturn.getEmpId(),
+					salesReturn.getApprovedDate(), salesReturn.getDate(), salesReturn.getGtnNo(),
+					salesReturn.getActivity(), salesReturn.getMonth(), salesReturn.getSuppliedGodown(),
+					salesReturn.getGodownName(), jv, salesReturn.getInvoiceNo(), salesReturn.getInvoice(), 
+					salesReturn.getInvoiceTableData(), salesReturn.getBillEntry());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
+
 	private PurchaseBookingDto mapPbDataToDto(PurchaseBooking item, String jwt) throws Exception {
 		List<JournalVoucher> jvData = new ArrayList<JournalVoucher>();
 		item.getJvList().forEach(jvNo -> {

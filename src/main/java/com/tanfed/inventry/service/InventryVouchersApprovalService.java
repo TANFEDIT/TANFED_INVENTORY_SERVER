@@ -56,6 +56,9 @@ public class InventryVouchersApprovalService {
 	private DespatchAdviceRepo despatchAdviceRepo;
 
 	@Autowired
+	private SalesReturnRepo salesReturnRepo;
+	
+	@Autowired
 	private DespatchAdviceService despatchAdviceService;
 
 	@Autowired
@@ -233,25 +236,25 @@ public class InventryVouchersApprovalService {
 				return designation;
 			}
 			case "salesReturn": {
-				GTN gtn = gtnRepo.findById(Long.valueOf(obj.getId())).orElse(null);
+				SalesReturn salesReturn = salesReturnRepo.findById(Long.valueOf(obj.getId())).orElse(null);
 
 				designation = userService.getNewDesignation(empId);
-				oldDesignation = gtn.getDesignation();
+				oldDesignation = salesReturn.getDesignation();
 
-				gtn.setVoucherStatus(obj.getVoucherStatus());
-				gtn.getEmpId().add(empId);
-				gtn.setBillEntry(false);
-				gtnService.updateJVStatusInAcc(gtn.getJvNo(), obj.getVoucherStatus(), jwt);
+				salesReturn.setVoucherStatus(obj.getVoucherStatus());
+				salesReturn.getEmpId().add(empId);
+				salesReturn.setBillEntry(false);
+				gtnService.updateJVStatusInAcc(salesReturn.getJvNo(), obj.getVoucherStatus(), jwt);
 				if (obj.getVoucherStatus().equals("Approved")) {
-					gtn.setApprovedDate(LocalDate.now());
-					gtnService.updateClosingBalanceReceipt(gtn);
+					salesReturn.setApprovedDate(LocalDate.now());
+					gtnService.updateClosingBalanceReceipt(salesReturn);
 				}
 				if (oldDesignation == null) {
-					gtn.setDesignation(Arrays.asList(designation));
+					salesReturn.setDesignation(Arrays.asList(designation));
 				} else {
-					gtn.getDesignation().add(designation);
+					salesReturn.getDesignation().add(designation);
 				}
-				gtnRepo.save(gtn);
+				salesReturnRepo.save(salesReturn);
 				return designation;
 			}
 			case "despatchAdvice": {

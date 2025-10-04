@@ -3,7 +3,6 @@ package com.tanfed.inventry.entity;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.tanfed.inventry.model.GtnInvoiceData;
 import com.tanfed.inventry.model.GtnTableData;
 
 import jakarta.persistence.*;
@@ -107,20 +106,9 @@ public class GTN {
 	
 	private String loadingCharges;
 	
-	private String jvNo;
-	
-	private String invoiceNo;
-	
-	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "gtn")
-	private List<GtnInvoiceData> invoiceTableData;
-	
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "gtn")
 	private List<GtnTableData> gtnTableData;
-	
-	@ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "invoice_id", nullable = false)
-	private Invoice invoice;
-	
+
 	private Boolean billEntry;
 	
 }

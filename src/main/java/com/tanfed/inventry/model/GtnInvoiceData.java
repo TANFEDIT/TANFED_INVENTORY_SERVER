@@ -1,7 +1,7 @@
 package com.tanfed.inventry.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.tanfed.inventry.entity.GTN;
+import com.tanfed.inventry.entity.SalesReturn;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,10 +31,11 @@ public class GtnInvoiceData {
 	private Double cgstAmount;
 	private Double sgstAmount;
 	private Double qty;
+	private Double QtyAvlForDc;
 	private Double returnQty;
 
 	@ManyToOne
-	@JoinColumn(name = "gtn")
+	@JoinColumn(name = "salesReturn")
 	@JsonIgnore
-	private GTN gtn;
+	private SalesReturn salesReturn;
 }

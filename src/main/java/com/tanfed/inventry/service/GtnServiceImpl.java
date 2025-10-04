@@ -23,6 +23,7 @@ import com.tanfed.inventry.entity.GRN;
 import com.tanfed.inventry.entity.GTN;
 import com.tanfed.inventry.entity.Invoice;
 import com.tanfed.inventry.entity.OutwardBatch;
+import com.tanfed.inventry.entity.SalesReturn;
 import com.tanfed.inventry.model.BuyerFirmInfo;
 import com.tanfed.inventry.model.ContractorChargesData;
 import com.tanfed.inventry.model.ContractorInfo;
@@ -36,6 +37,7 @@ import com.tanfed.inventry.model.Vouchers;
 import com.tanfed.inventry.repository.ClosingStockTableRepo;
 import com.tanfed.inventry.repository.GtnRepo;
 import com.tanfed.inventry.repository.OutwardBatchRepo;
+import com.tanfed.inventry.repository.SalesReturnRepo;
 import com.tanfed.inventry.response.DataForGtn;
 import com.tanfed.inventry.utils.CodeGenerator;
 import com.tanfed.inventry.utils.SlabRateCalculator;
@@ -50,6 +52,9 @@ public class GtnServiceImpl implements GtnService {
 	private GtnRepo gtnRepo;
 
 	@Autowired
+	private SalesReturnRepo salesReturnRepo;
+
+	@Autowired
 	private UserService userService;
 
 	@Autowired
@@ -58,7 +63,7 @@ public class GtnServiceImpl implements GtnService {
 	private static Logger logger = LoggerFactory.getLogger(GtnServiceImpl.class);
 
 	@Override
-	public ResponseEntity<String> saveGtn(GTN obj, String jwt) throws Exception {
+	public ResponseEntity<String> saveGtn(GTN obj, String jwt, SalesReturn salesReturn) throws Exception {
 		try {
 			String gtnNo = codeGenerator.gtnNoGenerator(obj.getOfficeName(), obj.getDate());
 			String empId = JwtTokenValidator.getEmailFromJwtToken(jwt);
@@ -67,10 +72,14 @@ public class GtnServiceImpl implements GtnService {
 			obj.setVoucherStatus("Pending");
 			obj.setEmpId(Arrays.asList(empId));
 
-			if(!obj.getTransactionFor().equals("Sales Return")) {
+			if (!obj.getTransactionFor().equals("Sales Return")) {
 				obj.getGtnTableData().forEach(temp -> {
 					temp.setQtyAvlForDc(temp.getReceivedQty());
-				});				
+				});
+			}
+			else {
+				
+				saveSalesReturn(salesReturn, jwt);
 			}
 //			GTN gtn = calculateCharges(obj);
 			gtnRepo.save(obj);
@@ -79,22 +88,27 @@ public class GtnServiceImpl implements GtnService {
 			throw new Exception(e);
 		}
 	}
-
-//	private GTN calculateCharges(GTN obj) {
-//		double totalQty = 0.0;
-//		if (obj.getGtnFor().equals("Issue")) {
-//			totalQty = obj.getGtnTableData().stream().mapToDouble(item -> item.getQty()).sum();
-//		} else {
-//			totalQty = obj.getGtnTableData().stream().mapToDouble(item -> item.getReceivedQty()).sum();
-//		}
-//		if (obj.getTransportCharges().equals("TANFED")) {
-//			obj.setTransportChargesValue(obj.getTransportChargesValue() * totalQty);
-//		}
-//		if (obj.getLoadingCharges().equals("TANFED")) {
-//			obj.setLoadingChargesValue(obj.getLoadingChargesValue() * totalQty);
-//		}
-//		return obj;
-//	}
+	
+	@Override
+	public ResponseEntity<String> saveSalesReturn(SalesReturn obj, String jwt) throws Exception {
+		try {
+			String gtnNo = codeGenerator.gtnNoGenerator(obj.getOfficeName(), obj.getDate());
+			String empId = JwtTokenValidator.getEmailFromJwtToken(jwt);
+			logger.info(empId);
+			obj.setGtnNo(gtnNo);
+			obj.setVoucherStatus("Pending");
+			obj.setEmpId(Arrays.asList(empId));
+			
+				obj.getInvoiceTableData().forEach(temp -> {
+					temp.setQtyAvlForDc(temp.getReturnQty());
+				});
+//			GTN gtn = calculateCharges(obj);
+				salesReturnRepo.save(obj);
+			return new ResponseEntity<String>("Created Successfully!" + "\n GTN No :" + gtnNo, HttpStatus.CREATED);
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
 
 	@Override
 	public ResponseEntity<String> editGtn(GTN obj, String jwt) throws Exception {
@@ -128,134 +142,6 @@ public class GtnServiceImpl implements GtnService {
 	@Autowired
 	private DcService dcService;
 
-//	@Override
-//	public DataForGtn getDataForGtn(String officeName, String productName, String activity, String gtnFor, LocalDate date,
-//			String transactionFor, String jwt, String godownName, String toRegion, String issuedGtnNo,
-//			String destination, String transportCharges, String loadingCharges, String unloadingCharges)
-//			throws Exception {
-//		try {
-//			logger.info(destination);
-//			DataForGtn data = new DataForGtn();
-//			if (!officeName.isEmpty() && officeName != null) {
-//				data.setGodownNameList(grnService.getGodownNameList(jwt, officeName));
-//
-//				if (!activity.isEmpty() && activity != null) {
-//					if (!gtnFor.isEmpty() && gtnFor != null) {
-//						if (gtnFor.equals("Issue")) {
-//							data.setProductNameList(
-//									grnService.getGrnDataByOffficeName(officeName).stream().filter(item -> {
-//										return item.getVoucherStatus().equals("Approved")
-//												&& item.getGrnQtyAvlForDc() > 0;
-//									}).map(item -> item.getProductName()).collect(Collectors.toSet()));
-//
-//							if (!productName.isEmpty() && productName != null) {
-//								ProductMaster productMaster = masterService.getProductDataByProductNameHandler(jwt,
-//										productName);
-//								data.setProductCategory(productMaster.getProductCategory());
-//								data.setProductGroup(productMaster.getProductGroup());
-//								data.setStandardUnits(productMaster.getStandardUnits());
-//								data.setSupplierGst(productMaster.getSupplierGst());
-//								data.setSupplierName(productMaster.getSupplierName());
-//								data.setPacking(productMaster.getPacking());
-//
-//							}
-//							if (!transactionFor.isEmpty() && transactionFor != null) {
-//								data.setTableData(grnService.grnTableData(officeName, productName, godownName, "gtn"));
-//								data.getTableData().addAll(gtnTableData(officeName, productName, godownName));
-//
-//								if (transactionFor.equals("RH to Buffer (Intra)")
-//										|| transactionFor.equals("Buffer To Buffer (Intra)")
-//										|| transactionFor.equals("Wholesale To Retail (Intra)")) {
-//									if (!godownName.isEmpty() && godownName != null) {
-//										data.setDesignationList(grnService.getGodownNameList(jwt, officeName).stream()
-//												.filter(item -> !item.equals(godownName)).collect(Collectors.toSet()));
-//										GodownInfo godownInfo = masterService.getGodownInfoByGodownNameHandler(godownName, jwt);
-//										logger.info("{}", date);
-//										if((date.isBefore(godownInfo.getInsuranceFrom()) || date.isAfter(godownInfo.getInsuranceTo()))
-//												|| (date.isBefore(godownInfo.getValidityFrom()) || date.isAfter(godownInfo.getValidityTo()))) {
-//											throw new Exception("Update Godown Data!");
-//										}
-//										if (destination != null && !destination.isEmpty()) {
-//											data.setFromIfmsId(godownInfo.getIfmsId());
-//											GodownInfo togodownInfo = masterService.getGodownInfoByGodownNameHandler(destination, jwt);
-//											data.setToIfmsId(togodownInfo.getIfmsId());
-//										}
-//									}
-//								}
-//								data.setOfficeList(userService.getOfficeList().stream()
-//										.map(item -> item.getOfficeName()).collect(Collectors.toList()));
-//								if (!toRegion.isEmpty() && toRegion != null) {
-//									if (transactionFor.equals("RH To Other Region Buffer")) {
-//										String temp = officeName;
-//										officeName = toRegion;
-//										data.setDesignationList(grnService.getGodownNameList(jwt, officeName));
-//										officeName = temp;
-//										if (!destination.isEmpty() && destination != null) {
-//											GodownInfo togodownInfo = masterService.getGodownInfoByGodownNameHandler(destination, jwt);
-//											data.setToIfmsId(togodownInfo.getIfmsId());
-//											GodownInfo godownInfo = masterService.getGodownInfoByGodownNameHandler(godownName, jwt);
-//											data.setFromIfmsId(godownInfo.getIfmsId());
-//										}
-//									}
-//									if (transactionFor.equals("RH To Other Region Direct")) {
-//										String temp = officeName;
-//										officeName = toRegion;
-//										data.setDesignationList(
-//												masterService.getBuyerIfmsIdByOfficeNameHandler(jwt, officeName)
-//														.stream().collect(Collectors.toSet()));
-//										officeName = temp;
-//										if (!destination.isEmpty() && destination != null) {
-//											BuyerFirmInfo buyerFirmInfo = masterService
-//													.getBuyerFirmByFirmNameHandler(jwt, destination);
-//											data.setBuyerName(buyerFirmInfo.getNameOfInstitution());
-//											data.setBuyerDistrict(buyerFirmInfo.getDistrict());
-//											destination = buyerFirmInfo.getNameOfInstitution();
-//											data.setToIfmsId(buyerFirmInfo.getIfmsIdNo());
-//											GodownInfo godownInfo = masterService.getGodownInfoByGodownNameHandler(godownName, jwt);
-//											data.setFromIfmsId(godownInfo.getIfmsId());
-//										}
-//									}
-//								}
-//								if ((!godownName.isEmpty() && !destination.isEmpty()) || !toRegion.isEmpty()) {
-//									validateChargesNeed(data, transactionFor, jwt, officeName, godownName, destination,
-//											transportCharges, loadingCharges, unloadingCharges);
-//								}
-//							}
-//						} else if (gtnFor.equals("Receipt")) {
-//							if (!transactionFor.isEmpty() && transactionFor != null) {
-//								List<String> gtnNoList = null;
-//								if (transactionFor.equals("RH To Other Region Buffer")
-//										|| transactionFor.equals("RH To Other Region Direct")) {
-//									gtnNoList = fetchGtnNoList(gtnRepo.findByToRegion(officeName), transactionFor,
-//											officeName);
-//								}
-//								if (transactionFor.equals("RH to Buffer (Intra)")
-//										|| transactionFor.equals("Buffer To Buffer (Intra)")
-//										|| transactionFor.equals("Wholesale To Retail (Intra)")) {
-//									gtnNoList = fetchGtnNoList(getGtnDataByOffficeName(officeName), transactionFor,
-//											officeName);
-//								}
-//								data.setGtnNoList(gtnNoList);
-//							}
-//							if (!issuedGtnNo.isEmpty() && issuedGtnNo != null) {
-//								GTN gtn = gtnRepo.findByGtnNo(issuedGtnNo).get();
-//								data.setGtnData(gtn);
-//								ContractorInfo contractor = getContractor(jwt, gtn.getOfficeName(),
-//										data.getGtnData().getGodownName());
-//								ContractorChargesData contractorChargesData = contractor.getChargesData()
-//										.get(contractor.getChargesData().size() - 1);
-//								data.setUnloadingChargesPerQty(contractorChargesData.getUnloadingCharges());
-//							}
-//						}
-//					}
-//				}
-//			}
-//			return data;
-//		} catch (Exception e) {
-//			throw new Exception(e);
-//		}
-//	}
-
 	@Override
 	public DataForGtn getDataForGtn(String officeName, String productName, String activity, String gtnFor, String rrNo,
 			LocalDate date, String transactionFor, String jwt, String godownName, String toRegion, String issuedGtnNo,
@@ -275,12 +161,12 @@ public class GtnServiceImpl implements GtnService {
 				break;
 			}
 			if (hasText(month)) {
-				data.setGtnSalesReturn(gtnRepo.findByOfficeName(officeName).stream()
-						.filter(item -> item.getGtnFor().equals("Receipt")
-								&& item.getTransactionFor().equals("Sales Return") && item.getJvNo() == null
-								&& String.format("%s%s%04d", item.getDate().getMonth(), " ", item.getDate().getYear())
-								.equals(month))
-						.collect(Collectors.toList()));
+				data.setGtnSalesReturn(
+						salesReturnRepo.findByOfficeName(officeName).stream()
+								.filter(item -> item.getJvNo() == null && String
+										.format("%s%s%04d", item.getDate().getMonth(), " ", item.getDate().getYear())
+										.equals(month))
+								.collect(Collectors.toList()));
 			}
 			return data;
 		} catch (Exception e) {
@@ -734,24 +620,56 @@ public class GtnServiceImpl implements GtnService {
 			String prefix = "JV Number : ";
 			int index = responseString.indexOf(prefix);
 			String jvNo = responseString.substring(index + prefix.length()).trim();
-			GTN gtn = gtnRepo.findByGtnNo(gtnNo).get();
-			gtn.setJvNo(jvNo);
-			gtnRepo.save(gtn);
+			SalesReturn salesReturn = salesReturnRepo.findByGtnNo(gtnNo).get();
+			salesReturn.setJvNo(jvNo);
+			salesReturnRepo.save(salesReturn);
 			return new ResponseEntity<String>("Updated Successfully!", HttpStatus.ACCEPTED);
 		} catch (Exception e) {
 			throw new Exception(e);
 		}
 	}
-	
 
 	@Override
 	public void updateJVStatusInAcc(String jvNo, String status, String jwt) throws Exception {
 		try {
-			Vouchers vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher",
-					jvNo, jwt);
-			VoucherApproval data = new VoucherApproval(status,
-					String.valueOf(vouchers.getJournalVoucherData().getId()), "journalVoucher");
+			Vouchers vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", jvNo, jwt);
+			VoucherApproval data = new VoucherApproval(status, String.valueOf(vouchers.getJournalVoucherData().getId()),
+					"journalVoucher");
 			accountsService.voucherApprovalHandler(data, jwt);
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
+
+	@Override
+	public void updateClosingBalanceReceipt(SalesReturn salesReturn) throws Exception {
+		try {
+			salesReturn.getInvoiceTableData().forEach(item -> {
+				ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(
+						salesReturn.getOfficeName(), item.getProductName(), salesReturn.getDate());
+				if (cb == null) {
+					int n = 1;
+					while (cb == null) {
+						LocalDate date = salesReturn.getDate().minusDays(n++);
+						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(salesReturn.getOfficeName(),
+								item.getProductName(), date);
+						if (date.equals(LocalDate.of(2025, 3, 30)) && cb == null) {
+							closingStockTableRepo.save(
+									new ClosingStockTable(null, salesReturn.getOfficeName(), salesReturn.getDate(),
+											item.getProductName(), salesReturn.getGodownName(), item.getReturnQty()));
+							break;
+						}
+					}
+					if (cb != null) {
+						closingStockTableRepo.save(new ClosingStockTable(null, salesReturn.getOfficeName(),
+								salesReturn.getDate(), item.getProductName(), salesReturn.getGodownName(),
+								cb.getBalance() + item.getReturnQty()));
+					}
+				} else {
+					cb.setBalance(cb.getBalance() + item.getReturnQty());
+					closingStockTableRepo.save(cb);
+				}
+			});
 		} catch (Exception e) {
 			throw new Exception(e);
 		}

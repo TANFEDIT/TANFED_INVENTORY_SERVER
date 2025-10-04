@@ -85,7 +85,7 @@ public class InventryHandler {
 				return grnService.saveGrn(obj.getGrnData(), jwt);
 			}
 			case "gtn": {
-				return gtnService.saveGtn(obj.getGtnData(), jwt);
+				return gtnService.saveGtn(obj.getGtnData(), jwt, obj.getSalesReturnData());
 			}
 			case "despatchAdvice": {
 				return despatchAdviceService.saveDespatchAdvice(obj.getDespatchAdviceData(), jwt);

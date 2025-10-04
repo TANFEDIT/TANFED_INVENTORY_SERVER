@@ -22,6 +22,7 @@ public class InventryData {
 	
 	private GTN gtnData;
 	private List<GTN> gtn;
+	private SalesReturn salesReturnData;
 	private List<GtnDTO> salesReturn;
 	private DespatchAdvice despatchAdviceData;
 	private List<DespatchAdvice> despatchAdvice;
