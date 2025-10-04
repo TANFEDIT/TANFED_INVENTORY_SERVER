@@ -29,6 +29,7 @@ import com.tanfed.inventry.model.ContractorChargesData;
 import com.tanfed.inventry.model.ContractorInfo;
 import com.tanfed.inventry.model.GodownInfo;
 import com.tanfed.inventry.model.GrnQtyUpdateForDc;
+import com.tanfed.inventry.model.GtnInvoiceData;
 import com.tanfed.inventry.model.JournalVoucher;
 import com.tanfed.inventry.model.ProductMaster;
 import com.tanfed.inventry.model.TableDataForDc;
@@ -65,30 +66,30 @@ public class GtnServiceImpl implements GtnService {
 	@Override
 	public ResponseEntity<String> saveGtn(GTN obj, String jwt, SalesReturn salesReturn) throws Exception {
 		try {
-			String gtnNo = codeGenerator.gtnNoGenerator(obj.getOfficeName(), obj.getDate());
-			String empId = JwtTokenValidator.getEmailFromJwtToken(jwt);
-			logger.info(empId);
-			obj.setGtnNo(gtnNo);
-			obj.setVoucherStatus("Pending");
-			obj.setEmpId(Arrays.asList(empId));
+			if (obj != null) {
+				String gtnNo = codeGenerator.gtnNoGenerator(obj.getOfficeName(), obj.getDate());
+				String empId = JwtTokenValidator.getEmailFromJwtToken(jwt);
+				logger.info(empId);
+				obj.setGtnNo(gtnNo);
+				obj.setVoucherStatus("Pending");
+				obj.setEmpId(Arrays.asList(empId));
 
-			if (!obj.getTransactionFor().equals("Sales Return")) {
-				obj.getGtnTableData().forEach(temp -> {
-					temp.setQtyAvlForDc(temp.getReceivedQty());
-				});
-			}
-			else {
-				
-				saveSalesReturn(salesReturn, jwt);
-			}
+				if (!obj.getTransactionFor().equals("Sales Return")) {
+					obj.getGtnTableData().forEach(temp -> {
+						temp.setQtyAvlForDc(temp.getReceivedQty());
+					});
+				}
 //			GTN gtn = calculateCharges(obj);
-			gtnRepo.save(obj);
-			return new ResponseEntity<String>("Created Successfully!" + "\n GTN No :" + gtnNo, HttpStatus.CREATED);
+				gtnRepo.save(obj);
+				return new ResponseEntity<String>("Created Successfully!" + "\n GTN No :" + gtnNo, HttpStatus.CREATED);
+			} else {
+				return saveSalesReturn(salesReturn, jwt);
+			}
 		} catch (Exception e) {
 			throw new Exception(e);
 		}
 	}
-	
+
 	@Override
 	public ResponseEntity<String> saveSalesReturn(SalesReturn obj, String jwt) throws Exception {
 		try {
@@ -98,16 +99,34 @@ public class GtnServiceImpl implements GtnService {
 			obj.setGtnNo(gtnNo);
 			obj.setVoucherStatus("Pending");
 			obj.setEmpId(Arrays.asList(empId));
+
+			obj.getInvoiceTableData().forEach(temp -> {
+				temp.setSalesReturn(obj);
+			});
 			
-				obj.getInvoiceTableData().forEach(temp -> {
-					temp.setQtyAvlForDc(temp.getReturnQty());
-				});
-//			GTN gtn = calculateCharges(obj);
-				salesReturnRepo.save(obj);
+			salesReturnRepo.save(obj);
+			updateQty(obj.getInvoiceTableData());
 			return new ResponseEntity<String>("Created Successfully!" + "\n GTN No :" + gtnNo, HttpStatus.CREATED);
 		} catch (Exception e) {
 			throw new Exception(e);
 		}
+	}
+
+	private void updateQty(List<GtnInvoiceData> invoiceTableData) throws Exception {
+		try {
+			invoiceTableData.forEach(item -> {
+				try {
+					GRN grn = grnService.getGrnDataByGrnNo(item.getGrnNo());
+					grn.setGrnQtyAvlForDc(grn.getGrnQtyAvlForDc() + item.getReturnQty());
+					grnService.saveGrn(grn);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+		
 	}
 
 	@Override

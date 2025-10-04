@@ -31,7 +31,6 @@ public class GtnInvoiceData {
 	private Double cgstAmount;
 	private Double sgstAmount;
 	private Double qty;
-	private Double QtyAvlForDc;
 	private Double returnQty;
 
 	@ManyToOne
