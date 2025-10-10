@@ -189,7 +189,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 							materialCenter, jwt);
 				}
 				if ("invoiceCollectionAvailable".equals(collectionProcess)) {
-					invoiceCollectionAvailableData(data, collect, invoiceType, ccbBranch, ackEntryDate);
+					invoiceCollectionAvailableData(data, collect, activity, officeName, invoiceType, ccbBranch, ackEntryDate);
 				}
 				if ("presentToCCB".equals(collectionProcess)) {
 					presentToCCBData(data, collect, invoiceType, ccbBranch, dueDate, addedToPresentDate);
@@ -255,7 +255,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 	}
 
 	public void invoiceCollectionAvailableData(InvoiceCollectionResponseData data, List<Invoice> collect,
-			String invoiceType, String ccbBranch, LocalDate ackEntryDate) {
+			String activity, String officeName, String invoiceType, String ccbBranch, LocalDate ackEntryDate) {
 		List<Invoice> NoOfAvlAckInvoices = collect.stream().filter(temp -> {
 			return temp.getAckQty() != null && temp.getAckEntryDate() != null && temp.getAddedToPresentDate() == null;
 		}).collect(Collectors.toList());
