@@ -273,8 +273,8 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 				NoOfAvlAckInvoices.stream().mapToDouble(temp -> temp.getNetInvoiceAdjustment()).sum()));
 		data.setCcbBranchLst(ccbBranchlst);
 		data.setAckEntryDate(ackEntryDatelst);
-		data.setAdjTableData(collect.stream()
-				.filter(temp -> null!= temp.getAddedToPresentDate() && !temp.getVoucherStatusICP2().equals("Approved")
+		data.setAdjTableData(invoiceRepo.findByActivityAndOfficeName(activity, officeName).stream()
+				.filter(temp -> null!= temp.getAddedToPresentDate() && null != temp.getVoucherStatusICP2() && !temp.getVoucherStatusICP2().equals("Approved")
 						&& temp.getCollectionMethod().equals("AdjReceipt"))
 				.map(item -> new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(), item.getIfmsId(),
 						item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
