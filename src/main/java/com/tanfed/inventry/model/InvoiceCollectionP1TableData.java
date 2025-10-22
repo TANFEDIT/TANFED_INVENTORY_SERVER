@@ -21,7 +21,7 @@ public class InvoiceCollectionP1TableData {
 	private String ccbBranch;
 	private String materialCenter;
 	private Double ackQty;
-	
+	private AdjustmentReceiptVoucher adjData;
 //	private Double collectionValue;
 //	private Double openingBalance;
 //	private Double total;

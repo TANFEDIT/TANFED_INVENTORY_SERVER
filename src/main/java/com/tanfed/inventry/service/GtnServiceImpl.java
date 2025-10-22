@@ -103,7 +103,7 @@ public class GtnServiceImpl implements GtnService {
 			obj.getInvoiceTableData().forEach(temp -> {
 				temp.setSalesReturn(obj);
 			});
-			
+
 			salesReturnRepo.save(obj);
 			updateQty(obj.getInvoiceTableData());
 			return new ResponseEntity<String>("Created Successfully!" + "\n GTN No :" + gtnNo, HttpStatus.CREATED);
@@ -116,9 +116,26 @@ public class GtnServiceImpl implements GtnService {
 		try {
 			invoiceTableData.forEach(item -> {
 				try {
-					GRN grn = grnService.getGrnDataByGrnNo(item.getGrnNo());
-					grn.setGrnQtyAvlForDc(grn.getGrnQtyAvlForDc() + item.getReturnQty());
-					grnService.saveGrn(grn);
+					if (item.getGrnNo().startsWith("GR")) {
+						GRN grn = grnService.getGrnDataByGrnNo(item.getGrnNo());
+						grn.setGrnQtyAvlForDc(grn.getGrnQtyAvlForDc() + item.getReturnQty());
+						grnService.saveGrn(grn);
+					} else {
+						GTN gtn = gtnRepo.findByGtnNo(item.getGrnNo()).get();
+						double qty = item.getReturnQty();
+						for (var temp : gtn.getGtnTableData()) {
+							if (qty <= 0)
+								break;
+							double available = temp.getQtyAvlForDc();
+							if (available >= qty) {
+								temp.setQtyAvlForDc(available + qty);
+								qty = 0;
+							} else {
+								temp.setQtyAvlForDc(0.0);
+								qty -= available;
+							}
+						}
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -126,7 +143,7 @@ public class GtnServiceImpl implements GtnService {
 		} catch (Exception e) {
 			throw new Exception(e);
 		}
-		
+
 	}
 
 	@Override
@@ -488,15 +505,19 @@ public class GtnServiceImpl implements GtnService {
 
 //				fetch gtn data by grnNo and set new qty and save in repository
 			GTN gtn = gtnRepo.findByGtnNo(obj.getOutwardBatchNo()).orElse(null);
-			gtn.getGtnTableData().forEach(item -> {
-				Double qty = obj.getQty();
-				if (item.getQtyAvlForDc() >= qty) {
-					item.setQtyAvlForDc(item.getQtyAvlForDc() - obj.getQty());
+			double qty = obj.getQty();
+			for (var item : gtn.getGtnTableData()) {
+				if (qty <= 0)
+					break;
+				double available = item.getQtyAvlForDc();
+				if (available >= qty) {
+					item.setQtyAvlForDc(available - qty);
+					qty = 0;
 				} else {
 					item.setQtyAvlForDc(0.0);
-					qty -= item.getQtyAvlForDc();
+					qty -= available;
 				}
-			});
+			}
 			gtnRepo.save(gtn);
 			try {
 				if (obj.getDcNo() != null) {
@@ -521,15 +542,19 @@ public class GtnServiceImpl implements GtnService {
 
 //				fetch gtn data by grnNo and set new qty and save in repository
 			GTN gtn = gtnRepo.findByGtnNo(obj.getOutwardBatchNo()).orElse(null);
-			gtn.getGtnTableData().forEach(item -> {
-				Double qty = obj.getQty();
-				if (item.getQtyAvlForDc() >= qty) {
-					item.setQtyAvlForDc(item.getQtyAvlForDc() + obj.getQty());
+			double qty = obj.getQty();
+			for (var item : gtn.getGtnTableData()) {
+				if (qty <= 0)
+					break;
+				double available = item.getQtyAvlForDc();
+				if (available >= qty) {
+					item.setQtyAvlForDc(available + qty);
+					qty = 0;
 				} else {
 					item.setQtyAvlForDc(0.0);
-					qty -= item.getQtyAvlForDc();
+					qty -= available;
 				}
-			});
+			}
 			gtnRepo.save(gtn);
 		} catch (Exception e) {
 			throw new Exception(e);

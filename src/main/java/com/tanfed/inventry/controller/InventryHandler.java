@@ -337,8 +337,8 @@ public class InventryHandler {
 	@Autowired
 	private FilterInventryDataService filterInventryDataService;
 
-	@GetMapping("/fetchinventryfilterdata/{formType}")
-	public InventryData filterInventryDataHandler(@PathVariable String formType, @RequestParam String officeName,
+	@GetMapping("/fetchinventryfilterdata")
+	public InventryData filterInventryDataHandler(@RequestParam String formType, @RequestParam String officeName,
 			@RequestParam(required = false) String gtnFor, @RequestParam String voucherStatus,
 			@RequestParam(required = false) String financialMonth, @RequestParam(required = false) String activity,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,

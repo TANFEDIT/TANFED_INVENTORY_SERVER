@@ -232,7 +232,7 @@ public class TcServiceIpml implements TcService {
 			if (loadType != null && !loadType.isEmpty()) {
 				if (loadType.equals("Single Load")) {
 					data.setIdNoList(dcService.getDeliveryChellanDataByOffficeName(officeName).stream()
-							.filter(item -> item.getSupplyMode().equals("FOL")
+							.filter(item -> !item.getSupplyMode().equals("FOL")
 									&& item.getVoucherStatus().equals("Approved")
 									&& item.getLoadType().equals("Single Load") && item.getBillEntry().equals(false)
 									&& !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate)

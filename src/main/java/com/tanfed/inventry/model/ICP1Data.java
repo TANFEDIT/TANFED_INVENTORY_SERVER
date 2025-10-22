@@ -31,6 +31,6 @@ public class ICP1Data {
 	private LocalDate dateOfCollection;
 	private Double collectionValue;
 	private String voucherStatus;
-	private AdjustmentReceiptVoucher adjVoucher;
+	private AdjustmentReceiptVoucher adjData;
 	private List<String> designation;
 }

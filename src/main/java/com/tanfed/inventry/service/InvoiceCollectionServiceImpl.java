@@ -140,10 +140,9 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					Invoice invoice = invoiceRepo.findByInvoiceNo(temp.getInvoiceNo()).get();
 					invoice.setVoucherStatusICP2("Pending");
 					invoice.setDueDate(temp.getDueDate());
+					invoice.setCollectionMethod(temp.getCollectionMethod());
 
-					if ("AdjReceipt".equals(temp.getCollectionMethod())) {
-						invoice.setCollectionMethod(temp.getCollectionProcess());
-					} else {
+					if (!"AdjReceipt".equals(temp.getCollectionMethod())) {
 						invoice.setAddedToPresentDate(temp.getAddedToPresentDate());
 					}
 					invoiceRepo.save(invoice);
@@ -189,7 +188,8 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 							materialCenter, jwt);
 				}
 				if ("invoiceCollectionAvailable".equals(collectionProcess)) {
-					invoiceCollectionAvailableData(data, collect, activity, officeName, invoiceType, ccbBranch, ackEntryDate);
+					invoiceCollectionAvailableData(data, collect, activity, officeName, invoiceType, ccbBranch,
+							ackEntryDate, jwt);
 				}
 				if ("presentToCCB".equals(collectionProcess)) {
 					presentToCCBData(data, collect, invoiceType, ccbBranch, dueDate, addedToPresentDate);
@@ -248,14 +248,14 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 							item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
 							roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
 							item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), item.getGodownName(),
-							null)).collect(Collectors.toList()));
+							null, null)).collect(Collectors.toList()));
 				}
 			}
 		}
 	}
 
 	public void invoiceCollectionAvailableData(InvoiceCollectionResponseData data, List<Invoice> collect,
-			String activity, String officeName, String invoiceType, String ccbBranch, LocalDate ackEntryDate) {
+			String activity, String officeName, String invoiceType, String ccbBranch, LocalDate ackEntryDate, String jwt) {
 		List<Invoice> NoOfAvlAckInvoices = collect.stream().filter(temp -> {
 			return temp.getAckQty() != null && temp.getAckEntryDate() != null && temp.getAddedToPresentDate() == null;
 		}).collect(Collectors.toList());
@@ -274,23 +274,43 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 		data.setCcbBranchLst(ccbBranchlst);
 		data.setAckEntryDate(ackEntryDatelst);
 		data.setAdjTableData(invoiceRepo.findByActivityAndOfficeName(activity, officeName).stream()
-				.filter(temp -> null!= temp.getAddedToPresentDate() && null != temp.getVoucherStatusICP2() && !temp.getVoucherStatusICP2().equals("Approved")
+				.filter(temp -> null == temp.getAddedToPresentDate() && null != temp.getVoucherStatusICP2()
+						&& !temp.getVoucherStatusICP2().equals("Approved")
 						&& temp.getCollectionMethod().equals("AdjReceipt"))
-				.map(item -> new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(), item.getIfmsId(),
-						item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
-						roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
-						item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), null, null))
+				.map(item -> {
+					AdjustmentReceiptVoucher adj = null;
+					if (item.getCollectionMethod().equals("AdjReceipt")) {
+						if (item.getAdjReceiptNo() != null) {
+							try {
+								Vouchers adjv = accountsService.getAccountsVoucherByVoucherNoHandler(
+										"adjustmentReceiptVoucher", item.getAdjReceiptNo(), jwt);
+								adj = adjv.getAdjustmentReceiptVoucherData();
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
+					return new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(), item.getIfmsId(),
+							item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
+							roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
+							item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), null, null, adj);
+				})
+//				.map(item -> new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(), item.getIfmsId(),
+//						item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
+//						roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
+//						item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), null, null))
 				.collect(Collectors.toList()));
 		if (invoiceType != null && !invoiceType.isEmpty()) {
 			if (ccbBranch != null && !ccbBranch.isEmpty()) {
 				data.setTableData(collect.stream().filter(temp -> {
 					return temp.getAckEntryDate() != null && ackEntryDate.equals(temp.getAckEntryDate())
 							&& invoiceType.equals(temp.getSupplyTo()) && ccbBranch.equals(temp.getCcbBranch())
-							&& temp.getAddedToPresentDate() == null;
+							&& temp.getCollectionMethod() == null && temp.getAddedToPresentDate() == null
+							&& temp.getVoucherStatusICP1().equals("Approved");
 				}).map(item -> new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(), item.getIfmsId(),
 						item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
 						roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
-						item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), null, null))
+						item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), null, null, null))
 						.collect(Collectors.toList()));
 			}
 		}
@@ -325,12 +345,13 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 						return temp.getAddedToPresentDate() != null && temp.getDueDate() != null
 								&& addedToPresentDate.equals(temp.getAddedToPresentDate())
 								&& !"AdjReceipt".equals(temp.getCollectionMethod())
+								&& temp.getVoucherStatusICP2().equals("Approved")
 								&& invoiceType.equals(temp.getSupplyTo()) && ccbBranch.equals(temp.getCcbBranch())
 								&& temp.getDueDate().isEqual(dueDate) && temp.getDateOfPresent() == null;
 					}).map(item -> new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(),
 							item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
 							roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()), null, item.getCcbBranch(), null,
-							null)).collect(Collectors.toList()));
+							null, null)).collect(Collectors.toList()));
 				}
 			}
 		}
@@ -350,11 +371,12 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 		if (icmNo != null && !icmNo.isEmpty()) {
 			data.setTableData(collect.stream()
 					.filter(temp -> temp.getDateOfPresent() != null && icmNo.equals(temp.getIcmNo())
-							&& temp.getDateOfCollectionFromCcb() == null)
+							&& temp.getDateOfCollectionFromCcb() == null
+							&& temp.getVoucherStatusICP3().equals("Approved"))
 					.map(item -> new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(), item.getIfmsId(),
 							item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
 							roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()), null, item.getCcbBranch(), null,
-							null))
+							null, null))
 					.collect(Collectors.toList()));
 		}
 	}
@@ -368,7 +390,8 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 		if (date != null) {
 			List<Invoice> invList = collect.stream().filter(temp -> {
 				return temp.getDateOfCollectionFromCcb() != null && temp.getCcbBranch().equals(branchName)
-						&& temp.getDateOfCollectionFromCcb().isBefore(date)
+						&& (temp.getDateOfCollectionFromCcb().isBefore(date)
+								|| temp.getDateOfCollectionFromCcb().equals(date))
 						&& temp.getVoucherStatusICP4().equals("Approved") && temp.getTransferDone().equals(false);
 			}).collect(Collectors.toList());
 			data.setTotalInvoicesValue(
@@ -543,7 +566,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 						statusMatch = voucherStatus.isEmpty() || voucherStatus.equals(temp.getVoucherStatusICP1());
 						pageMatch = true;
 					}
-					if (formType.equals("invoiceCollectionAvailable") && temp.getAddedToPresentDate() != null) {
+					if (formType.equals("invoiceCollectionAvailable") && temp.getCollectionMethod() != null) {
 						statusMatch = voucherStatus.isEmpty() || voucherStatus.equals(temp.getVoucherStatusICP2());
 						pageMatch = true;
 					}
@@ -825,7 +848,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 				try {
 					Vouchers adjv = accountsService.getAccountsVoucherByVoucherNoHandler("adjustmentReceiptVoucher",
 							temp.getAdjReceiptNo(), jwt);
-					data.setAdjVoucher(adjv.getAdjustmentReceiptVoucherData());
+					data.setAdjData(adjv.getAdjustmentReceiptVoucherData());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -898,7 +921,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 
 			case "invoiceCollectionAvailable": {
 				Invoice invoice = invoiceRepo.findById(Long.valueOf(obj.getId())).get();
-
+				revertIcmAdjAcc(obj, jwt);
 				designation = userService.getNewDesignation(empId);
 				oldDesignation = invoice.getDesignationICP2();
 
