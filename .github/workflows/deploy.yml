@@ -1,0 +1,38 @@
+name: Build & Deploy Spring Boot to VM
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Use Java installed on the VM (no need to download from internet)
+      - name: Use local Java 17
+        run: |
+          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
+          echo "PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH" >> $GITHUB_ENV
+          java -version
+
+      # Build Spring Boot
+      - name: Build project
+        run: mvn -B clean package -DskipTests
+
+      # Copy jar to deploy folder
+      - name: Copy JAR file
+        run: |
+          sudo mkdir -p /opt/myapp
+          sudo cp target/*.jar /opt/myapp/app.jar
+          sudo chmod 755 /opt/myapp/app.jar
+
+      # Restart systemd Spring Boot service
+      - name: Restart Spring Boot Service
+        run: |
+          sudo systemctl daemon-reload
+          sudo systemctl restart myapp
+          sudo systemctl status myapp --no-pager
