@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 public class DataForGrn {
 
 	private Set<String> productNameList;
-	private List<String> godownNameList;
+	private Set<String> godownNameList;
 	private List<String> wagonGrnNoList;
 	private List<String> filteredGodownNameList;
 	private String supplierName;

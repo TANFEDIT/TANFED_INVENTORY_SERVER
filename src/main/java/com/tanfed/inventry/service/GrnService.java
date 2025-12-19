@@ -37,7 +37,7 @@ public interface GrnService {
 
 	public GRN getGrnDataByRrNo(String rrNo) throws Exception;
 
-	public Set<String> getGodownNameList(String jwt, String officeName) throws Exception;
+	public Set<String> getGodownNameList(String jwt, String officeName, String godownType) throws Exception;
 
 	public List<TableDataForDc> grnTableData(String officeName, String productName, String godownName, String page) throws Exception;
 

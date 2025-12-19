@@ -383,7 +383,7 @@ public class InventryHandler {
 			throws Exception {
 		RegisterData data = new RegisterData();
 
-		data.setGodownNameList(grnService.getGodownNameList(jwt, officeName));
+		data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
 		data.setSupplierNameList(masterService.getProductDataHandler(jwt).stream()
 				.filter(item -> !item.getSupplierName().startsWith("TANFED")).map(ProductMaster::getSupplierName)
 				.collect(Collectors.toSet()));

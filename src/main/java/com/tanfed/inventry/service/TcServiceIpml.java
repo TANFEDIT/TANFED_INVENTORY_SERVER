@@ -54,7 +54,7 @@ public class TcServiceIpml implements TcService {
 		try {
 			DataForTcBillEntry data = new DataForTcBillEntry();
 			if (officeName != null && !officeName.isEmpty()) {
-				data.setGodownNameList(grnService.getGodownNameList(jwt, officeName));
+				data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
 				if (godownName != null && !godownName.isEmpty()) {
 					ContractorInfo contractorInfo = masterService.getContractFirmByGodownNameHandler(jwt, officeName,
 							godownName);

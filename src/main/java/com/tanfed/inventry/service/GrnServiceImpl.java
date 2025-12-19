@@ -204,17 +204,7 @@ public class GrnServiceImpl implements GrnService {
 
 					data.setProductNameList(productListFinal);
 					if (godownType != null && !godownType.isEmpty()) {
-						List<String> godownNameList = masterService.getGodownInfoByOfficeNameHandler(jwt, officeName)
-								.stream().filter(item -> item.getGodownType().equals(godownType))
-								.map(item -> item.getGodownName()).collect(Collectors.toList());
-						Set<String> list = getGodownNameList(jwt, officeName);
-
-						list.forEach(item -> {
-							if (!godownNameList.contains(item)) {
-								godownNameList.remove(item);
-							}
-						});
-						data.setGodownNameList(godownNameList);
+						data.setGodownNameList(getGodownNameList(jwt, officeName, godownType));
 					}
 					if (!godownName.isEmpty() && godownName != null && !godownName.equals("Direct Material Center")) {
 						GodownInfo godownInfo = masterService.getGodownInfoByGodownNameHandler(godownName, jwt);
@@ -429,14 +419,25 @@ public class GrnServiceImpl implements GrnService {
 	}
 
 	@Override
-	public Set<String> getGodownNameList(String jwt, String officeName) throws Exception {
+	public Set<String> getGodownNameList(String jwt, String officeName, String godownType) throws Exception {
 		List<ContractorInfo> contractorInfoList = masterService.getContarctorInfoByOfficeName(jwt, officeName).stream()
 				.filter(item -> "Active".equals(item.getStatus())).collect(Collectors.toList());
 
-		return contractorInfoList.stream()
+		Set<String> list =  contractorInfoList.stream()
 				.flatMap(item -> Stream.concat(item.getGodownName().stream(),
 						item.getAdditionalGodownData().stream().flatMap(add -> add.getAdditionalGodown().stream())))
 				.collect(Collectors.toSet());
+		
+		Set<String> godownNameList = masterService.getGodownInfoByOfficeNameHandler(jwt, officeName)
+				.stream().filter(item -> item.getGodownType().equals(godownType) || godownType.isEmpty())
+				.map(item -> item.getGodownName()).collect(Collectors.toSet());
+		
+		list.forEach(item -> {
+			if (!godownNameList.contains(item)) {
+				godownNameList.remove(item);
+			}
+		});
+		return godownNameList;
 	}
 
 	@Override

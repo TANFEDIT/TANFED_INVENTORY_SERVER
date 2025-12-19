@@ -91,7 +91,7 @@ public class InvoiceCollectionHandler {
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate toDate)
 			throws Exception {
 		IcRegisters data = new IcRegisters();
-		data.setGodownNameList(grnService.getGodownNameList(jwt, officeName));
+		data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
 		List<BankInfo> bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName);
 		data.setBranchNameList(bankInfo.stream().filter(item -> item.getAccountType().equals("Non PDS A/c"))
 				.map(BankInfo::getBranchName).collect(Collectors.toSet()));

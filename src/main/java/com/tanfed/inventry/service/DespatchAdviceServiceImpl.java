@@ -101,10 +101,7 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 			DataForDespatchAdvice data = new DataForDespatchAdvice();
 			if (officeName != null && !officeName.isEmpty()) {
 				data.setIfmsIdList(masterService.getBuyerIfmsIdByOfficeNameHandler(jwt, officeName));
-
-				data.setGodownNameList(grnService.getGrnDataByOffficeName(officeName).stream()
-						.filter(item -> item.getVoucherStatus().equals("Approved")).map(item -> item.getGodownName())
-						.collect(Collectors.toSet()));
+				data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
 
 				if (month != null && !month.isEmpty()) {
 					data.setDespatchAdviceData(getDespatchAdviceDataByOffficeName(officeName).stream()
@@ -175,7 +172,7 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 			throw new Exception(e);
 		}
 	}
-
+	
 	private List<DespatchAdviseTable> fetchQtyDataFromDc_Invoice(String despatchAdviceNo) throws Exception {
 		List<DespatchAdviseTable> data = dcService.fetchDcData(despatchAdviceNo);
 		data.addAll(invoiceService.fetchInvoiceData(despatchAdviceNo));

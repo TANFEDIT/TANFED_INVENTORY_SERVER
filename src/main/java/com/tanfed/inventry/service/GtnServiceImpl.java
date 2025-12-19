@@ -177,6 +177,9 @@ public class GtnServiceImpl implements GtnService {
 
 	@Autowired
 	private DcService dcService;
+	
+	@Autowired
+	private OpeningStockService openingStockService;
 
 	@Override
 	public DataForGtn getDataForGtn(String officeName, String productName, String activity, String gtnFor, String rrNo,
@@ -214,14 +217,23 @@ public class GtnServiceImpl implements GtnService {
 		return str != null && !str.trim().isEmpty();
 	}
 
+	private Set<String> fetchProduct(String officeName) throws Exception {
+		Set<String> productNames;
+		productNames = grnService.getGrnDataByOffficeName(officeName).stream()
+				.filter(item -> "Approved".equals(item.getVoucherStatus()) && item.getGrnQtyAvlForDc() > 0)
+				.map(item -> item.getProductName()).collect(Collectors.toSet());
+		if(productNames.isEmpty()) {
+			productNames = openingStockService.getOpeningStockByOfficeName(officeName).stream()
+			.filter(item -> item.getQtyAvlForDc() > 0).map(item -> item.getProductName()).collect(Collectors.toSet());
+		}
+		return productNames;
+	}
+	
 	private void handleIssueGTN(DataForGtn data, String officeName, String productName, String activity,
 			String transactionFor, String jwt, String godownName, String toRegion, LocalDate date, String destination,
 			String transportCharges, String loadingCharges, String unloadingCharges, String rrNo) throws Exception {
 
-		Set<String> productNames = grnService.getGrnDataByOffficeName(officeName).stream()
-				.filter(item -> "Approved".equals(item.getVoucherStatus()) && item.getGrnQtyAvlForDc() > 0)
-				.map(item -> item.getProductName()).collect(Collectors.toSet());
-		data.setProductNameList(productNames);
+		data.setProductNameList(fetchProduct(officeName));
 
 		if (hasText(productName)) {
 			populateProductDetails(data, jwt, productName);
@@ -233,7 +245,7 @@ public class GtnServiceImpl implements GtnService {
 			Set<String> godownNameList = masterService.getGodownInfoByOfficeNameHandler(jwt, officeName).stream()
 					.filter(item -> item.getGodownType().equals("Railways Godown")).map(item -> item.getGodownName())
 					.collect(Collectors.toSet());
-			Set<String> list = grnService.getGodownNameList(jwt, officeName);
+			Set<String> list = grnService.getGodownNameList(jwt, officeName, "");
 
 			list.forEach(item -> {
 				if (!godownNameList.contains(item)) {
@@ -242,7 +254,7 @@ public class GtnServiceImpl implements GtnService {
 			});
 			data.setGodownNameList(godownNameList);
 		} else {
-			data.setGodownNameList(grnService.getGodownNameList(jwt, officeName));
+			data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
 		}
 
 		if (hasText(productName) && hasText(godownName)) {
@@ -296,7 +308,7 @@ public class GtnServiceImpl implements GtnService {
 						data.setInvoice(invoice);
 					}
 				}
-				data.setGodownNameList(grnService.getGodownNameList(jwt, officeName));
+				data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
 				if (hasText(godownName)) {
 					ContractorInfo contractorInfo = getContractor(jwt, officeName, godownName);
 					ContractorChargesData contractorChargesData = contractorInfo.getChargesData()
@@ -344,7 +356,7 @@ public class GtnServiceImpl implements GtnService {
 		if (transactionFor.equals("RH to Buffer (Intra)") || transactionFor.equals("Buffer To Buffer (Intra)")
 				|| transactionFor.equals("Wholesale To Retail (Intra)")) {
 			if (hasText(godownName)) {
-				data.setDesignationList(grnService.getGodownNameList(jwt, officeName).stream()
+				data.setDesignationList(grnService.getGodownNameList(jwt, officeName, "").stream()
 						.filter(item -> !item.equals(godownName)).collect(Collectors.toSet()));
 
 				GodownInfo godownInfo = masterService.getGodownInfoByGodownNameHandler(godownName, jwt);
@@ -365,7 +377,7 @@ public class GtnServiceImpl implements GtnService {
 		officeName = toRegion;
 
 		if (transactionFor.equals("RH To Other Region Buffer")) {
-			data.setDesignationList(grnService.getGodownNameList(jwt, officeName));
+			data.setDesignationList(grnService.getGodownNameList(jwt, officeName, ""));
 
 			if (hasText(destination)) {
 				GodownInfo toGodown = masterService.getGodownInfoByGodownNameHandler(destination, jwt);

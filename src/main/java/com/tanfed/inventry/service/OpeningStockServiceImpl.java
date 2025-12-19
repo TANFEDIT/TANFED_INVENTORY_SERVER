@@ -87,7 +87,7 @@ public class OpeningStockServiceImpl implements OpeningStockService {
 			if (!activity.isEmpty() && activity != null) {
 				data.setProductNameList(getProductData.stream().filter(item -> item.getActivity().equals(activity))
 						.map(ProductMaster::getProductName).collect(Collectors.toList()));
-				data.setGodownNameList(grnService.getGodownNameList(jwt, officeName));
+				data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
 				if (!productName.isEmpty() && productName != null) {
 					ProductMaster productMaster = masterService.getProductDataByProductNameHandler(jwt, productName);
 					data.setBatchNo(productMaster.getBatchNo());
