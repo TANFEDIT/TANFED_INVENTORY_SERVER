@@ -413,14 +413,14 @@ public class DcServiceImpl implements DcService {
 	public void updateClosingBalance(DeliveryChellan dc) throws Exception {
 		try {
 			dc.getDcTableData().forEach(item -> {
-				ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(dc.getOfficeName(),
-						item.getProductName(), dc.getDate());
+				ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(dc.getOfficeName(),
+						item.getProductName(), dc.getDate(), dc.getGodownName());
 				if (cb == null) {
 					int n = 1;
 					while (cb == null) {
 						LocalDate date = dc.getDate().minusDays(n++);
-						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(dc.getOfficeName(),
-								item.getProductName(), date);
+						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(dc.getOfficeName(),
+								item.getProductName(), date, dc.getGodownName());
 						if (date.equals(LocalDate.of(2025, 3, 30))) {
 							closingStockTableRepo.save(new ClosingStockTable(null, dc.getOfficeName(), dc.getDate(),
 									item.getProductName(), dc.getGodownName(), item.getQty()));

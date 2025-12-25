@@ -610,14 +610,14 @@ public class GtnServiceImpl implements GtnService {
 	@Override
 	public void updateClosingBalanceIssue(GTN gtn) throws Exception {
 		try {
-			ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(gtn.getOfficeName(),
-					gtn.getProductName(), gtn.getDate());
+			ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(gtn.getOfficeName(),
+					gtn.getProductName(), gtn.getDate(), gtn.getGodownName());
 			if (cb == null) {
 				int n = 1;
 				while (cb == null) {
 					LocalDate date = gtn.getDate().minusDays(n++);
-					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(gtn.getOfficeName(),
-							gtn.getProductName(), date);
+					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(gtn.getOfficeName(),
+							gtn.getProductName(), date, gtn.getGodownName());
 					if (date.equals(LocalDate.of(2025, 3, 30)) && cb == null) {
 						closingStockTableRepo.save(new ClosingStockTable(null, gtn.getOfficeName(), gtn.getDate(),
 								gtn.getProductName(), gtn.getGodownName(),
@@ -645,14 +645,14 @@ public class GtnServiceImpl implements GtnService {
 		try {
 			String region = gtn.getTransactionFor().contains("Other Region") ? gtn.getToRegion() : gtn.getOfficeName();
 
-			ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(region,
-					gtn.getProductName(), gtn.getDate());
+			ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(region,
+					gtn.getProductName(), gtn.getDate(), gtn.getGodownName());
 			if (cb == null) {
 				int n = 1;
 				while (cb == null) {
 					LocalDate date = gtn.getDate().minusDays(n++);
-					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(region, gtn.getProductName(),
-							date);
+					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(region, gtn.getProductName(),
+							date, gtn.getGodownName());
 					if (date.equals(LocalDate.of(2025, 3, 30)) && cb == null) {
 						closingStockTableRepo.save(new ClosingStockTable(null, region, gtn.getDate(),
 								gtn.getProductName(), gtn.getGodownName(),
@@ -714,14 +714,14 @@ public class GtnServiceImpl implements GtnService {
 	public void updateClosingBalanceReceipt(SalesReturn salesReturn) throws Exception {
 		try {
 			salesReturn.getInvoiceTableData().forEach(item -> {
-				ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(
-						salesReturn.getOfficeName(), item.getProductName(), salesReturn.getDate());
+				ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(
+						salesReturn.getOfficeName(), item.getProductName(), salesReturn.getDate(), salesReturn.getGodownName());
 				if (cb == null) {
 					int n = 1;
 					while (cb == null) {
 						LocalDate date = salesReturn.getDate().minusDays(n++);
-						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(salesReturn.getOfficeName(),
-								item.getProductName(), date);
+						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(salesReturn.getOfficeName(),
+								item.getProductName(), date, salesReturn.getGodownName());
 						if (date.equals(LocalDate.of(2025, 3, 30)) && cb == null) {
 							closingStockTableRepo.save(
 									new ClosingStockTable(null, salesReturn.getOfficeName(), salesReturn.getDate(),

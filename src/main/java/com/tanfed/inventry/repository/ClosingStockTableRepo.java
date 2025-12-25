@@ -13,5 +13,5 @@ public interface ClosingStockTableRepo extends JpaRepository<ClosingStockTable, 
 
 	public List<ClosingStockTable> findByOfficeNameAndProductName(String officeName, String productName);
 
-	public ClosingStockTable findByOfficeNameAndProductNameAndDate(String officeName, String productName, LocalDate date);
+	public ClosingStockTable findByOfficeNameAndProductNameAndDateAndGodownName(String officeName, String productName, LocalDate date, String godownName);
 }

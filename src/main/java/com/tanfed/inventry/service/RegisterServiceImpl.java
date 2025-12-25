@@ -235,8 +235,8 @@ public class RegisterServiceImpl implements RegisterService {
 				} else {
 					int n = 1;
 					do {
-						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(officeName, productName,
-								currentDate.minusDays(n++));
+						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(officeName, productName,
+								currentDate.minusDays(n++), godownName);
 						if (n == 32) {
 							throw new Exception("No Balance Found!");
 						}

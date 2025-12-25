@@ -611,14 +611,14 @@ public class GrnServiceImpl implements GrnService {
 	@Override
 	public void updateClosingBalance(GRN grn) throws Exception {
 		try {
-			ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(grn.getOfficeName(),
-					grn.getProductName(), grn.getDate());
+			ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(grn.getOfficeName(),
+					grn.getProductName(), grn.getDate(), grn.getGodownName());
 			if (cb == null) {
 				int n = 1;
 				while (cb == null) {
 					LocalDate date = grn.getDate().minusDays(n++);
-					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(grn.getOfficeName(),
-							grn.getProductName(), date);
+					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(grn.getOfficeName(),
+							grn.getProductName(), date, grn.getGodownName());
 					if (date.equals(LocalDate.of(2025, 3, 30))) {
 						closingStockTableRepo.save(new ClosingStockTable(null, grn.getOfficeName(), grn.getDate(),
 								grn.getProductName(), grn.getGodownName(), grn.getMaterialReceivedQuantity()));
