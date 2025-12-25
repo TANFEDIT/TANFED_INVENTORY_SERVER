@@ -17,7 +17,7 @@ public interface OpeningStockRepo extends JpaRepository<OpeningStock, Long> {
 	
 	public List<OpeningStock> findByOfficeName(String officeName);
 	
-	public OpeningStock findByOfficeNameAndProductNameAndAsOn(String officeName, String productName, LocalDate asOn);
+	public List<OpeningStock> findByOfficeNameAndProductNameAndAsOn(String officeName, String productName, LocalDate asOn);
 	
 	@Query("SELECT e FROM OpeningStock e WHERE (e.voucherStatus = 'Pending' OR e.voucherStatus = 'Verified') AND e.officeName =:officeName")
 	public List<OpeningStock> findPendingDataByOfficeName(@Param("officeName") String officeName);

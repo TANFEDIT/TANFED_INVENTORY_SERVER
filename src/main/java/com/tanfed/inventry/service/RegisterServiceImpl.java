@@ -229,7 +229,9 @@ public class RegisterServiceImpl implements RegisterService {
 				Double ob;
 				if (currentDate.equals(LocalDate.of(2025, 4, 1))) {
 					ob = openingStockRepo.findByOfficeNameAndProductNameAndAsOn(officeName, productName, currentDate)
-							.getQuantity();
+							.stream().filter(item -> item.getVoucherStatus().equals("Approved")
+									&& item.getGodownName().equals(godownName))
+							.collect(Collectors.toList()).get(0).getQuantity();
 				} else {
 					int n = 1;
 					do {
@@ -782,11 +784,12 @@ public class RegisterServiceImpl implements RegisterService {
 					.filter(item -> item.getRegion().equals(data.getValue().getRegion())).map(item -> {
 						return mapGrnData(item);
 					}).collect(Collectors.toList());
-					purchaseDayBookQty.setGrnData(grnDataWithoutGrouping.stream()
-							.collect(Collectors.toMap(PurchaseDayBookQtyGrnData::getGrnNo,
-									Function.identity(),
-									(existing, replacement) -> existing
-					)).values().stream().toList());
+			purchaseDayBookQty
+					.setGrnData(
+							grnDataWithoutGrouping
+									.stream().collect(Collectors.toMap(PurchaseDayBookQtyGrnData::getGrnNo,
+											Function.identity(), (existing, replacement) -> existing))
+									.values().stream().toList());
 			list.add(purchaseDayBookQty);
 		});
 		return list;

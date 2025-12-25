@@ -475,7 +475,8 @@ public class FilterInventryDataService {
 						.filter(item -> {
 							String monthValue = String.format("%s %04d", item.getDate().getMonth(),
 									item.getDate().getYear());
-							logger.info(monthValue);
+							logger.info("month{}", monthValue);
+							logger.info("month1{}", financialMonth);
 							return monthValue.equals(financialMonth);
 						}).collect(Collectors.toList());
 				List<PurchaseOrder> toRemovePo = new ArrayList<PurchaseOrder>();

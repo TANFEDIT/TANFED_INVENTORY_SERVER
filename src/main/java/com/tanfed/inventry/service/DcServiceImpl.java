@@ -25,6 +25,7 @@ import com.tanfed.inventry.response.DataForDc;
 import com.tanfed.inventry.utils.CodeGenerator;
 import com.tanfed.inventry.utils.SlabRateCalculator;
 
+
 @Service
 public class DcServiceImpl implements DcService {
 
@@ -195,7 +196,8 @@ public class DcServiceImpl implements DcService {
 										rates);
 
 								if (isHillKmPresent[0] != 0.0) {
-									Double transportChargesHill = SlabRateCalculator.calculateSlabRate(isHillKmPresent[0], rates);
+									Double transportChargesHill = SlabRateCalculator
+											.calculateSlabRate(isHillKmPresent[0], rates);
 									Double hillCharges = transportChargesHill
 											+ (transportChargesHill * (contractorChargesData.getHillRate() / 100));
 									data.setTransportChargesPerQty(transportChargesPlain + hillCharges);
@@ -416,11 +418,19 @@ public class DcServiceImpl implements DcService {
 				if (cb == null) {
 					int n = 1;
 					while (cb == null) {
+						LocalDate date = dc.getDate().minusDays(n++);
 						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(dc.getOfficeName(),
-								item.getProductName(), dc.getDate().minusDays(n++));
+								item.getProductName(), date);
+						if (date.equals(LocalDate.of(2025, 3, 30))) {
+							closingStockTableRepo.save(new ClosingStockTable(null, dc.getOfficeName(), dc.getDate(),
+									item.getProductName(), dc.getGodownName(), item.getQty()));
+							break;
+						}
 					}
-					closingStockTableRepo.save(new ClosingStockTable(null, dc.getOfficeName(), dc.getDate(),
-							item.getProductName(), dc.getGodownName(), cb.getBalance() - item.getQty()));
+					if (cb != null) {
+						closingStockTableRepo.save(new ClosingStockTable(null, dc.getOfficeName(), dc.getDate(),
+								item.getProductName(), dc.getGodownName(), cb.getBalance() - item.getQty()));
+					}
 				} else {
 					cb.setBalance(cb.getBalance() - item.getQty());
 					closingStockTableRepo.save(cb);

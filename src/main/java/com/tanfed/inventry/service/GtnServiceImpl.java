@@ -177,7 +177,7 @@ public class GtnServiceImpl implements GtnService {
 
 	@Autowired
 	private DcService dcService;
-	
+
 	@Autowired
 	private OpeningStockService openingStockService;
 
@@ -222,13 +222,14 @@ public class GtnServiceImpl implements GtnService {
 		productNames = grnService.getGrnDataByOffficeName(officeName).stream()
 				.filter(item -> "Approved".equals(item.getVoucherStatus()) && item.getGrnQtyAvlForDc() > 0)
 				.map(item -> item.getProductName()).collect(Collectors.toSet());
-		if(productNames.isEmpty()) {
+		if (productNames.isEmpty()) {
 			productNames = openingStockService.getOpeningStockByOfficeName(officeName).stream()
-			.filter(item -> item.getQtyAvlForDc() > 0).map(item -> item.getProductName()).collect(Collectors.toSet());
+					.filter(item -> item.getQtyAvlForDc() > 0).map(item -> item.getProductName())
+					.collect(Collectors.toSet());
 		}
 		return productNames;
 	}
-	
+
 	private void handleIssueGTN(DataForGtn data, String officeName, String productName, String activity,
 			String transactionFor, String jwt, String godownName, String toRegion, LocalDate date, String destination,
 			String transportCharges, String loadingCharges, String unloadingCharges, String rrNo) throws Exception {
@@ -305,6 +306,9 @@ public class GtnServiceImpl implements GtnService {
 							invoiceList.stream().map(item -> item.getInvoiceNo()).collect(Collectors.toList()));
 					if (hasText(invoiceNo)) {
 						invoice = invoiceService.getInvoiceDataByInvoiceNo(invoiceNo);
+						if (invoice == null) {
+							throw new Exception("No Invoice found");
+						}
 						data.setInvoice(invoice);
 					}
 				}
@@ -611,12 +615,21 @@ public class GtnServiceImpl implements GtnService {
 			if (cb == null) {
 				int n = 1;
 				while (cb == null) {
+					LocalDate date = gtn.getDate().minusDays(n++);
 					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDate(gtn.getOfficeName(),
-							gtn.getProductName(), gtn.getDate().minusDays(n++));
+							gtn.getProductName(), date);
+					if (date.equals(LocalDate.of(2025, 3, 30)) && cb == null) {
+						closingStockTableRepo.save(new ClosingStockTable(null, gtn.getOfficeName(), gtn.getDate(),
+								gtn.getProductName(), gtn.getGodownName(),
+								gtn.getGtnTableData().stream().mapToDouble(item -> item.getReceivedQty()).sum()));
+						break;
+					}
 				}
-				closingStockTableRepo.save(new ClosingStockTable(null, gtn.getOfficeName(), gtn.getDate(),
-						gtn.getProductName(), gtn.getGodownName(),
-						cb.getBalance() - gtn.getGtnTableData().stream().mapToDouble(item -> item.getQty()).sum()));
+				if (cb != null) {
+					closingStockTableRepo.save(new ClosingStockTable(null, gtn.getOfficeName(), gtn.getDate(),
+							gtn.getProductName(), gtn.getGodownName(),
+							cb.getBalance() - gtn.getGtnTableData().stream().mapToDouble(item -> item.getQty()).sum()));
+				}
 			} else {
 				cb.setBalance(
 						cb.getBalance() - gtn.getGtnTableData().stream().mapToDouble(item -> item.getQty()).sum());
