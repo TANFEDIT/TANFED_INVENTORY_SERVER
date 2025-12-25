@@ -102,7 +102,7 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 			if (officeName != null && !officeName.isEmpty()) {
 				data.setIfmsIdList(masterService.getBuyerIfmsIdByOfficeNameHandler(jwt, officeName));
 				data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
-
+				data.getGodownNameList().add("Direct Material Center");
 				if (month != null && !month.isEmpty()) {
 					data.setDespatchAdviceData(getDespatchAdviceDataByOffficeName(officeName).stream()
 							.filter(item -> item.getVoucherStatus().equals("Approved")).filter(item -> {

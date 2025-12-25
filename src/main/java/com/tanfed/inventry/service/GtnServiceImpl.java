@@ -73,7 +73,9 @@ public class GtnServiceImpl implements GtnService {
 				obj.setGtnNo(gtnNo);
 				obj.setVoucherStatus("Pending");
 				obj.setEmpId(Arrays.asList(empId));
-
+				obj.getGtnTableData().forEach(item -> {
+					item.setGtn(obj);
+				});
 				if (!obj.getTransactionFor().equals("Sales Return")) {
 					obj.getGtnTableData().forEach(temp -> {
 						temp.setQtyAvlForDc(temp.getReceivedQty());

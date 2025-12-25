@@ -284,7 +284,7 @@ public class InventryHandler {
 	}
 
 	@PutMapping("/updatewagon/{grnNo}")
-	@PreAuthorize("hasAnyRole('ROLE_SUPERADMIN', 'ROLE_ROADMIN')")
+	@PreAuthorize("hasAnyRole('ROLE_SUPERADMIN', 'ROLE_ROUSER', 'ROLE_ROADMIN')")
 	public ResponseEntity<String> updateWagonDataHandler(@PathVariable String grnNo, @RequestBody WagonDataGrn obj,
 			@RequestHeader("Authorization") String jwt) throws Exception {
 		return grnService.updateWagonData(obj, grnNo, jwt);
