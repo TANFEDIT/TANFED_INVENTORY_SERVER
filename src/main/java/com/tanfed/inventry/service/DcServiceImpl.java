@@ -333,7 +333,7 @@ public class DcServiceImpl implements DcService {
 	}
 
 	private static double roundToTwoDecimalPlaces(double value) {
-		return new BigDecimal(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
+		return new BigDecimal(value).setScale(3, RoundingMode.HALF_UP).doubleValue();
 	}
 
 	public Double fetchMrpFromPoNo(String poNo) throws Exception {
