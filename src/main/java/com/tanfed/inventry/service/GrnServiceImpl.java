@@ -61,7 +61,7 @@ public class GrnServiceImpl implements GrnService {
 
 	@Autowired
 	private OpeningStockService openingStockService;
-	
+
 	@Autowired
 	private SupplierInvoiceService supplierInvoiceService;
 
@@ -370,7 +370,7 @@ public class GrnServiceImpl implements GrnService {
 	@Override
 	public ResponseEntity<String> updateGrnAttachQty(GrnAttachDto obj) throws Exception {
 		try {
-			
+
 			Double BookngQty = obj.getCurrentBookingQty();
 
 			for (String temp : obj.getGrnNo()) {
@@ -423,15 +423,17 @@ public class GrnServiceImpl implements GrnService {
 		List<ContractorInfo> contractorInfoList = masterService.getContarctorInfoByOfficeName(jwt, officeName).stream()
 				.filter(item -> "Active".equals(item.getStatus())).collect(Collectors.toList());
 
-		Set<String> list =  contractorInfoList.stream()
+		Set<String> list = contractorInfoList.stream()
 				.flatMap(item -> Stream.concat(item.getGodownName().stream(),
 						item.getAdditionalGodownData().stream().flatMap(add -> add.getAdditionalGodown().stream())))
 				.collect(Collectors.toSet());
-		
-		Set<String> godownNameList = masterService.getGodownInfoByOfficeNameHandler(jwt, officeName)
-				.stream().filter(item -> item.getGodownType().equals(godownType) || godownType.isEmpty())
+
+		Set<String> godownNameList = masterService.getGodownInfoByOfficeNameHandler(jwt, officeName).stream()
+				.filter(item -> (("Railways Godown".equals(godownType) && item.getGodownType().equals(godownType))
+						|| (!"Railways Godown".equals(godownType) && !item.getGodownType().equals("Railways Godown")))
+						|| godownType.isEmpty())
 				.map(item -> item.getGodownName()).collect(Collectors.toSet());
-		
+
 		list.forEach(item -> {
 			if (!godownNameList.contains(item)) {
 				godownNameList.remove(item);
@@ -611,8 +613,8 @@ public class GrnServiceImpl implements GrnService {
 	@Override
 	public void updateClosingBalance(GRN grn) throws Exception {
 		try {
-			ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(grn.getOfficeName(),
-					grn.getProductName(), grn.getDate(), grn.getGodownName());
+			ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(
+					grn.getOfficeName(), grn.getProductName(), grn.getDate(), grn.getGodownName());
 			if (cb == null) {
 				int n = 1;
 				while (cb == null) {

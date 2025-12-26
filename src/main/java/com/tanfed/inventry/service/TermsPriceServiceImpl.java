@@ -100,20 +100,30 @@ public class TermsPriceServiceImpl implements TermsPriceService {
 				data.setHeadNameGeneralList(terms_Price_ConfigList.stream().filter(item -> item.getHeadName() != null)
 						.filter(item -> item.getActivity().equals(activity) && item.getSupplyType().equals("Both"))
 						.map(Terms_Price_Config::getHeadName).filter(Objects::nonNull).collect(Collectors.toList()));
+				
 				data.setHeadNameDirectList(terms_Price_ConfigList.stream().filter(item -> item.getHeadName() != null)
 						.filter(item -> item.getActivity().equals(activity) && item.getSupplyType().equals("Direct"))
 						.map(Terms_Price_Config::getHeadName).filter(Objects::nonNull).collect(Collectors.toList()));
+				
 				data.setHeadNameBufferList(terms_Price_ConfigList.stream().filter(item -> item.getHeadName() != null)
 						.filter(item -> item.getActivity().equals(activity) && item.getSupplyType().equals("Buffer"))
 						.map(Terms_Price_Config::getHeadName).filter(Objects::nonNull).collect(Collectors.toList()));
+				
 				data.setPaymentModeList(terms_Price_ConfigList.stream()
 						.filter(item -> item.getActivity().equals(activity)).map(Terms_Price_Config::getPaymentMode)
 						.filter(Objects::nonNull).collect(Collectors.toList()));
+				
 				data.setSupplyModeList(terms_Price_ConfigList.stream()
 						.filter(item -> item.getActivity().equals(activity)).map(Terms_Price_Config::getSupplyMode)
 						.filter(Objects::nonNull).collect(Collectors.toList()));
+				
+				data.setPurchaseCreditPeriodList(terms_Price_ConfigList.stream()
+						.filter(item -> item.getActivity().equals(activity)).map(Terms_Price_Config::getPurchaseCreditPeriod)
+						.filter(Objects::nonNull).collect(Collectors.toList()));
+				
 				data.setSupplierList(getProductData.stream().filter(item -> item.getActivity().equals(activity))
 						.map(ProductMaster::getSupplierName).collect(Collectors.toSet()));
+				
 				if (!supplierName.isEmpty() && supplierName != null) {
 					data.setProductNameList(getProductData.stream().filter(
 							item -> item.getActivity().equals(activity) && item.getSupplierName().equals(supplierName))

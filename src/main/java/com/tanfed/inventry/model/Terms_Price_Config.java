@@ -28,6 +28,7 @@ public class Terms_Price_Config {
 	private String paymentMode;
 	
 	private String salesCreditPeriod;
+	private String purchaseCreditPeriod;
 	
 	private List<String> empId;
 }

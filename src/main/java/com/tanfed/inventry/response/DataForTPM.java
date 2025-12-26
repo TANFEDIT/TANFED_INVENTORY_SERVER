@@ -20,6 +20,7 @@ public class DataForTPM {
 	private List<String> headNameGeneralList;
 	private List<String> supplyModeList;
 	private List<String> paymentModeList;
+	private List<String> purchaseCreditPeriodList;
 	private List<String> productNameList;
 	private ProductData productData;
 	private Double gstRate;

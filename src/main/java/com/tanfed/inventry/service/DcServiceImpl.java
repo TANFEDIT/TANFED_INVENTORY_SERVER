@@ -289,7 +289,7 @@ public class DcServiceImpl implements DcService {
 						&& item.getProductName().equals(productName) && item.getGodownName().equals(godownName))
 				.map(item -> new TableDataForDc(item.getProductCategory(), item.getProductGroup(),
 						item.getSupplierName(), item.getProductName(), item.getPacking(), item.getStandardUnits(),
-						item.getQtyAvlForDc(), item.getObId(), null, null, null, item.getAsOn()))
+						item.getQtyAvlForDc(), item.getObId(), null, null, item.getB2cMrp(), item.getAsOn()))
 				.collect(Collectors.toList());
 	}
 
