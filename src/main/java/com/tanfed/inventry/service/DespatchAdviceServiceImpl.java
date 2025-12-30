@@ -8,7 +8,6 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.hibernate.PropertyNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -149,8 +148,8 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 										item -> item.getTableData().stream().map(itemData -> itemData.getName()))
 										.collect(Collectors.toList());
 								if (!buyerList.contains(buyerFirmInfo.getNameOfInstitution())) {
-									throw new PropertyNotFoundException(
-											"No distance available for :" + buyerFirmInfo.getNameOfInstitution());
+									throw new Exception(
+											buyerFirmInfo.getNameOfInstitution() + "Distance Not Mapped with Selected Material center");
 								}
 							}
 
