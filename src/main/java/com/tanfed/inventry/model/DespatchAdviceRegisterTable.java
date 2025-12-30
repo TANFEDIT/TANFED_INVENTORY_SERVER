@@ -23,4 +23,5 @@ public class DespatchAdviceRegisterTable {
 	private List<String> dcNoList;
 	
 	private LocalDate clearedOn;
+	private LocalDate despatchAdviceDate;
 }

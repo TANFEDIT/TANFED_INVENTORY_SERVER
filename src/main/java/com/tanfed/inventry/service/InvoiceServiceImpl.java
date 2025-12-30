@@ -49,6 +49,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 	@Autowired
 	private TermsPriceService termsPriceService;
 
+	@Autowired
+	private OpeningStockService openingStockService;
+
 	private static Logger logger = LoggerFactory.getLogger(InvoiceServiceImpl.class);
 
 	@Override
@@ -65,9 +68,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 				buyerFirmInfo = masterService.getBuyerFirmByFirmNameHandler(jwt, obj.getNameOfInstitution());
 				obj.setCcbBranch(buyerFirmInfo.getBranchName());
 				obj.setFirmType(buyerFirmInfo.getFirmType());
-				if(obj.getGodownName() != "Direct Material Center") {
+				if (obj.getGodownName() != "Direct Material Center") {
 					GodownInfo godownInfo = masterService.getGodownInfoByGodownNameHandler(obj.getGodownName(), jwt);
-					obj.setLicenseNoGodown(godownInfo.getLicenseNo());					
+					obj.setLicenseNoGodown(godownInfo.getLicenseNo());
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -162,90 +165,114 @@ public class InvoiceServiceImpl implements InvoiceService {
 								.collect(Collectors.toList());
 						List<Double> b2cDiscount = new ArrayList<Double>();
 						dcTableData.forEach(item -> {
-							logger.info(item.getOutwardBatchNo());
 							try {
 								String batchOrCertificateNo = null;
 								if (item.getOutwardBatchNo().startsWith("GR")) {
 									GRN grn = grnService.getGrnDataByGrnNo(item.getOutwardBatchNo());
 									batchOrCertificateNo = grn.getBatchOrCertificateNo();
 								}
-								TermsPrice termsPrice = termsPriceService.fetchTermsByTermsNo(item.getTermsNo());
-								PurchaseTermsConditionsTPM purchaseTermsAndCondition = termsPrice
-										.getPurchaseTermsAndCondition();
-								B2bTermsConditionsTPM b2bTermsConditionsTPM = termsPrice.getB2bTermsAndConditions();
-								B2cPricingTPM b2cPricingTPM = termsPrice.getB2cPrice();
-								InvoiceTermsAndConditions tc = new InvoiceTermsAndConditions();
-								tc.setSelectedProductName(item.getProductName());
-								tc.setQty(item.getQty());
-								PmodeAndValue paccsIncentive = new PmodeAndValue();
-								if (purchaseTermsAndCondition.getIncentiveToFirm().equals("By Invoice Adj")) {
-									paccsIncentive
-											.setInvAdj_Cash(b2bTermsConditionsTPM.getIncentivePaccs() * item.getQty());
-									paccsIncentive.setOnline(0.0);
-								} else if (purchaseTermsAndCondition.getIncentiveToFirm().equals("By Online")) {
-									paccsIncentive.setInvAdj_Cash(0.0);
-									paccsIncentive.setOnline(b2bTermsConditionsTPM.getIncentivePaccs() * item.getQty());
-								}
-								tc.setIncentivePaccs(paccsIncentive);
-								PmodeAndValue salesmanIncentive = new PmodeAndValue();
-								PmodeAndValue secretaryIncentive = new PmodeAndValue();
-								if ("B2B".equals(deliveryChellan.getSupplyTo())) {
-									if (purchaseTermsAndCondition.getIncentiveToB2b().equals("By Cash")) {
-										salesmanIncentive.setInvAdj_Cash(
-												b2bTermsConditionsTPM.getSalesmanIncentive() * item.getQty());
-										salesmanIncentive.setOnline(0.0);
-										secretaryIncentive.setInvAdj_Cash(
-												b2bTermsConditionsTPM.getSecretoryIncentive() * item.getQty());
-										secretaryIncentive.setOnline(0.0);
-									} else if (purchaseTermsAndCondition.getIncentiveToB2b().equals("By Online")) {
-										salesmanIncentive.setInvAdj_Cash(0.0);
-										salesmanIncentive.setOnline(
-												b2bTermsConditionsTPM.getSalesmanIncentive() * item.getQty());
-										secretaryIncentive.setInvAdj_Cash(0.0);
-										secretaryIncentive.setOnline(
-												b2bTermsConditionsTPM.getSecretoryIncentive() * item.getQty());
-									}
-									tc.setSalesmanIncentive(salesmanIncentive);
-									tc.setSecretoryIncentive(secretaryIncentive);
-								} else if ("B2C".equals(deliveryChellan.getSupplyTo())) {
-									if (purchaseTermsAndCondition.getIncentiveToB2c().equals("By Invoice Adj")) {
-										b2cDiscount.add(b2cPricingTPM.getB2cDiscount() * item.getQty());
-									}
-								}
-								if (!purchaseTermsAndCondition.getIncentiveToFirm().equals("Not Applicable")
-										|| !purchaseTermsAndCondition.getIncentiveToB2b().equals("Not Applicable")) {
-									tcData.add(new InvoiceTermsAndConditions(null, paccsIncentive, salesmanIncentive,
-											secretaryIncentive, item.getProductName(), item.getQty()));
-								}
 								Double basicPrice = 0.0, cgst = 0.0, sgst = 0.0, margin = 0.0, gstOnMargin = 0.0,
 										mrp = 0.0;
 								Double total;
-								if ("B2B".equals(deliveryChellan.getSupplyTo())) {
-									basicPrice = termsPrice.getB2bPrice().getB2bBasicPrice();
-									cgst = termsPrice.getB2bPrice().getB2bCgst();
-									sgst = termsPrice.getB2bPrice().getB2bSgst();
-									margin = termsPrice.getB2bPrice().getMarginToPaccs();
-									gstOnMargin = termsPrice.getB2bPrice().getPaccsMarginGst();
-									mrp = termsPrice.getB2cPrice().getB2cMrp();
-								} else if ("B2C".equals(deliveryChellan.getSupplyTo())) {
-									basicPrice = termsPrice.getB2cPrice().getB2cBasicPrice();
-									cgst = termsPrice.getB2cPrice().getB2cCgst();
-									sgst = termsPrice.getB2cPrice().getB2cSgst();
-									mrp = termsPrice.getB2cPrice().getB2cMrp();
+								if (item.getOutwardBatchNo().startsWith("OB")) {
+									OpeningStock openingStock = openingStockService.getObById(item.getOutwardBatchNo());
+									basicPrice = openingStock.getB2bBasicPrice();
+									cgst = openingStock.getB2bCgst();
+									sgst = openingStock.getB2bSgst();
+									margin = openingStock.getMarginToPaccs();
+									gstOnMargin = openingStock.getPaccsMarginGst();
+									mrp = openingStock.getB2cMrp();
+									total = (basicPrice + cgst + sgst) * item.getQty();
+									updateTotals(data, basicPrice * item.getQty(), cgst * item.getQty(),
+											sgst * item.getQty(), total, margin, gstOnMargin);
+									invoiceTable.add(new InvoiceTable(item.getOutwardBatchNo(),
+											item.getProductCategory(), item.getSupplierName(), item.getProductName(),
+											item.getPacking(), item.getBags(), item.getQty(), item.getHsnCode(),
+											item.getGstRate(), basicPrice, cgst, sgst,
+											RoundToDecimalPlace.roundToTwoDecimalPlaces(total), mrp, margin,
+											gstOnMargin, batchOrCertificateNo));
+								} else {
+									TermsPrice termsPrice = termsPriceService.fetchTermsByTermsNo(item.getTermsNo());
+
+									PurchaseTermsConditionsTPM purchaseTermsAndCondition = termsPrice
+											.getPurchaseTermsAndCondition();
+									B2bTermsConditionsTPM b2bTermsConditionsTPM = termsPrice.getB2bTermsAndConditions();
+									B2cPricingTPM b2cPricingTPM = termsPrice.getB2cPrice();
+
+									InvoiceTermsAndConditions tc = new InvoiceTermsAndConditions();
+									tc.setSelectedProductName(item.getProductName());
+									tc.setQty(item.getQty());
+									PmodeAndValue paccsIncentive = new PmodeAndValue();
+									if (purchaseTermsAndCondition.getIncentiveToFirm().equals("By Invoice Adj")) {
+										paccsIncentive.setInvAdj_Cash(
+												b2bTermsConditionsTPM.getIncentivePaccs() * item.getQty());
+										paccsIncentive.setOnline(0.0);
+									} else if (purchaseTermsAndCondition.getIncentiveToFirm().equals("By Online")) {
+										paccsIncentive.setInvAdj_Cash(0.0);
+										paccsIncentive
+												.setOnline(b2bTermsConditionsTPM.getIncentivePaccs() * item.getQty());
+									}
+
+									tc.setIncentivePaccs(paccsIncentive);
+									PmodeAndValue salesmanIncentive = new PmodeAndValue();
+									PmodeAndValue secretaryIncentive = new PmodeAndValue();
+									if ("B2B".equals(deliveryChellan.getSupplyTo())) {
+										if (purchaseTermsAndCondition.getIncentiveToB2b().equals("By Cash")) {
+											salesmanIncentive.setInvAdj_Cash(
+													b2bTermsConditionsTPM.getSalesmanIncentive() * item.getQty());
+											salesmanIncentive.setOnline(0.0);
+											secretaryIncentive.setInvAdj_Cash(
+													b2bTermsConditionsTPM.getSecretoryIncentive() * item.getQty());
+											secretaryIncentive.setOnline(0.0);
+										} else if (purchaseTermsAndCondition.getIncentiveToB2b().equals("By Online")) {
+											salesmanIncentive.setInvAdj_Cash(0.0);
+											salesmanIncentive.setOnline(
+													b2bTermsConditionsTPM.getSalesmanIncentive() * item.getQty());
+											secretaryIncentive.setInvAdj_Cash(0.0);
+											secretaryIncentive.setOnline(
+													b2bTermsConditionsTPM.getSecretoryIncentive() * item.getQty());
+										}
+										tc.setSalesmanIncentive(salesmanIncentive);
+										tc.setSecretoryIncentive(secretaryIncentive);
+									} else if ("B2C".equals(deliveryChellan.getSupplyTo())) {
+										if (purchaseTermsAndCondition.getIncentiveToB2c().equals("By Invoice Adj")) {
+											b2cDiscount.add(b2cPricingTPM.getB2cDiscount() * item.getQty());
+										}
+									}
+									if (!purchaseTermsAndCondition.getIncentiveToFirm().equals("Not Applicable")
+											|| !purchaseTermsAndCondition.getIncentiveToB2b()
+													.equals("Not Applicable")) {
+										tcData.add(
+												new InvoiceTermsAndConditions(null, paccsIncentive, salesmanIncentive,
+														secretaryIncentive, item.getProductName(), item.getQty()));
+									}
+									if ("B2B".equals(deliveryChellan.getSupplyTo())) {
+										basicPrice = termsPrice.getB2bPrice().getB2bBasicPrice();
+										cgst = termsPrice.getB2bPrice().getB2bCgst();
+										sgst = termsPrice.getB2bPrice().getB2bSgst();
+										margin = termsPrice.getB2bPrice().getMarginToPaccs();
+										gstOnMargin = termsPrice.getB2bPrice().getPaccsMarginGst();
+										mrp = termsPrice.getB2cPrice().getB2cMrp();
+									} else if ("B2C".equals(deliveryChellan.getSupplyTo())) {
+										basicPrice = termsPrice.getB2cPrice().getB2cBasicPrice();
+										cgst = termsPrice.getB2cPrice().getB2cCgst();
+										sgst = termsPrice.getB2cPrice().getB2cSgst();
+										mrp = termsPrice.getB2cPrice().getB2cMrp();
+									}
+									total = (basicPrice + cgst + sgst) * item.getQty();
+									updateTotals(data, basicPrice * item.getQty(), cgst * item.getQty(),
+											sgst * item.getQty(), total, margin, gstOnMargin);
+									invoiceTable.add(new InvoiceTable(item.getOutwardBatchNo(),
+											item.getProductCategory(), item.getSupplierName(), item.getProductName(),
+											item.getPacking(), item.getBags(), item.getQty(), item.getHsnCode(),
+											item.getGstRate(), basicPrice, cgst, sgst,
+											RoundToDecimalPlace.roundToTwoDecimalPlaces(total), mrp, margin,
+											gstOnMargin, batchOrCertificateNo));
 								}
-								total = (basicPrice + cgst + sgst) * item.getQty();
-								updateTotals(data, basicPrice * item.getQty(), cgst * item.getQty(),
-										sgst * item.getQty(), total, margin, gstOnMargin);
-								invoiceTable.add(new InvoiceTable(item.getOutwardBatchNo(), item.getProductCategory(),
-										item.getSupplierName(), item.getProductName(), item.getPacking(),
-										item.getBags(), item.getQty(), item.getHsnCode(), item.getGstRate(), basicPrice,
-										cgst, sgst, RoundToDecimalPlace.roundToTwoDecimalPlaces(total), mrp, margin,
-										gstOnMargin, batchOrCertificateNo));
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
 						});
-						logger.info("{}", invoiceTable);
 						data.setTableData(invoiceTable);
 						data.setTcData(tcData);
 						if (data.getTcData().isEmpty()) {

@@ -597,7 +597,7 @@ public class RegisterServiceImpl implements RegisterService {
 							.map(DespatchAdviseTable::getDcNo).collect(Collectors.toList());
 					return new DespatchAdviceRegisterTable(item.getActivity(), item.getDespatchAdviceNo(),
 							item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(), item.getGodownName(),
-							productQtyMap, dcNoList, item.getStatusDisabledDate());
+							productQtyMap, dcNoList, item.getStatusDisabledDate(), item.getDate());
 				} catch (Exception e) {
 					e.printStackTrace();
 					return null;

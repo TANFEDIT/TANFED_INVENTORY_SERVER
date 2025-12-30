@@ -13,7 +13,7 @@ public class InvoiceCollectionP1TableData {
 	private String invoiceNo;
 	private LocalDate date;
 	private String ifmsId;
-	private String name;
+	private String nameOfInstitution;
 	private String district;
 	private Double totalQty;
 	private Double totalInvoiceValue;

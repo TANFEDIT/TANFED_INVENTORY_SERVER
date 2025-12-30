@@ -68,6 +68,9 @@ public class OpeningStock {
 	
 	private Double qtyAvlForDc;
 
+	
+//	B2bTermsConditionsTPM
+	
 	private String b2bModeofSupply;
 	
 	private String b2bCollectionMode;
@@ -77,6 +80,9 @@ public class OpeningStock {
 	private Double salesmanIncentive;
 	
 	private Double secretoryIncentive;
+	
+	
+//	B2bPricingTPM	
 	
 	private Double b2bBasicPrice;
 	
@@ -92,6 +98,9 @@ public class OpeningStock {
 	
 	private Double paccsMarginGst;
 	
+	
+//	B2cPricingTPM
+	
 	private Double b2cBasicPrice;
 	
 	private Double b2cCgst;
@@ -103,6 +112,8 @@ public class OpeningStock {
 	private Double b2cNetTotal;
 	
 	private Double b2cDiscount;
+	
+	
 	
     @PrePersist
     protected void onCreate() {

@@ -214,7 +214,6 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 		List<String> godownList = masterService.getGodownInfoByOfficeNameHandler(jwt, officeName).stream()
 				.map(GodownInfo::getGodownName).collect(Collectors.toList());
 		data.setMaterialCenterLst(godownList);
-
 		if (monthOfSales != null && !monthOfSales.isEmpty()) {
 			double[] result = collect.stream().filter(temp -> temp.getDate().getMonth().toString().equals(monthOfSales))
 					.mapToDouble(temp -> temp.getNetInvoiceAdjustment()).collect(() -> new double[2], (acc, value) -> {
@@ -226,7 +225,6 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					});
 			data.setNoOfInvoicesCreated((int) result[0]);
 			data.setTotalInvoicesValue(RoundToDecimalPlace.roundToTwoDecimalPlaces(result[1]));
-
 			data.setNoOfInvoicesAckReceived(Math.toIntExact(collect.stream().filter(temp -> {
 				return temp.getAckQty() != null && temp.getDate().getMonth().toString().equals(monthOfSales)
 						&& temp.getAckEntryDate() != null;
@@ -1107,28 +1105,21 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			vouchers.setAdjustmentReceiptVoucherData(obj);
 			ResponseEntity<String> responseEntity = accountsService
 					.saveAccountsVouchersHandler("adjustmentReceiptVoucher", vouchers, jwt);
+			String responseString = responseEntity.getBody();
+			if (responseString == null) {
+				throw new Exception("No data found");
+			}
+			String prefix = "Voucher Number: ";
+			int index = responseString.indexOf(prefix);
+			String voucherNo = responseString.substring(index + prefix.length()).trim();
 			if (type.equals("icm")) {
 				List<Invoice> byIcmNo = invoiceRepo.findByIcmNo(obj.getIcmInvNo());
-				String responseString = responseEntity.getBody();
-				if (responseString == null) {
-					throw new Exception("No data found");
-				}
-				String prefix = "Voucher Number: ";
-				int index = responseString.indexOf(prefix);
-				String voucherNo = responseString.substring(index + prefix.length()).trim();
 				byIcmNo.forEach(item -> {
 					item.setAdjReceiptNo(voucherNo);
 				});
 				invoiceRepo.saveAll(byIcmNo);
 			} else {
 				Invoice invoice = invoiceRepo.findByInvoiceNo(obj.getIcmInvNo()).get();
-				String responseString = responseEntity.getBody();
-				if (responseString == null) {
-					throw new Exception("No data found");
-				}
-				String prefix = "Voucher Number: ";
-				int index = responseString.indexOf(prefix);
-				String voucherNo = responseString.substring(index + prefix.length()).trim();
 				invoice.setAdjReceiptNo(voucherNo);
 				invoiceRepo.save(invoice);
 			}
