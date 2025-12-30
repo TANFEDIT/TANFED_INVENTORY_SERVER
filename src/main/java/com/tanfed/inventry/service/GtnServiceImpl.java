@@ -393,11 +393,11 @@ public class GtnServiceImpl implements GtnService {
 			}
 
 		} else if (transactionFor.equals("RH To Other Region Direct")) {
-			data.setDesignationList(new HashSet<>(masterService.getBuyerIfmsIdByOfficeNameHandler(jwt, officeName)));
+			data.setDesignationList(new HashSet<>(masterService.getBuyerNameByOfficeNameHandler(jwt, officeName)));
 
 			if (hasText(destination)) {
 				BuyerFirmInfo buyer = masterService.getBuyerFirmByFirmNameHandler(jwt, destination);
-				data.setBuyerName(buyer.getNameOfInstitution());
+				data.setBuyerName(buyer.getIfmsIdNo());
 				data.setBuyerDistrict(buyer.getDistrict());
 				data.setToIfmsId(buyer.getIfmsIdNo());
 				data.setBuyerGstNo(buyer.getBuyerGstNo());
@@ -517,7 +517,7 @@ public class GtnServiceImpl implements GtnService {
 	}
 
 	@Override
-	public ResponseEntity<String> updateGrnQtyForDc(GrnQtyUpdateForDc obj) throws Exception {
+	public ResponseEntity<String> updateGrnQtyForDc(GrnQtyUpdateForDc obj, String despatchAdviceNo) throws Exception {
 		try {
 			logger.info("{}", obj);
 
@@ -543,7 +543,7 @@ public class GtnServiceImpl implements GtnService {
 							obj.getOutwardBatchNo(), obj.getQty(), gtn.getProductCategory(), gtn.getProductGroup(),
 							gtn.getSupplierName(), gtn.getProductName(), gtn.getGtnTableData().get(0).getPacking(),
 							gtn.getGtnTableData().get(0).getStandardUnits(), gtn.getGtnTableData().get(0).getMrp(),
-							gtn.getDate(), gtn.getOfficeName(), gtn.getGodownName()));
+							gtn.getDate(), gtn.getOfficeName(), gtn.getGodownName(), despatchAdviceNo));
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

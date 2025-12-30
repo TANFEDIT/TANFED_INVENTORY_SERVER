@@ -157,9 +157,9 @@ public class InventryHandler {
 
 	@GetMapping("/fetchdatafordespatchadvice")
 	public DataForDespatchAdvice getDataForDespatchAdviceHandler(@RequestParam String officeName, String activity,
-			String ifmsId, String productName, String month, String godownName,
+			String nameOfInstitution, String productName, String month, String godownName,
 			@RequestHeader("Authorization") String jwt) throws Exception {
-		return despatchAdviceService.getDataForDespatchAdvice(officeName, activity, ifmsId, productName, jwt, month,
+		return despatchAdviceService.getDataForDespatchAdvice(officeName, activity, nameOfInstitution, productName, jwt, month,
 				godownName);
 	}
 
@@ -254,7 +254,7 @@ public class InventryHandler {
 						.map(item -> new DcTableData(null, null, item.getOutwardBatchNo(), null, null,
 								item.getProductName(), null, null, item.getQty(), null, null, null, null, null, null))
 						.collect(Collectors.toList()));
-		return grnService.updateGrnQtyForDc(obj);
+		return grnService.updateGrnQtyForDc(obj, despatchAdviceNo);
 	}
 
 	@PutMapping("/updategrn")

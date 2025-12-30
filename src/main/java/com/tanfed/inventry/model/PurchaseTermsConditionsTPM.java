@@ -20,9 +20,7 @@ public class PurchaseTermsConditionsTPM {
 	
 	@Column
 	private String purchasePaymentMode;
-	
-	@Column
-	private String purchaseTermApplicableTo;
+
 	
 	@Column
 	private String rebateReceivableMode;

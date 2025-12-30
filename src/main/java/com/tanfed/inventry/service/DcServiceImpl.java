@@ -1,14 +1,13 @@
 package com.tanfed.inventry.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +22,8 @@ import com.tanfed.inventry.model.*;
 import com.tanfed.inventry.repository.*;
 import com.tanfed.inventry.response.DataForDc;
 import com.tanfed.inventry.utils.CodeGenerator;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 import com.tanfed.inventry.utils.SlabRateCalculator;
-
 
 @Service
 public class DcServiceImpl implements DcService {
@@ -43,12 +42,6 @@ public class DcServiceImpl implements DcService {
 
 	@Autowired
 	private GrnService grnService;
-
-	@Autowired
-	private TermsPriceService termsPriceService;
-
-	@Autowired
-	private PoService poService;
 
 	@Autowired
 	private GtnService gtnService;
@@ -208,10 +201,13 @@ public class DcServiceImpl implements DcService {
 							}
 
 							if (!productName.isEmpty() && productName != null) {
-								data.setDespatchAdviseQty(roundToTwoDecimalPlaces(despatchAdvice.getTableData().stream()
-										.filter(item -> item.getProductName().equals(productName))
-										.map(item -> item.getQtyAvlForDc()).collect(Collectors.toList()).get(0)));
 								data.setTableData(fetchTableData(officeName, productName, godownName));
+								data.setDespatchAdviseQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+										despatchAdviceService.getDespatchAdviceDataByDespatchAdviceNo(despatchAdviceNo)
+												.getTableData().stream()
+												.filter(item -> item.getProductName().equals(productName))
+												.map(item -> item.getQtyAvlForDc()).collect(Collectors.toList())
+												.get(0)));
 							}
 						}
 					}
@@ -223,63 +219,56 @@ public class DcServiceImpl implements DcService {
 		}
 	}
 
-	public List<TableDataForDc> fetchTableData(String officeName, String productName, String godownName)
+	private List<TableDataForDc> fecthCombinedTableData(String officeName, String productName, String godownName)
 			throws Exception {
-		try {
-			List<TableDataForDc> tableData = grnService.grnTableData(officeName, productName, godownName, "dc");
-			tableData.addAll(gtnService.gtnTableData(officeName, productName, godownName));
-			logger.info("{}", tableData);
-			List<OutwardBatch> unfullfilledGrnQty = fetchUnfullfilledGrnQty(officeName, productName, godownName);
-			List<OutwardBatch> toRemove = new ArrayList<OutwardBatch>();
-			unfullfilledGrnQty.forEach(item -> {
-				tableData.forEach(data -> {
-					if (data.getOutwardBatchNo().equals(item.getBatchNo())) {
-						data.setAvlQty(data.getAvlQty() + item.getQty());
-						try {
-							updateAvlQtyInGrn(data.getOutwardBatchNo(), item.getQty());
-							updateAvlQtyInGtn(data.getOutwardBatchNo(), item.getQty());
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-						outwardBatchRepo.deleteById(item.getId());
-						toRemove.add(item);
-					}
-				});
-			});
-			unfullfilledGrnQty.removeAll(toRemove);
-			unfullfilledGrnQty.forEach(item -> {
-				try {
-					GRN grn = updateAvlQtyInGrn(item.getBatchNo(), item.getQty());
-					tableData.add(new TableDataForDc(grn.getProductCategory(), grn.getProductGroup(),
-							grn.getSupplierName(), grn.getProductName(), grn.getPacking(), grn.getStandardUnits(),
-							roundToTwoDecimalPlaces(grn.getGrnQtyAvlForDc()), grn.getGrnNo(),
-							poService.getPoByPoNo(grn.getPoNo()).getTermsPrice().getTermsNo(),
-							fetchCollectionModeFromPo(grn.getPoNo()), fetchMrpFromPoNo(grn.getPoNo()), grn.getDate()));
+		List<TableDataForDc> grnTableData = grnService.grnTableData(officeName, productName, godownName, "dc");
+		List<TableDataForDc> gtnTableData = gtnService.gtnTableData(officeName, productName, godownName);
+		List<TableDataForDc> obData = getObData(officeName, productName, godownName);
+		return Stream.of(grnTableData, gtnTableData, obData).filter(Objects::nonNull).flatMap(List::stream)
+				.collect(Collectors.toList());
 
-					GTN gtn = updateAvlQtyInGtn(item.getBatchNo(), item.getQty());
-					gtn.getGtnTableData().forEach(itemData -> {
-						tableData.add(new TableDataForDc(gtn.getProductCategory(), gtn.getProductGroup(),
-								gtn.getSupplierName(), gtn.getProductName(), itemData.getPacking(),
-								itemData.getStandardUnits(), roundToTwoDecimalPlaces(itemData.getQtyAvlForDc()),
-								gtn.getGtnNo(), gtnService.fetchTermsNoFromGrnNo(itemData.getOutwardBatchNo()),
-								itemData.getCollectionMode(), itemData.getMrp(), gtn.getDate()));
+	}
 
-						OpeningStock ob = updateAvlQtyInOb(item.getBatchNo(), item.getQty());
-						tableData.add(new TableDataForDc(ob.getProductCategory(), ob.getProductGroup(),
-								ob.getSupplierName(), ob.getProductName(), ob.getPacking(), ob.getStandardUnits(),
-								roundToTwoDecimalPlaces(ob.getQtyAvlForDc()), ob.getObId(), null, null, null,
-								ob.getAsOn()));
-					});
+	private void restoreTableData(String officeName, String productName, String godownName) {
+		List<OutwardBatch> tempTableData = outwardBatchRepo.findAll().stream()
+				.filter(item -> item.getProductName().equals(productName) && item.getOfficeName().equals(officeName)
+						&& item.getGodownName().equals(godownName))
+				.filter(item -> item.getTime().isBefore(LocalDateTime.now().minusMinutes(3)))
+				.collect(Collectors.toList());
+
+		tempTableData.forEach(item -> {
+			try {
+				despatchAdviceService.revertDespatchAdviceQty(item.getDaNo(),
+						Arrays.asList(new DcTableData(null, null, null, null, null, item.getProductName(), null, null,
+								item.getQty(), null, null, null, null, null, null)));
+				if (item.getBatchNo().startsWith("GR")) {
+					GRN grn = grnService.getGrnDataByGrnNo(item.getBatchNo());
+					grn.setGrnQtyAvlForDc(grn.getGrnQtyAvlForDc() + item.getQty());
+					grnRepo.save(grn);
 					outwardBatchRepo.deleteById(item.getId());
-				} catch (Exception e) {
-					e.printStackTrace();
+				} else if (item.getBatchNo().startsWith("GT")) {
+					GTN gtn = gtnService.getGtnDataByGtnNo(item.getBatchNo());
+					GtnTableData qtyUpdateForDc = gtn.getGtnTableData().get(0);
+					qtyUpdateForDc.setQtyAvlForDc(qtyUpdateForDc.getQtyAvlForDc() + item.getQty());
+					gtnRepo.save(gtn);
+					outwardBatchRepo.deleteById(item.getId());
+				} else if (item.getBatchNo().startsWith("OB")) {
+					OpeningStock ob = openingStockService.getObById(item.getBatchNo());
+					ob.setQtyAvlForDc(ob.getQtyAvlForDc() + item.getQty());
+					openingStockRepo.save(ob);
+					outwardBatchRepo.deleteById(item.getId());
 				}
-			});
-			tableData.addAll(getObData(officeName, productName, godownName));
-			return tableData;
-		} catch (Exception e) {
-			throw new Exception(e);
-		}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+		});
+	}
+
+	private List<TableDataForDc> fetchTableData(String officeName, String productName, String godownName)
+			throws Exception {
+		restoreTableData(officeName, productName, godownName);
+		return fecthCombinedTableData(officeName, productName, godownName);
 	}
 
 	@Override
@@ -289,61 +278,12 @@ public class DcServiceImpl implements DcService {
 						&& item.getProductName().equals(productName) && item.getGodownName().equals(godownName))
 				.map(item -> new TableDataForDc(item.getProductCategory(), item.getProductGroup(),
 						item.getSupplierName(), item.getProductName(), item.getPacking(), item.getStandardUnits(),
-						item.getQtyAvlForDc(), item.getObId(), null, null, item.getB2cMrp(), item.getAsOn()))
+						item.getQtyAvlForDc(), item.getObId(), null, "", item.getB2cMrp(), item.getAsOn()))
 				.collect(Collectors.toList());
-	}
-
-	public GRN updateAvlQtyInGrn(String grnNo, Double qty) throws Exception {
-		GRN grn = grnService.getGrnDataByGrnNo(grnNo);
-		grn.setGrnQtyAvlForDc(grn.getGrnQtyAvlForDc() + qty);
-		grnRepo.save(grn);
-		return grn;
-	}
-
-	public GTN updateAvlQtyInGtn(String gtnNo, Double qty) throws Exception {
-		GTN gtn = gtnService.getGtnDataByGtnNo(gtnNo);
-		GtnTableData qtyUpdateForDc = gtn.getGtnTableData().get(0);
-		qtyUpdateForDc.setQtyAvlForDc(qtyUpdateForDc.getQtyAvlForDc() + qty);
-		gtnRepo.save(gtn);
-		return gtn;
 	}
 
 	@Autowired
 	private OpeningStockService openingStockService;
-
-	public OpeningStock updateAvlQtyInOb(String obId, Double qty) {
-		try {
-			OpeningStock ob = openingStockService.getObById(obId);
-			ob.setQtyAvlForDc(ob.getQtyAvlForDc() + qty);
-			openingStockRepo.save(ob);
-			return ob;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	public List<OutwardBatch> fetchUnfullfilledGrnQty(String officeName, String productName, String godownName)
-			throws Exception {
-		return outwardBatchRepo.findAll().stream()
-				.filter(item -> item.getProductName().equals(productName) && item.getOfficeName().equals(officeName)
-						&& item.getGodownName().equals(godownName))
-				.filter(item -> item.getTime().isBefore(LocalDateTime.now().minusMinutes(3)))
-				.collect(Collectors.toList());
-	}
-
-	private static double roundToTwoDecimalPlaces(double value) {
-		return new BigDecimal(value).setScale(3, RoundingMode.HALF_UP).doubleValue();
-	}
-
-	public Double fetchMrpFromPoNo(String poNo) throws Exception {
-		return termsPriceService.fetchTermsByTermsNo(poService.getPoByPoNo(poNo).getTermsPrice().getTermsNo())
-				.getB2cPrice().getB2cMrp();
-	}
-
-	public String fetchCollectionModeFromPo(String poNo) throws Exception {
-		return poService.getPoByPoNo(poNo).getTermsPrice().getB2bTermsAndConditions().getB2bCollectionMode();
-	}
 
 	@Override
 	public DeliveryChellan getDcDataByDcNo(String dcNo) throws Exception {
@@ -413,14 +353,14 @@ public class DcServiceImpl implements DcService {
 	public void updateClosingBalance(DeliveryChellan dc) throws Exception {
 		try {
 			dc.getDcTableData().forEach(item -> {
-				ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(dc.getOfficeName(),
-						item.getProductName(), dc.getDate(), dc.getGodownName());
+				ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(
+						dc.getOfficeName(), item.getProductName(), dc.getDate(), dc.getGodownName());
 				if (cb == null) {
 					int n = 1;
 					while (cb == null) {
 						LocalDate date = dc.getDate().minusDays(n++);
-						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(dc.getOfficeName(),
-								item.getProductName(), date, dc.getGodownName());
+						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(
+								dc.getOfficeName(), item.getProductName(), date, dc.getGodownName());
 						if (date.equals(LocalDate.of(2025, 3, 30))) {
 							closingStockTableRepo.save(new ClosingStockTable(null, dc.getOfficeName(), dc.getDate(),
 									item.getProductName(), dc.getGodownName(), item.getQty()));

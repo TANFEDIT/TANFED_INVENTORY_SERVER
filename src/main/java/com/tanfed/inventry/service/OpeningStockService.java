@@ -20,6 +20,6 @@ public interface OpeningStockService {
 
 	public OpeningStock getObById(String obId) throws Exception;
 
-	public ResponseEntity<String> updateGrnQtyForDc(GrnQtyUpdateForDc obj) throws Exception;
+	public ResponseEntity<String> updateGrnQtyForDc(GrnQtyUpdateForDc obj, String despatchAdviceNo) throws Exception;
 	
 }

@@ -58,8 +58,6 @@ public class DeliveryChellan {
 	
 	private String district;
 	
-	private String salesType;
-	
 	private String activity;
 	
 	private String supplyMode;

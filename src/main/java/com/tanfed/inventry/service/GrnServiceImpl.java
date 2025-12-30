@@ -1,7 +1,5 @@
 package com.tanfed.inventry.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.TextStyle;
@@ -31,6 +29,7 @@ import com.tanfed.inventry.repository.PurchaseOrderRepo;
 import com.tanfed.inventry.response.DataForGrn;
 import com.tanfed.inventry.response.DataForGrnUpdate;
 import com.tanfed.inventry.utils.CodeGenerator;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 
 @Service
 public class GrnServiceImpl implements GrnService {
@@ -306,7 +305,8 @@ public class GrnServiceImpl implements GrnService {
 	}
 
 	@Override
-	public ResponseEntity<String> updateGrnQtyForDc(List<GrnQtyUpdateForDc> obj) throws Exception {
+	public ResponseEntity<String> updateGrnQtyForDc(List<GrnQtyUpdateForDc> obj, String despatchAdviceNo)
+			throws Exception {
 		try {
 //			initialize loop object
 			obj.forEach(temp -> {
@@ -320,20 +320,20 @@ public class GrnServiceImpl implements GrnService {
 									temp.getOutwardBatchNo(), temp.getQty(), grn.getProductCategory(),
 									grn.getProductGroup(), grn.getSupplierName(), grn.getProductName(),
 									grn.getPacking(), grn.getStandardUnits(), fetchMrpFromPoNo(grn.getPoNo()),
-									grn.getDate(), grn.getOfficeName(), grn.getGodownName()));
+									grn.getDate(), grn.getOfficeName(), grn.getGodownName(), despatchAdviceNo));
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				} else if (temp.getOutwardBatchNo().startsWith("GT")) {
 					try {
-						gtnService.updateGrnQtyForDc(temp);
+						gtnService.updateGrnQtyForDc(temp, despatchAdviceNo);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				} else {
 					try {
-						openingStockService.updateGrnQtyForDc(temp);
+						openingStockService.updateGrnQtyForDc(temp, despatchAdviceNo);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -464,7 +464,8 @@ public class GrnServiceImpl implements GrnService {
 					try {
 						return new TableDataForDc(item.getProductCategory(), item.getProductGroup(),
 								item.getSupplierName(), item.getProductName(), item.getPacking(),
-								item.getStandardUnits(), roundToTwoDecimalPlaces(item.getGrnQtyAvlForDc()),
+								item.getStandardUnits(),
+								RoundToDecimalPlace.roundToThreeDecimalPlaces(item.getGrnQtyAvlForDc()),
 								item.getGrnNo(), poService.getPoByPoNo(item.getPoNo()).getTermsPrice().getTermsNo(),
 								fetchCollectionModeFromPo(item.getPoNo()), fetchMrpFromPoNo(item.getPoNo()),
 								item.getDate());
@@ -473,10 +474,6 @@ public class GrnServiceImpl implements GrnService {
 						throw new InputMismatchException();
 					}
 				}).collect(Collectors.toList());
-	}
-
-	private static double roundToTwoDecimalPlaces(double value) {
-		return new BigDecimal(value).setScale(3, RoundingMode.HALF_UP).doubleValue();
 	}
 
 	public Double fetchMrpFromPoNo(String poNo) throws Exception {

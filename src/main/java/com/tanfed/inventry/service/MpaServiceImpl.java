@@ -1,7 +1,5 @@
 package com.tanfed.inventry.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.file.FileSystemAlreadyExistsException;
 import java.util.Arrays;
 import java.util.List;
@@ -18,6 +16,7 @@ import com.tanfed.inventry.model.*;
 import com.tanfed.inventry.repository.*;
 import com.tanfed.inventry.response.*;
 import com.tanfed.inventry.utils.CodeGenerator;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 
 @Service
 public class MpaServiceImpl implements MpaService {
@@ -80,10 +79,6 @@ public class MpaServiceImpl implements MpaService {
 		} catch (Exception e) {
 			throw new Exception(e);
 		}
-	}
-
-	private static double roundToTwoDecimalPlaces(double value) {
-		return new BigDecimal(value).setScale(3, RoundingMode.HALF_UP).doubleValue();
 	}
 
 	@Override
@@ -195,7 +190,7 @@ public class MpaServiceImpl implements MpaService {
 							(manPowerAgency.getGstData().getCgstRate() * data.getTotalCalculatedValue()) / 100);
 					data.setTotalSgstValue(
 							(manPowerAgency.getGstData().getSgstRate() * data.getTotalCalculatedValue()) / 100);
-					data.setTotalPaymentValue(roundToTwoDecimalPlaces(
+					data.setTotalPaymentValue(RoundToDecimalPlace.roundToThreeDecimalPlaces(
 							data.getTotalCalculatedValue() + data.getTotalCgstValue() + data.getTotalSgstValue()));
 				}
 			}
@@ -249,6 +244,9 @@ public class MpaServiceImpl implements MpaService {
 				ResponseEntity<String> responseEntity = accountsService.saveAccountsVouchersHandler("journalVoucher",
 						voucher, jwt);
 				String responseString = responseEntity.getBody();
+				if(responseString == null) {
+					throw new Exception("No data found");
+				}
 				String prefix = "JV Number : ";
 				int index = responseString.indexOf(prefix);
 				finalObj.setJvNo(responseString.substring(index + prefix.length()).trim());

@@ -52,4 +52,6 @@ public class OutwardBatch {
 	
 	private String godownName;
 
+	private String daNo;
+
 }

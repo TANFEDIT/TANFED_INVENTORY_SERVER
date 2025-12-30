@@ -1,7 +1,5 @@
 package com.tanfed.inventry.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
@@ -25,6 +23,7 @@ import com.tanfed.inventry.model.*;
 import com.tanfed.inventry.repository.InvoiceRepo;
 import com.tanfed.inventry.response.*;
 import com.tanfed.inventry.utils.CodeGenerator;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 
 @Service
 public class InvoiceServiceImpl implements InvoiceService {
@@ -57,17 +56,19 @@ public class InvoiceServiceImpl implements InvoiceService {
 		try {
 			String invoiceNo = codeGenerator.invoiceNoGenerator(obj.getOfficeName(), obj.getDate());
 			obj.setInvoiceNo(invoiceNo);
-			obj.setFirmType(masterService.getBuyerFirmByFirmNameHandler(jwt, obj.getIfmsId()).getFirmType());
 			String empId = JwtTokenValidator.getEmailFromJwtToken(jwt);
 			obj.setEmpId(Arrays.asList(empId));
 			obj.setVoucherStatus("Pending");
 			obj.setDueDate(obj.getDate().plusDays(obj.getCreditDays()));
 			BuyerFirmInfo buyerFirmInfo;
 			try {
-				buyerFirmInfo = masterService.getBuyerFirmByFirmNameHandler(jwt, obj.getIfmsId());
+				buyerFirmInfo = masterService.getBuyerFirmByFirmNameHandler(jwt, obj.getNameOfInstitution());
 				obj.setCcbBranch(buyerFirmInfo.getBranchName());
-				GodownInfo godownInfo = masterService.getGodownInfoByGodownNameHandler(obj.getGodownName(), jwt);
-				obj.setLicenseNoGodown(godownInfo.getLicenseNo());
+				obj.setFirmType(buyerFirmInfo.getFirmType());
+				if(obj.getGodownName() != "Direct Material Center") {
+					GodownInfo godownInfo = masterService.getGodownInfoByGodownNameHandler(obj.getGodownName(), jwt);
+					obj.setLicenseNoGodown(godownInfo.getLicenseNo());					
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -238,8 +239,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 								invoiceTable.add(new InvoiceTable(item.getOutwardBatchNo(), item.getProductCategory(),
 										item.getSupplierName(), item.getProductName(), item.getPacking(),
 										item.getBags(), item.getQty(), item.getHsnCode(), item.getGstRate(), basicPrice,
-										cgst, sgst, roundToTwoDecimalPlaces(total), mrp, margin, gstOnMargin,
-										batchOrCertificateNo));
+										cgst, sgst, RoundToDecimalPlace.roundToTwoDecimalPlaces(total), mrp, margin,
+										gstOnMargin, batchOrCertificateNo));
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
@@ -263,12 +264,12 @@ public class InvoiceServiceImpl implements InvoiceService {
 
 	private static void updateTotals(DataForInvoice data, double basic, double cgst, double sgst, double total,
 			double margin, double gstOnMargin) {
-		data.setTotalBasicValue(roundToTwoDecimalPlaces(data.getTotalBasicValue() + basic));
-		data.setTotalCgstValue(roundToTwoDecimalPlaces(data.getTotalCgstValue() + cgst));
-		data.setTotalSgstValue(roundToTwoDecimalPlaces(data.getTotalSgstValue() + sgst));
-		data.setTotalInvoiceValue(roundToTwoDecimalPlaces(data.getTotalInvoiceValue() + total));
-		data.setTotalMarginValue(roundToTwoDecimalPlaces(data.getTotalMarginValue() + margin));
-		data.setTotalGstOnMargin(roundToTwoDecimalPlaces(data.getTotalGstOnMargin() + gstOnMargin));
+		data.setTotalBasicValue(RoundToDecimalPlace.roundToTwoDecimalPlaces(data.getTotalBasicValue() + basic));
+		data.setTotalCgstValue(RoundToDecimalPlace.roundToTwoDecimalPlaces(data.getTotalCgstValue() + cgst));
+		data.setTotalSgstValue(RoundToDecimalPlace.roundToTwoDecimalPlaces(data.getTotalSgstValue() + sgst));
+		data.setTotalInvoiceValue(RoundToDecimalPlace.roundToTwoDecimalPlaces(data.getTotalInvoiceValue() + total));
+		data.setTotalMarginValue(RoundToDecimalPlace.roundToTwoDecimalPlaces(data.getTotalMarginValue() + margin));
+		data.setTotalGstOnMargin(RoundToDecimalPlace.roundToTwoDecimalPlaces(data.getTotalGstOnMargin() + gstOnMargin));
 	}
 
 	private void mapInvoiceDataFromDc(DeliveryChellan dc, DataForInvoice data) {
@@ -285,12 +286,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 		data.setTotalQty(dc.getTotalQty());
 		data.setTotalNoOfBags(dc.getTotalBags());
 		data.setDespatchAdviceNo(dc.getDespatchAdviceNo());
-		data.setSalesType(dc.getSalesType());
 
-	}
-
-	private static double roundToTwoDecimalPlaces(double value) {
-		return new BigDecimal(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
 	}
 
 	@Override
@@ -436,18 +432,18 @@ public class InvoiceServiceImpl implements InvoiceService {
 			throw new Exception(e);
 		}
 	}
-	
+
 	@Override
 	public void approveNonCCInvoice(String invoiceNo) throws Exception {
 		try {
-				Invoice invoice = invoiceRepo.findByInvoiceNo(invoiceNo).get();
-				invoice.setAdjReceiptStatus("Approved");
-				invoiceRepo.save(invoice);
+			Invoice invoice = invoiceRepo.findByInvoiceNo(invoiceNo).get();
+			invoice.setAdjReceiptStatus("Approved");
+			invoiceRepo.save(invoice);
 		} catch (Exception e) {
 			throw new Exception(e);
 		}
 	}
-	
+
 	@Override
 	public List<Invoice> getInvoiceDataFromDateOfficeName(String officeName, LocalDate date) throws Exception {
 		try {

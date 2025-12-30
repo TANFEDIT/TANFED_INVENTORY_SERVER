@@ -26,7 +26,7 @@ public interface GtnService {
 
 	public List<TableDataForDc> gtnTableData(String officeName, String productName, String godownName) throws Exception;
 	
-	public ResponseEntity<String> updateGrnQtyForDc(GrnQtyUpdateForDc obj) throws Exception;
+	public ResponseEntity<String> updateGrnQtyForDc(GrnQtyUpdateForDc obj, String despatchAdviceNo) throws Exception;
 	
 	public void revertGrnQtyForDc(GrnQtyUpdateForDc obj) throws Exception;
 

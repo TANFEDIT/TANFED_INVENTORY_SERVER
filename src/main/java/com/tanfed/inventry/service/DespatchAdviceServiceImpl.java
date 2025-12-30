@@ -95,12 +95,12 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 	}
 
 	@Override
-	public DataForDespatchAdvice getDataForDespatchAdvice(String officeName, String activity, String ifmsId,
+	public DataForDespatchAdvice getDataForDespatchAdvice(String officeName, String activity, String nameOfInstitution,
 			String productName, String jwt, String month, String godownName) throws Exception {
 		try {
 			DataForDespatchAdvice data = new DataForDespatchAdvice();
 			if (officeName != null && !officeName.isEmpty()) {
-				data.setIfmsIdList(masterService.getBuyerIfmsIdByOfficeNameHandler(jwt, officeName));
+				data.setNameOfInstitutionList(masterService.getBuyerNameByOfficeNameHandler(jwt, officeName));
 				data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
 				data.getGodownNameList().add("Direct Material Center");
 				if (month != null && !month.isEmpty()) {
@@ -132,9 +132,9 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 							.filter(item -> item.getActivity().equals(activity)).map(Terms_Price_Config::getSupplyMode)
 							.filter(Objects::nonNull).collect(Collectors.toList()));
 					if (godownName != null && !godownName.isEmpty()) {
-						if (ifmsId != null && !ifmsId.isEmpty()) {
-							BuyerFirmInfo buyerFirmInfo = masterService.getBuyerFirmByFirmNameHandler(jwt, ifmsId);
-							data.setNameOfInstitution(buyerFirmInfo.getNameOfInstitution());
+						if (nameOfInstitution != null && !nameOfInstitution.isEmpty()) {
+							BuyerFirmInfo buyerFirmInfo = masterService.getBuyerFirmByFirmNameHandler(jwt, nameOfInstitution);
+							data.setIfmsId(buyerFirmInfo.getIfmsIdNo());
 							data.setBuyerGstNo(buyerFirmInfo.getBuyerGstNo());
 							data.setVillage(buyerFirmInfo.getVillage());
 							data.setBlock(buyerFirmInfo.getBlock());

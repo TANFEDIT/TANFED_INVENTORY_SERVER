@@ -111,7 +111,7 @@ public class OpeningStockServiceImpl implements OpeningStockService {
 	}
 
 	@Override
-	public ResponseEntity<String> updateGrnQtyForDc(GrnQtyUpdateForDc obj) throws Exception {
+	public ResponseEntity<String> updateGrnQtyForDc(GrnQtyUpdateForDc obj, String despatchAdviceNo) throws Exception {
 		try {
 			OpeningStock ob = openingStockRepo.findByObId(obj.getOutwardBatchNo()).orElse(null);
 			ob.setQtyAvlForDc(ob.getQtyAvlForDc() - obj.getQty());
@@ -121,7 +121,7 @@ public class OpeningStockServiceImpl implements OpeningStockService {
 					outwardBatchRepo.save(new OutwardBatch(null, LocalDateTime.now(), obj.getDcNo(),
 							obj.getOutwardBatchNo(), obj.getQty(), ob.getProductCategory(), ob.getProductGroup(),
 							ob.getSupplierName(), ob.getProductName(), ob.getPacking(), ob.getStandardUnits(), null,
-							ob.getAsOn(), ob.getOfficeName(), ob.getGodownName()));
+							ob.getAsOn(), ob.getOfficeName(), ob.getGodownName(), despatchAdviceNo));
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

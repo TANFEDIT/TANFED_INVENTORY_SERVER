@@ -45,10 +45,10 @@ public interface MasterService {
 	public List<ContractorInfo> getContarctorInfoByOfficeName(@RequestHeader("Authorization") String jwt, @RequestParam String officeName) throws Exception;
 
 	@GetMapping("/api/basic-info/fetchbuyerfirmdata")
-	public BuyerFirmInfo getBuyerFirmByFirmNameHandler(@RequestHeader("Authorization") String jwt, @RequestParam String ifmsId) throws Exception;
+	public BuyerFirmInfo getBuyerFirmByFirmNameHandler(@RequestHeader("Authorization") String jwt, @RequestParam String nameOfInstitution) throws Exception;
 	
-	@GetMapping("/api/basic-info/fetchbuyerifmsid")
-	public List<String> getBuyerIfmsIdByOfficeNameHandler(@RequestHeader("Authorization") String jwt, @RequestParam String officeName) throws Exception;
+	@GetMapping("/api/basic-info/fetchbuyername")
+	public List<String> getBuyerNameByOfficeNameHandler(@RequestHeader("Authorization") String jwt, @RequestParam String officeName) throws Exception;
 	
 	@GetMapping("/api/basic-info/fetchbanklist")
 	public List<BankInfo> getBankInfoByOfficeNameHandler(@RequestHeader("Authorization") String jwt, @RequestParam String officeName) throws Exception;

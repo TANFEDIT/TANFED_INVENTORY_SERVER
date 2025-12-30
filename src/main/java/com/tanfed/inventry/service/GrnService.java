@@ -29,7 +29,7 @@ public interface GrnService {
 	public DataForGrn fetchDataForGrn(String officeName, String godownType, String activity, String productName, String poNo, String jwt, 
 			String godownName, LocalDate date, String month) throws Exception;
 	
-	public ResponseEntity<String> updateGrnQtyForDc(List<GrnQtyUpdateForDc> obj) throws Exception;
+	public ResponseEntity<String> updateGrnQtyForDc(List<GrnQtyUpdateForDc> obj, String despatchAdviceNo) throws Exception;
 	
 	public ResponseEntity<String> updateGrnAttachQty(GrnAttachDto obj) throws Exception;
 	

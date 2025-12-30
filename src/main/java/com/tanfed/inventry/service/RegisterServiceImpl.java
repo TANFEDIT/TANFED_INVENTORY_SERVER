@@ -1,7 +1,5 @@
 package com.tanfed.inventry.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.YearMonth;
@@ -25,6 +23,7 @@ import com.tanfed.inventry.repository.ClosingStockTableRepo;
 import com.tanfed.inventry.repository.FundTransferRepo;
 import com.tanfed.inventry.repository.OpeningStockRepo;
 import com.tanfed.inventry.response.StockRegisterTable;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 
 @Service
 public class RegisterServiceImpl implements RegisterService {
@@ -229,14 +228,15 @@ public class RegisterServiceImpl implements RegisterService {
 				Double ob;
 				if (currentDate.equals(LocalDate.of(2025, 4, 1))) {
 					ob = openingStockRepo.findByOfficeNameAndProductNameAndAsOn(officeName, productName, currentDate)
-							.stream().filter(item -> item.getVoucherStatus().equals("Approved")
+							.stream()
+							.filter(item -> item.getVoucherStatus().equals("Approved")
 									&& item.getGodownName().equals(godownName))
 							.collect(Collectors.toList()).get(0).getQuantity();
 				} else {
 					int n = 1;
 					do {
-						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(officeName, productName,
-								currentDate.minusDays(n++), godownName);
+						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(officeName,
+								productName, currentDate.minusDays(n++), godownName);
 						if (n == 32) {
 							throw new Exception("No Balance Found!");
 						}
@@ -506,21 +506,20 @@ public class RegisterServiceImpl implements RegisterService {
 				double total = direct[0] + buffer[0];
 				double totalReceipt = receiptDirect + receiptBuffer;
 				return new PoRegisterTable(item.getActivity(), item.getPurchaseOrderType(), item.getPoNo(),
-						item.getDate(), roundToTwoDecimalPlaces(direct[0]), roundToTwoDecimalPlaces(buffer[0]),
-						roundToTwoDecimalPlaces(total), roundToTwoDecimalPlaces(receiptDirect),
-						roundToTwoDecimalPlaces(receiptBuffer), roundToTwoDecimalPlaces(totalReceipt),
-						roundToTwoDecimalPlaces(direct[0] - receiptDirect),
-						roundToTwoDecimalPlaces(buffer[0] - receiptBuffer),
-						roundToTwoDecimalPlaces(total - totalReceipt), null, null, null, null, null, null, null, null,
-						null);
+						item.getDate(), RoundToDecimalPlace.roundToTwoDecimalPlaces(direct[0]),
+						RoundToDecimalPlace.roundToTwoDecimalPlaces(buffer[0]),
+						RoundToDecimalPlace.roundToTwoDecimalPlaces(total),
+						RoundToDecimalPlace.roundToTwoDecimalPlaces(receiptDirect),
+						RoundToDecimalPlace.roundToTwoDecimalPlaces(receiptBuffer),
+						RoundToDecimalPlace.roundToTwoDecimalPlaces(totalReceipt),
+						RoundToDecimalPlace.roundToTwoDecimalPlaces(direct[0] - receiptDirect),
+						RoundToDecimalPlace.roundToTwoDecimalPlaces(buffer[0] - receiptBuffer),
+						RoundToDecimalPlace.roundToTwoDecimalPlaces(total - totalReceipt), null, null, null, null, null,
+						null, null, null, null);
 			}).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception("Error while generating PO Register data", e);
 		}
-	}
-
-	private static double roundToTwoDecimalPlaces(double value) {
-		return new BigDecimal(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
 	}
 
 	@Override

@@ -1,7 +1,5 @@
 package com.tanfed.inventry.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.YearMonth;
@@ -27,6 +25,7 @@ import com.tanfed.inventry.repository.FundTransferRepo;
 import com.tanfed.inventry.repository.InvoiceRepo;
 import com.tanfed.inventry.response.InvoiceCollectionResponseData;
 import com.tanfed.inventry.utils.CodeGenerator;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 
 @Service
 public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
@@ -103,6 +102,9 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 						ResponseEntity<String> responseEntity = accountsService
 								.saveAccountsVouchersHandler("paymentVoucher", voucher, jwt);
 						String responseString = responseEntity.getBody();
+						if (responseString == null) {
+							throw new Exception("No data found");
+						}
 						String prefix = " Voucher Number : ";
 						int index = responseString.indexOf(prefix);
 						pvList.add(responseString.substring(index + prefix.length()).trim());
@@ -206,10 +208,6 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 		return data;
 	}
 
-	private static double roundToTwoDecimalPlaces(double value) {
-		return new BigDecimal(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
-	}
-
 	public void invoiceAckEntryData(InvoiceCollectionResponseData data, String officeName, List<Invoice> collect,
 			String monthOfSales, LocalDate fromDate, LocalDate toDate, String invoiceType, String materialCenter,
 			String jwt) throws Exception {
@@ -218,7 +216,6 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 		data.setMaterialCenterLst(godownList);
 
 		if (monthOfSales != null && !monthOfSales.isEmpty()) {
-
 			double[] result = collect.stream().filter(temp -> temp.getDate().getMonth().toString().equals(monthOfSales))
 					.mapToDouble(temp -> temp.getNetInvoiceAdjustment()).collect(() -> new double[2], (acc, value) -> {
 						acc[0]++;
@@ -228,13 +225,12 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 						acc1[1] += acc2[1];
 					});
 			data.setNoOfInvoicesCreated((int) result[0]);
-			data.setTotalInvoicesValue(roundToTwoDecimalPlaces(result[1]));
+			data.setTotalInvoicesValue(RoundToDecimalPlace.roundToTwoDecimalPlaces(result[1]));
 
-			List<Invoice> list = collect.stream().filter(temp -> {
+			data.setNoOfInvoicesAckReceived(Math.toIntExact(collect.stream().filter(temp -> {
 				return temp.getAckQty() != null && temp.getDate().getMonth().toString().equals(monthOfSales)
 						&& temp.getAckEntryDate() != null;
-			}).collect(Collectors.toList());
-			data.setNoOfInvoicesAckReceived(list.size());
+			}).count()));
 		}
 		if (fromDate != null && toDate != null) {
 			if (invoiceType != null && !invoiceType.isEmpty()) {
@@ -246,7 +242,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 								&& temp.getAckEntryDate() == null;
 					}).map(item -> new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(),
 							item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
-							roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
+							RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
 							item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), item.getGodownName(),
 							null, null)).collect(Collectors.toList()));
 				}
@@ -255,7 +251,8 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 	}
 
 	public void invoiceCollectionAvailableData(InvoiceCollectionResponseData data, List<Invoice> collect,
-			String activity, String officeName, String invoiceType, String ccbBranch, LocalDate ackEntryDate, String jwt) {
+			String activity, String officeName, String invoiceType, String ccbBranch, LocalDate ackEntryDate,
+			String jwt) {
 		List<Invoice> NoOfAvlAckInvoices = collect.stream().filter(temp -> {
 			return temp.getAckQty() != null && temp.getAckEntryDate() != null && temp.getAddedToPresentDate() == null;
 		}).collect(Collectors.toList());
@@ -267,9 +264,8 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			ccbBranchlst.add(temp.getCcbBranch());
 			ackEntryDatelst.add(temp.getAckEntryDate());
 		});
-
 		data.setNoOfAvlAckInvoices(NoOfAvlAckInvoices.size());
-		data.setTotalInvoicesValue(roundToTwoDecimalPlaces(
+		data.setTotalInvoicesValue(RoundToDecimalPlace.roundToTwoDecimalPlaces(
 				NoOfAvlAckInvoices.stream().mapToDouble(temp -> temp.getNetInvoiceAdjustment()).sum()));
 		data.setCcbBranchLst(ccbBranchlst);
 		data.setAckEntryDate(ackEntryDatelst);
@@ -292,13 +288,9 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					}
 					return new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(), item.getIfmsId(),
 							item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
-							roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
+							RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
 							item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), null, null, adj);
 				})
-//				.map(item -> new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(), item.getIfmsId(),
-//						item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
-//						roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
-//						item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), null, null))
 				.collect(Collectors.toList()));
 		if (invoiceType != null && !invoiceType.isEmpty()) {
 			if (ccbBranch != null && !ccbBranch.isEmpty()) {
@@ -309,7 +301,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 							&& temp.getVoucherStatusICP1().equals("Approved");
 				}).map(item -> new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(), item.getIfmsId(),
 						item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
-						roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
+						RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
 						item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), null, null, null))
 						.collect(Collectors.toList()));
 			}
@@ -332,7 +324,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 		});
 
 		data.setNoOfInvoicesAvlToPresent(NoOfInvoicesAvlToPresent.size());
-		data.setTotalInvoicesValue(roundToTwoDecimalPlaces(
+		data.setTotalInvoicesValue(RoundToDecimalPlace.roundToTwoDecimalPlaces(
 				NoOfInvoicesAvlToPresent.stream().mapToDouble(temp -> temp.getNetInvoiceAdjustment()).sum()));
 		data.setCcbBranchLst(ccbBranchlst);
 		data.setAddedToPresentDate(addedToPresentDatelst);
@@ -350,8 +342,8 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 								&& temp.getDueDate().isEqual(dueDate) && temp.getDateOfPresent() == null;
 					}).map(item -> new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(),
 							item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
-							roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()), null, item.getCcbBranch(), null,
-							null, null)).collect(Collectors.toList()));
+							RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()), null,
+							item.getCcbBranch(), null, null, null)).collect(Collectors.toList()));
 				}
 			}
 		}
@@ -365,7 +357,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 		data.setIcmNoList(NoOfPresented.stream().map(item -> item.getIcmNo()).collect(Collectors.toSet()));
 
 		data.setNoOfInvoicesPresented(NoOfPresented.size());
-		data.setTotalInvoicesValue(roundToTwoDecimalPlaces(
+		data.setTotalInvoicesValue(RoundToDecimalPlace.roundToTwoDecimalPlaces(
 				NoOfPresented.stream().mapToDouble(temp -> temp.getNetInvoiceAdjustment()).sum()));
 
 		if (icmNo != null && !icmNo.isEmpty()) {
@@ -375,8 +367,8 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 							&& temp.getVoucherStatusICP3().equals("Approved"))
 					.map(item -> new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(), item.getIfmsId(),
 							item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
-							roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()), null, item.getCcbBranch(), null,
-							null, null))
+							RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()), null,
+							item.getCcbBranch(), null, null, null))
 					.collect(Collectors.toList()));
 		}
 	}
@@ -394,8 +386,8 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 								|| temp.getDateOfCollectionFromCcb().equals(date))
 						&& temp.getVoucherStatusICP4().equals("Approved") && temp.getTransferDone().equals(false);
 			}).collect(Collectors.toList());
-			data.setTotalInvoicesValue(
-					roundToTwoDecimalPlaces(invList.stream().mapToDouble(total -> total.getCollectionValue()).sum()));
+			data.setTotalInvoicesValue(RoundToDecimalPlace
+					.roundToTwoDecimalPlaces(invList.stream().mapToDouble(total -> total.getCollectionValue()).sum()));
 
 			data.setNoOfInvoicesTransferedToHO(fundTransferRepo.findByOfficeName(officeName).stream().filter(temp -> {
 				return temp.getDate().isBefore(date) && temp.getCurrentTransfer() != null;
@@ -436,8 +428,8 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 
 				data.setOpeningBalance(ftLst.get(ftLst.size() - 1).getClosingBalance());
 
-				data.setCollection(
-						roundToTwoDecimalPlaces(invList.stream().mapToDouble(item -> item.getCollectionValue()).sum()));
+				data.setCollection(RoundToDecimalPlace.roundToTwoDecimalPlaces(
+						invList.stream().mapToDouble(item -> item.getCollectionValue()).sum()));
 
 				List<FundTransfer> receipts = fundTransferRepo.findByToAccountNo(Long.valueOf(accountNo)).stream()
 						.filter(temp -> !temp.getDate().isAfter(date) && temp.getTransferDone().equals(false))
@@ -512,29 +504,29 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 										&& item.getCcbBranch().equals(branchName))
 								.collect(Collectors.toList());
 
-						tableObj.setOpeningBalance(roundToTwoDecimalPlaces(ob));
+						tableObj.setOpeningBalance(RoundToDecimalPlace.roundToTwoDecimalPlaces(ob));
 
-						tableObj.setCollection(roundToTwoDecimalPlaces(
+						tableObj.setCollection(RoundToDecimalPlace.roundToTwoDecimalPlaces(
 								byDateOfCollectionFromCcb.stream().mapToDouble(Invoice::getCollectionValue).sum()));
 
 						tableObj.setIbrAmount(fundTransferRepo.findByToAccountNo(Long.valueOf(accountNo)).stream()
 								.filter(temp -> temp.getDate().equals(localDate))
 								.mapToDouble(item -> item.getIbtAmount()).sum());
 
-						tableObj.setTotal(
-								roundToTwoDecimalPlaces(ob + tableObj.getCollection() + tableObj.getIbrAmount()));
+						tableObj.setTotal(RoundToDecimalPlace
+								.roundToTwoDecimalPlaces(ob + tableObj.getCollection() + tableObj.getIbrAmount()));
 
-						tableObj.setCurrentTransfer(roundToTwoDecimalPlaces(
+						tableObj.setCurrentTransfer(RoundToDecimalPlace.roundToTwoDecimalPlaces(
 								byDateOfTransfer.stream().mapToDouble(FundTransfer::getCurrentTransfer).sum()));
 
-						tableObj.setIbtAmount(roundToTwoDecimalPlaces(
+						tableObj.setIbtAmount(RoundToDecimalPlace.roundToTwoDecimalPlaces(
 								byDateOfTransfer.stream().filter(item -> item.getIbtAmount() != null)
 										.mapToDouble(FundTransfer::getIbtAmount).sum()));
 
-						tableObj.setBankCharges(roundToTwoDecimalPlaces(
+						tableObj.setBankCharges(RoundToDecimalPlace.roundToTwoDecimalPlaces(
 								byDateOfTransfer.stream().mapToDouble(FundTransfer::getBankCharges).sum()));
 
-						tableObj.setOthers(roundToTwoDecimalPlaces(
+						tableObj.setOthers(RoundToDecimalPlace.roundToTwoDecimalPlaces(
 								byDateOfTransfer.stream().mapToDouble(FundTransfer::getOthers).sum()));
 
 						tableObj.setClosingBalance(tableObj.getTotal() - (tableObj.getCurrentTransfer()
@@ -1118,6 +1110,9 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			if (type.equals("icm")) {
 				List<Invoice> byIcmNo = invoiceRepo.findByIcmNo(obj.getIcmInvNo());
 				String responseString = responseEntity.getBody();
+				if (responseString == null) {
+					throw new Exception("No data found");
+				}
 				String prefix = "Voucher Number: ";
 				int index = responseString.indexOf(prefix);
 				String voucherNo = responseString.substring(index + prefix.length()).trim();
@@ -1128,6 +1123,9 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			} else {
 				Invoice invoice = invoiceRepo.findByInvoiceNo(obj.getIcmInvNo()).get();
 				String responseString = responseEntity.getBody();
+				if (responseString == null) {
+					throw new Exception("No data found");
+				}
 				String prefix = "Voucher Number: ";
 				int index = responseString.indexOf(prefix);
 				String voucherNo = responseString.substring(index + prefix.length()).trim();

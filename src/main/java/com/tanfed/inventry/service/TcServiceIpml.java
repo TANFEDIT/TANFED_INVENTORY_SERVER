@@ -1,7 +1,5 @@
 package com.tanfed.inventry.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.rmi.AlreadyBoundException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -27,6 +25,7 @@ import com.tanfed.inventry.repository.TcCheckMemoRepo;
 import com.tanfed.inventry.response.DataForTcBillEntry;
 import com.tanfed.inventry.response.DataForTcCheckMemo;
 import com.tanfed.inventry.utils.CodeGenerator;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 
 @Service
 public class TcServiceIpml implements TcService {
@@ -98,12 +97,12 @@ public class TcServiceIpml implements TcService {
 					.map(item -> item.getGrnNo()).collect(Collectors.toList()));
 			if (idNo != null && !idNo.isEmpty()) {
 				GRN grn = grnService.getGrnDataByGrnNo(idNo);
-				data.setAckQty(roundToTwoDecimalPlaces(grn.getWagonData().getActualReceiptQty()));
+				data.setAckQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(grn.getWagonData().getActualReceiptQty()));
 				data.setSupplierName(grn.getSupplierName());
 				data.setProductName(grn.getProductName());
 				data.setPacking(grn.getPacking());
 				data.setBags(grn.getMaterialReceivedBags());
-				data.setCalcWagonClearanceCharges(roundToTwoDecimalPlaces(grn.getWagonClearanceValue()));
+				data.setCalcWagonClearanceCharges(RoundToDecimalPlace.roundToThreeDecimalPlaces(grn.getWagonClearanceValue()));
 				data.setDate(grn.getDate());
 			}
 		}
@@ -128,31 +127,27 @@ public class TcServiceIpml implements TcService {
 			if (idNo != null && !idNo.isEmpty()) {
 				if (idNo.startsWith("GT")) {
 					GTN gtn = gtnService.getGtnDataByGtnNo(idNo);
-					data.setAckQty(roundToTwoDecimalPlaces(
+					data.setAckQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(
 							gtn.getGtnTableData().stream().mapToDouble(item -> item.getReceivedQty()).sum()));
 					data.setSupplierName(gtn.getSupplierName());
 					data.setProductName(gtn.getProductName());
 					Double sum = gtn.getGtnTableData().stream().mapToDouble(item -> item.getReceivedBags()).sum();
 					data.setBags(sum.toString());
-					data.setCalcUnloadingCharges(roundToTwoDecimalPlaces(gtn.getTotalUnloadingCharges()));
+					data.setCalcUnloadingCharges(RoundToDecimalPlace.roundToThreeDecimalPlaces(gtn.getTotalUnloadingCharges()));
 					data.setDate(gtn.getDate());
 					data.setPacking(gtn.getGtnTableData().get(0).getPacking());
 				} else {
 					GRN grn = grnService.getGrnDataByGrnNo(idNo);
-					data.setAckQty(roundToTwoDecimalPlaces(grn.getMaterialReceivedQuantity()));
+					data.setAckQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(grn.getMaterialReceivedQuantity()));
 					data.setSupplierName(grn.getSupplierName());
 					data.setProductName(grn.getProductName());
 					data.setPacking(grn.getPacking());
 					data.setBags(grn.getMaterialReceivedBags());
-					data.setCalcUnloadingCharges(roundToTwoDecimalPlaces(grn.getUnloadingChargesValue()));
+					data.setCalcUnloadingCharges(RoundToDecimalPlace.roundToThreeDecimalPlaces(grn.getUnloadingChargesValue()));
 					data.setDate(grn.getDate());
 				}
 			}
 		}
-	}
-
-	private static double roundToTwoDecimalPlaces(double value) {
-		return new BigDecimal(value).setScale(3, RoundingMode.HALF_UP).doubleValue();
 	}
 
 	private void transportChargesData(DataForTcBillEntry data, String loadType, String officeName, String godownName,
@@ -206,7 +201,7 @@ public class TcServiceIpml implements TcService {
 										gtn.getProductName(), item.getMrp(), item.getQty(), null, null))
 								.collect(Collectors.toList()));
 						GTN receiptGtn = gtnService.getReceiptGtnDataByGtnNo(idNo);
-						data.setAckQty(roundToTwoDecimalPlaces(receiptGtn.getGtnTableData().stream()
+						data.setAckQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(receiptGtn.getGtnTableData().stream()
 								.mapToDouble(item -> item.getReceivedQty()).sum()));
 					} else {
 						DeliveryChellan deliveryChellan = dcService.getDcDataByDcNo(idNo);
@@ -275,7 +270,7 @@ public class TcServiceIpml implements TcService {
 										gtn.getProductName(), item.getMrp(), item.getQty(), null, null))
 								.collect(Collectors.toList()));
 						GTN receiptGtn = gtnService.getReceiptGtnDataByGtnNo(idNo);
-						data.setAckQty(roundToTwoDecimalPlaces(receiptGtn.getGtnTableData().stream()
+						data.setAckQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(receiptGtn.getGtnTableData().stream()
 								.mapToDouble(item -> item.getReceivedQty()).sum()));
 					} else {
 						DeliveryChellan deliveryChellan = dcService.getDcDataByDcNo(idNo);
@@ -380,6 +375,9 @@ public class TcServiceIpml implements TcService {
 					ResponseEntity<String> responseEntity = accountsService
 							.saveAccountsVouchersHandler("journalVoucher", voucher, jwt);
 					String responseString = responseEntity.getBody();
+					if(responseString == null) {
+						throw new Exception("No data found");
+					}
 					String prefix = "JV Number : ";
 					int index = responseString.indexOf(prefix);
 					jvNoList.add(responseString.substring(index + prefix.length()).trim());

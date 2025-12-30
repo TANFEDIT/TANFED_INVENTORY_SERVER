@@ -16,7 +16,7 @@ public interface DespatchAdviceService {
 
 	public List<DespatchAdvice> getDespatchAdviceDataByOffficeName(String officeName) throws Exception;
 
-	public DataForDespatchAdvice getDataForDespatchAdvice(String officeName, String activity, String ifmsId, String productName, 
+	public DataForDespatchAdvice getDataForDespatchAdvice(String officeName, String activity, String nameOfInstitution, String productName, 
 			String jwt, String month, String godownName) throws Exception;
 	
 	public List<String> getUnfullfilledDespatchAdviceNo(String officeName, String activity) throws Exception;

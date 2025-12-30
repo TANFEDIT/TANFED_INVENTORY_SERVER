@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DataForDespatchAdvice {
 
-	private List<String> ifmsIdList;
+	private List<String> nameOfInstitutionList;
 	private List<String> productNameList;
 	private Set<String> godownNameList;
 	private List<String> supplyModeList;
@@ -23,7 +23,7 @@ public class DataForDespatchAdvice {
 	private String block;
 	private String village;
 	private String buyerGstNo;
-	private String nameOfInstitution;
+	private String ifmsId;
 	private String supplyTo;
 	private String packing;
 	private String productCategory;
