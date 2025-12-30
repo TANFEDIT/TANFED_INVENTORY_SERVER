@@ -148,9 +148,9 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 								List<String> buyerList = distanceData.stream().flatMap(
 										item -> item.getTableData().stream().map(itemData -> itemData.getName()))
 										.collect(Collectors.toList());
-								if (!buyerList.contains(buyerFirmInfo.getIfmsIdNo())) {
+								if (!buyerList.contains(buyerFirmInfo.getNameOfInstitution())) {
 									throw new PropertyNotFoundException(
-											"No distance available for :" + buyerFirmInfo.getIfmsIdNo());
+											"No distance available for :" + buyerFirmInfo.getNameOfInstitution());
 								}
 							}
 
