@@ -22,6 +22,7 @@ import com.tanfed.inventry.repository.PoRequestRepo;
 import com.tanfed.inventry.repository.PurchaseOrderRepo;
 import com.tanfed.inventry.response.DataForPo;
 import com.tanfed.inventry.utils.CodeGenerator;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 
 @Service
 public class PoServiceImpl implements PoService {
@@ -192,7 +193,8 @@ public class PoServiceImpl implements PoService {
 		poRequest.getTableData().forEach(item -> {
 			if (item.getProductName().equals(productName)) {
 				if (item.getPoRequestFor().equals(poReqFor)) {
-					item.setAlreadyIssuedQty(item.getAlreadyIssuedQty() - qty);
+					item.setAlreadyIssuedQty(RoundToDecimalPlace
+							.roundToTwoDecimalPlaces(item.getAlreadyIssuedQty() - qty));
 				}
 			}
 		});

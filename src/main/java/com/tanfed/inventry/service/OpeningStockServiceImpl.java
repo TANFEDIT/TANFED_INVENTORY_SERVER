@@ -21,6 +21,7 @@ import com.tanfed.inventry.repository.OpeningStockRepo;
 import com.tanfed.inventry.repository.OutwardBatchRepo;
 import com.tanfed.inventry.response.DataForOpeningStock;
 import com.tanfed.inventry.utils.CodeGenerator;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 
 @Service
 public class OpeningStockServiceImpl implements OpeningStockService {
@@ -114,7 +115,8 @@ public class OpeningStockServiceImpl implements OpeningStockService {
 	public ResponseEntity<String> updateGrnQtyForDc(GrnQtyUpdateForDc obj, String despatchAdviceNo) throws Exception {
 		try {
 			OpeningStock ob = openingStockRepo.findByObId(obj.getOutwardBatchNo()).orElse(null);
-			ob.setQtyAvlForDc(ob.getQtyAvlForDc() - obj.getQty());
+			ob.setQtyAvlForDc(RoundToDecimalPlace
+					.roundToTwoDecimalPlaces(ob.getQtyAvlForDc() - obj.getQty()));
 			openingStockRepo.save(ob);
 			try {
 				if (obj.getDcNo() != null) {
@@ -135,6 +137,18 @@ public class OpeningStockServiceImpl implements OpeningStockService {
 	@Override
 	public OpeningStock getObById(String obId) throws Exception {
 		return openingStockRepo.findByObId(obId).orElseThrow();
+	}
+
+	@Override
+	public void revertGrnQtyForDc(GrnQtyUpdateForDc temp) throws Exception {
+		try {
+			OpeningStock ob = openingStockRepo.findByObId(temp.getOutwardBatchNo()).orElse(null);
+			ob.setQtyAvlForDc(RoundToDecimalPlace
+					.roundToTwoDecimalPlaces(ob.getQtyAvlForDc() + temp.getQty()));
+			openingStockRepo.save(ob);
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
 	}
 
 }

@@ -288,8 +288,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 							item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
 							RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
 							item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), null, null, adj);
-				})
-				.collect(Collectors.toList()));
+				}).collect(Collectors.toList()));
 		if (invoiceType != null && !invoiceType.isEmpty()) {
 			if (ccbBranch != null && !ccbBranch.isEmpty()) {
 				data.setTableData(collect.stream().filter(temp -> {

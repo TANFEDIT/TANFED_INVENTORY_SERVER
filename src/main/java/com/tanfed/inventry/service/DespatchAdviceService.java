@@ -19,7 +19,7 @@ public interface DespatchAdviceService {
 	public DataForDespatchAdvice getDataForDespatchAdvice(String officeName, String activity, String nameOfInstitution, String productName, 
 			String jwt, String month, String godownName) throws Exception;
 	
-	public List<String> getUnfullfilledDespatchAdviceNo(String officeName, String activity) throws Exception;
+	public List<String> getUnfullfilledDespatchAdviceNo(String officeName, String activity, String godownName) throws Exception;
 	
 	public DespatchAdvice getDespatchAdviceDataByDespatchAdviceNo(String DespatchAdviceNo) throws Exception;
 	

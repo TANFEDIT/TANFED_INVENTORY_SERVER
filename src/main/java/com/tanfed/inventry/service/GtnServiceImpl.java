@@ -41,6 +41,7 @@ import com.tanfed.inventry.repository.OutwardBatchRepo;
 import com.tanfed.inventry.repository.SalesReturnRepo;
 import com.tanfed.inventry.response.DataForGtn;
 import com.tanfed.inventry.utils.CodeGenerator;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 import com.tanfed.inventry.utils.SlabRateCalculator;
 
 @Service
@@ -120,7 +121,8 @@ public class GtnServiceImpl implements GtnService {
 				try {
 					if (item.getGrnNo().startsWith("GR")) {
 						GRN grn = grnService.getGrnDataByGrnNo(item.getGrnNo());
-						grn.setGrnQtyAvlForDc(grn.getGrnQtyAvlForDc() + item.getReturnQty());
+						grn.setGrnQtyAvlForDc(RoundToDecimalPlace
+								.roundToTwoDecimalPlaces(grn.getGrnQtyAvlForDc() + item.getReturnQty()));
 						grnService.saveGrn(grn);
 					} else {
 						GTN gtn = gtnRepo.findByGtnNo(item.getGrnNo()).get();
@@ -130,7 +132,7 @@ public class GtnServiceImpl implements GtnService {
 								break;
 							double available = temp.getQtyAvlForDc();
 							if (available >= qty) {
-								temp.setQtyAvlForDc(available + qty);
+								temp.setQtyAvlForDc(RoundToDecimalPlace.roundToTwoDecimalPlaces(available + qty));
 								qty = 0;
 							} else {
 								temp.setQtyAvlForDc(0.0);
@@ -319,6 +321,9 @@ public class GtnServiceImpl implements GtnService {
 					ContractorInfo contractorInfo = getContractor(jwt, officeName, godownName);
 					ContractorChargesData contractorChargesData = contractorInfo.getChargesData()
 							.get(contractorInfo.getChargesData().size() - 1);
+					if (invoice == null) {
+						throw new Exception("No Invoice found");
+					}
 					calculateCharges(data, jwt, officeName, godownName, invoice.getNameOfInstitution(),
 							contractorChargesData);
 					data.setTransporterName(contractorInfo.getContractFirm());
@@ -529,7 +534,7 @@ public class GtnServiceImpl implements GtnService {
 					break;
 				double available = item.getQtyAvlForDc();
 				if (available >= qty) {
-					item.setQtyAvlForDc(available - qty);
+					item.setQtyAvlForDc(RoundToDecimalPlace.roundToTwoDecimalPlaces(available - qty));
 					qty = 0;
 				} else {
 					item.setQtyAvlForDc(0.0);
@@ -566,7 +571,7 @@ public class GtnServiceImpl implements GtnService {
 					break;
 				double available = item.getQtyAvlForDc();
 				if (available >= qty) {
-					item.setQtyAvlForDc(available + qty);
+					item.setQtyAvlForDc(RoundToDecimalPlace.roundToTwoDecimalPlaces(available + qty));
 					qty = 0;
 				} else {
 					item.setQtyAvlForDc(0.0);
@@ -612,8 +617,8 @@ public class GtnServiceImpl implements GtnService {
 	@Override
 	public void updateClosingBalanceIssue(GTN gtn) throws Exception {
 		try {
-			ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(gtn.getOfficeName(),
-					gtn.getProductName(), gtn.getDate(), gtn.getGodownName());
+			ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(
+					gtn.getOfficeName(), gtn.getProductName(), gtn.getDate(), gtn.getGodownName());
 			if (cb == null) {
 				int n = 1;
 				while (cb == null) {
@@ -653,8 +658,8 @@ public class GtnServiceImpl implements GtnService {
 				int n = 1;
 				while (cb == null) {
 					LocalDate date = gtn.getDate().minusDays(n++);
-					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(region, gtn.getProductName(),
-							date, gtn.getGodownName());
+					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(region,
+							gtn.getProductName(), date, gtn.getGodownName());
 					if (date.equals(LocalDate.of(2025, 3, 30)) && cb == null) {
 						closingStockTableRepo.save(new ClosingStockTable(null, region, gtn.getDate(),
 								gtn.getProductName(), gtn.getGodownName(),
@@ -688,6 +693,9 @@ public class GtnServiceImpl implements GtnService {
 			ResponseEntity<String> responseEntity = accountsService.saveAccountsVouchersHandler("journalVoucher",
 					voucher, jwt);
 			String responseString = responseEntity.getBody();
+			if (responseString == null) {
+				throw new Exception("No data found");
+			}
 			String prefix = "JV Number : ";
 			int index = responseString.indexOf(prefix);
 			String jvNo = responseString.substring(index + prefix.length()).trim();
@@ -717,13 +725,14 @@ public class GtnServiceImpl implements GtnService {
 		try {
 			salesReturn.getInvoiceTableData().forEach(item -> {
 				ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(
-						salesReturn.getOfficeName(), item.getProductName(), salesReturn.getDate(), salesReturn.getGodownName());
+						salesReturn.getOfficeName(), item.getProductName(), salesReturn.getDate(),
+						salesReturn.getGodownName());
 				if (cb == null) {
 					int n = 1;
 					while (cb == null) {
 						LocalDate date = salesReturn.getDate().minusDays(n++);
-						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(salesReturn.getOfficeName(),
-								item.getProductName(), date, salesReturn.getGodownName());
+						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(
+								salesReturn.getOfficeName(), item.getProductName(), date, salesReturn.getGodownName());
 						if (date.equals(LocalDate.of(2025, 3, 30)) && cb == null) {
 							closingStockTableRepo.save(
 									new ClosingStockTable(null, salesReturn.getOfficeName(), salesReturn.getDate(),

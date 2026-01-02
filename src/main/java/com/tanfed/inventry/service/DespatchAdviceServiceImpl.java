@@ -27,6 +27,7 @@ import com.tanfed.inventry.model.Terms_Price_Config;
 import com.tanfed.inventry.repository.DespatchAdviceRepo;
 import com.tanfed.inventry.response.DataForDespatchAdvice;
 import com.tanfed.inventry.utils.CodeGenerator;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 
 @Service
 public class DespatchAdviceServiceImpl implements DespatchAdviceService {
@@ -132,7 +133,8 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 							.filter(Objects::nonNull).collect(Collectors.toList()));
 					if (godownName != null && !godownName.isEmpty()) {
 						if (nameOfInstitution != null && !nameOfInstitution.isEmpty()) {
-							BuyerFirmInfo buyerFirmInfo = masterService.getBuyerFirmByFirmNameHandler(jwt, nameOfInstitution);
+							BuyerFirmInfo buyerFirmInfo = masterService.getBuyerFirmByFirmNameHandler(jwt,
+									nameOfInstitution);
 							data.setIfmsId(buyerFirmInfo.getIfmsIdNo());
 							data.setBuyerGstNo(buyerFirmInfo.getBuyerGstNo());
 							data.setVillage(buyerFirmInfo.getVillage());
@@ -148,8 +150,8 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 										item -> item.getTableData().stream().map(itemData -> itemData.getName()))
 										.collect(Collectors.toList());
 								if (!buyerList.contains(buyerFirmInfo.getNameOfInstitution())) {
-									throw new Exception(
-											buyerFirmInfo.getNameOfInstitution() + "Distance Not Mapped with Selected Material center");
+									throw new Exception(buyerFirmInfo.getNameOfInstitution()
+											+ "Distance Not Mapped with Selected Material center");
 								}
 							}
 
@@ -171,7 +173,7 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 			throw new Exception(e);
 		}
 	}
-	
+
 	private List<DespatchAdviseTable> fetchQtyDataFromDc_Invoice(String despatchAdviceNo) throws Exception {
 		List<DespatchAdviseTable> data = dcService.fetchDcData(despatchAdviceNo);
 		data.addAll(invoiceService.fetchInvoiceData(despatchAdviceNo));
@@ -179,10 +181,11 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 	}
 
 	@Override
-	public List<String> getUnfullfilledDespatchAdviceNo(String officeName, String activity) throws Exception {
+	public List<String> getUnfullfilledDespatchAdviceNo(String officeName, String activity, String godownName)
+			throws Exception {
 		try {
 			return despatchAdviceRepo.findByActivity(activity).stream()
-					.filter(item -> item.getOfficeName().equals(officeName)
+					.filter(item -> item.getOfficeName().equals(officeName) && item.getGodownName().equals(godownName)
 							&& item.getVoucherStatus().equals("Approved") && item.getStatusDisabled().equals(false))
 					.filter(item -> item.getTableData().stream().anyMatch(itemData -> itemData.getQtyAvlForDc() > 0))
 					.map(DespatchAdvice::getDespatchAdviceNo).collect(Collectors.toList());
@@ -209,7 +212,8 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 			despatchAdvice.getTableData().forEach(despatchAdviceData -> {
 				obj.forEach(dcData -> {
 					if (dcData.getProductName().equals(despatchAdviceData.getProductName())) {
-						despatchAdviceData.setQtyAvlForDc(despatchAdviceData.getQtyAvlForDc() - dcData.getQty());
+						despatchAdviceData.setQtyAvlForDc(RoundToDecimalPlace
+								.roundToTwoDecimalPlaces(despatchAdviceData.getQtyAvlForDc() - dcData.getQty()));
 					}
 				});
 			});
@@ -226,7 +230,8 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 			despatchAdvice.getTableData().forEach(despatchAdviceData -> {
 				obj.forEach(dcData -> {
 					if (dcData.getProductName().equals(despatchAdviceData.getProductName())) {
-						despatchAdviceData.setQtyAvlForDc(despatchAdviceData.getQtyAvlForDc() + dcData.getQty());
+						despatchAdviceData.setQtyAvlForDc(RoundToDecimalPlace
+								.roundToTwoDecimalPlaces(despatchAdviceData.getQtyAvlForDc() + dcData.getQty()));
 					}
 				});
 			});

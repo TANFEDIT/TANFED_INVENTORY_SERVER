@@ -8,7 +8,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +26,7 @@ import com.tanfed.inventry.model.ProductMaster;
 import com.tanfed.inventry.model.Vouchers;
 import com.tanfed.inventry.repository.SupplierInvoiceDetailsRepo;
 import com.tanfed.inventry.response.DataForSupplierInvoice;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 
 @Service
 public class SupplierInvoiceServiceImpl implements SupplierInvoiceService {
@@ -244,7 +244,7 @@ public class SupplierInvoiceServiceImpl implements SupplierInvoiceService {
 	public ResponseEntity<String> updateSupplierInvoiceQtyForGrnAttach(String invoiceNo, Double qty) throws Exception {
 		try {
 			SupplierInvoiceDetails invoiceDetails = supplierInvoiceDetailsRepo.findByInvoiceNumber(invoiceNo);
-			invoiceDetails.setInvoiceQtyAvlForGrnAttach(qty);
+			invoiceDetails.setInvoiceQtyAvlForGrnAttach(RoundToDecimalPlace.roundToTwoDecimalPlaces(qty));
 			supplierInvoiceDetailsRepo.save(invoiceDetails);
 			return new ResponseEntity<String>("Updated Successfully!", HttpStatus.ACCEPTED);
 		} catch (Exception e) {

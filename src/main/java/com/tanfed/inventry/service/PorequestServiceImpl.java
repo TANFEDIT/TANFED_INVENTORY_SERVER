@@ -22,6 +22,7 @@ import com.tanfed.inventry.repository.PoReqTempTableRepo;
 import com.tanfed.inventry.repository.PoRequestRepo;
 import com.tanfed.inventry.response.DataForPoRequest;
 import com.tanfed.inventry.utils.CodeGenerator;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 
 @Service
 public class PorequestServiceImpl implements PorequestService {
@@ -147,14 +148,14 @@ public class PorequestServiceImpl implements PorequestService {
 	public ResponseEntity<String> updatePoIssueQty(List<PoTableData> obj, String productName) throws Exception {
 		try {
 			obj.forEach(item -> {
-//			fetching PO request by REQ no
+
 				PoRequest poRequest = poRequestRepo.findByPoReqNo(item.getPoReqNo()).orElse(null);
 				poRequest.getTableData().forEach(temp -> {
 
-//				mapping issued QTY by district
 					if (temp.getProductName().equals(productName)) {
 						if (temp.getPoRequestFor().equals(item.getPoRequestFor())) {
-							temp.setAlreadyIssuedQty(temp.getAlreadyIssuedQty() + item.getPoIssueQty());
+							temp.setAlreadyIssuedQty(RoundToDecimalPlace
+									.roundToTwoDecimalPlaces(temp.getAlreadyIssuedQty() + item.getPoIssueQty()));
 							poReqTempTableRepo.save(new PoReqTempTable(null, item.getPoReqNo(), productName,
 									temp.getPoRequestFor(), temp.getRequestQuantity(), temp.getAlreadyIssuedQty(),
 									item.getPoIssueQty(), LocalDateTime.now(), poRequest.getOfficeName(),
@@ -176,9 +177,10 @@ public class PorequestServiceImpl implements PorequestService {
 			PoRequest poRequest = poRequestRepo.findByPoReqNo(obj.getPoReqNo()).orElse(null);
 			poRequest.getTableData().forEach(temp -> {
 
-//				mapping issued QTY by district
+
 				if (temp.getProductName().equals(productName)) {
-					temp.setAlreadyIssuedQty(temp.getAlreadyIssuedQty() - obj.getPoIssueQty());
+					temp.setAlreadyIssuedQty(RoundToDecimalPlace
+							.roundToTwoDecimalPlaces(temp.getAlreadyIssuedQty() - obj.getPoIssueQty()));
 				}
 			});
 			poRequestRepo.save(poRequest);

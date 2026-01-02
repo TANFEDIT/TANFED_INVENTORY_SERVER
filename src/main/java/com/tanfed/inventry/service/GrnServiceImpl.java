@@ -308,11 +308,12 @@ public class GrnServiceImpl implements GrnService {
 	public ResponseEntity<String> updateGrnQtyForDc(List<GrnQtyUpdateForDc> obj, String despatchAdviceNo)
 			throws Exception {
 		try {
-//			initialize loop object
+
 			obj.forEach(temp -> {
 				if (temp.getOutwardBatchNo().startsWith("GR")) {
 					GRN grn = grnRepo.findByGrnNo(temp.getOutwardBatchNo()).orElse(null);
-					grn.setGrnQtyAvlForDc(grn.getGrnQtyAvlForDc() - temp.getQty());
+					grn.setGrnQtyAvlForDc(
+							RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnQtyAvlForDc() - temp.getQty()));
 					grnRepo.save(grn);
 					try {
 						if (temp.getDcNo() != null) {
@@ -352,11 +353,18 @@ public class GrnServiceImpl implements GrnService {
 			obj.forEach(temp -> {
 				if (temp.getOutwardBatchNo().startsWith("GR")) {
 					GRN grn = grnRepo.findByGrnNo(temp.getOutwardBatchNo()).orElse(null);
-					grn.setGrnQtyAvlForDc(grn.getGrnQtyAvlForDc() + temp.getQty());
+					grn.setGrnQtyAvlForDc(
+							RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnQtyAvlForDc() + temp.getQty()));
 					grnRepo.save(grn);
-				} else {
+				} else if (temp.getOutwardBatchNo().startsWith("GT")) {
 					try {
 						gtnService.revertGrnQtyForDc(temp);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				} else {
+					try {
+						openingStockService.revertGrnQtyForDc(temp);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -381,7 +389,8 @@ public class GrnServiceImpl implements GrnService {
 					} else {
 						grn.setGrnAttachQtyString(grn.getGrnAttachQtyString() + ", " + grn.getGrnQtyAvlForGrnAttach());
 					}
-					grn.setGrnAttachQty(grn.getGrnAttachQty() + grn.getGrnQtyAvlForGrnAttach());
+					grn.setGrnAttachQty(RoundToDecimalPlace
+							.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + grn.getGrnQtyAvlForGrnAttach()));
 					BookngQty -= grn.getGrnQtyAvlForGrnAttach();
 					grn.setGrnQtyAvlForGrnAttach(0.0);
 				} else {
@@ -390,7 +399,7 @@ public class GrnServiceImpl implements GrnService {
 					} else {
 						grn.setGrnAttachQtyString(grn.getGrnAttachQtyString() + ", " + BookngQty);
 					}
-					grn.setGrnAttachQty(grn.getGrnAttachQty() + BookngQty);
+					grn.setGrnAttachQty(RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + BookngQty));
 					grn.setGrnQtyAvlForGrnAttach(grn.getGrnQtyAvlForGrnAttach() - BookngQty);
 				}
 				if (grn.getSupplierInvoiceNo() == null) {

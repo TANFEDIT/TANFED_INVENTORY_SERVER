@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -72,15 +73,16 @@ public class DcServiceImpl implements DcService {
 				dcData.setHsnCode(productMaster.getHsnCode());
 				dcData.setGstRate(productMaster.getGstRate());
 			}
+			outwardBatchRepo.deleteItemsByDcNo(obj.getDcNo());
+			obj.setDcNo(codeGenerator.dcNoGenerator(obj.getOfficeName(), obj.getDate()));
 			String empId = JwtTokenValidator.getEmailFromJwtToken(jwt);
 			obj.setEmpId(Arrays.asList(empId));
-
 			obj.setVoucherStatus("Pending");
 			obj.setTotalBags(obj.getDcTableData().stream().mapToDouble(item -> item.getBags()).sum());
-			obj.setTotalQty(obj.getDcTableData().stream().mapToDouble(item -> item.getQty()).sum());
+			obj.setTotalQty(RoundToDecimalPlace
+					.roundToTwoDecimalPlaces(obj.getDcTableData().stream().mapToDouble(item -> item.getQty()).sum()));
 //			Saving data in database
 			deliveryChellanRepo.save(obj);
-			outwardBatchRepo.deleteItemsByDcNo(obj.getDcNo());
 			return new ResponseEntity<String>("Created Successfully!" + "\n DC No :" + obj.getDcNo(),
 					HttpStatus.CREATED);
 		} catch (Exception e) {
@@ -120,7 +122,7 @@ public class DcServiceImpl implements DcService {
 			if (!officeName.isEmpty() && officeName != null) {
 				List<DespatchAdvice> despatchAdviceData = despatchAdviceService
 						.getDespatchAdviceDataByOffficeName(officeName);
-				data.setDcNo(codeGenerator.dcNoGenerator(officeName, date));
+				data.setDcNo(UUID.randomUUID().toString());
 
 				data.setClData(deliveryChellanRepo.findByOfficeName(officeName).stream()
 						.filter(item -> item.getLoadType().equals("Combined Load") && item.getClNo() == null
@@ -134,8 +136,8 @@ public class DcServiceImpl implements DcService {
 							despatchAdviceData.stream().filter(item -> item.getVoucherStatus().equals("Approved"))
 									.map(item -> item.getGodownName()).collect(Collectors.toSet()));
 					if (!godownName.isEmpty() && godownName != null) {
-						data.setDespatchAdviceNoList(
-								despatchAdviceService.getUnfullfilledDespatchAdviceNo(officeName, activity));
+						data.setDespatchAdviceNoList(despatchAdviceService.getUnfullfilledDespatchAdviceNo(officeName,
+								activity, godownName));
 
 						if (!despatchAdviceNo.isEmpty() && despatchAdviceNo != null) {
 							DespatchAdvice despatchAdvice = despatchAdviceService
@@ -243,18 +245,20 @@ public class DcServiceImpl implements DcService {
 								item.getQty(), null, null, null, null, null, null)));
 				if (item.getBatchNo().startsWith("GR")) {
 					GRN grn = grnService.getGrnDataByGrnNo(item.getBatchNo());
-					grn.setGrnQtyAvlForDc(grn.getGrnQtyAvlForDc() + item.getQty());
+					grn.setGrnQtyAvlForDc(
+							RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnQtyAvlForDc() + item.getQty()));
 					grnRepo.save(grn);
 					outwardBatchRepo.deleteById(item.getId());
 				} else if (item.getBatchNo().startsWith("GT")) {
 					GTN gtn = gtnService.getGtnDataByGtnNo(item.getBatchNo());
 					GtnTableData qtyUpdateForDc = gtn.getGtnTableData().get(0);
-					qtyUpdateForDc.setQtyAvlForDc(qtyUpdateForDc.getQtyAvlForDc() + item.getQty());
+					qtyUpdateForDc.setQtyAvlForDc(RoundToDecimalPlace
+							.roundToTwoDecimalPlaces(qtyUpdateForDc.getQtyAvlForDc() + item.getQty()));
 					gtnRepo.save(gtn);
 					outwardBatchRepo.deleteById(item.getId());
 				} else if (item.getBatchNo().startsWith("OB")) {
 					OpeningStock ob = openingStockService.getObById(item.getBatchNo());
-					ob.setQtyAvlForDc(ob.getQtyAvlForDc() + item.getQty());
+					ob.setQtyAvlForDc(RoundToDecimalPlace.roundToTwoDecimalPlaces(ob.getQtyAvlForDc() + item.getQty()));
 					openingStockRepo.save(ob);
 					outwardBatchRepo.deleteById(item.getId());
 				}
@@ -369,10 +373,11 @@ public class DcServiceImpl implements DcService {
 					}
 					if (cb != null) {
 						closingStockTableRepo.save(new ClosingStockTable(null, dc.getOfficeName(), dc.getDate(),
-								item.getProductName(), dc.getGodownName(), cb.getBalance() - item.getQty()));
+								item.getProductName(), dc.getGodownName(),
+								RoundToDecimalPlace.roundToTwoDecimalPlaces(cb.getBalance() - item.getQty())));
 					}
 				} else {
-					cb.setBalance(cb.getBalance() - item.getQty());
+					cb.setBalance(RoundToDecimalPlace.roundToTwoDecimalPlaces(cb.getBalance() - item.getQty()));
 					closingStockTableRepo.save(cb);
 				}
 			});
