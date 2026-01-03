@@ -23,4 +23,5 @@ public class TableDataForDc {
 	private String collectionMode;
 	private Double mrp;
 	private LocalDate grnDate;
+	private String voucherId;
 }

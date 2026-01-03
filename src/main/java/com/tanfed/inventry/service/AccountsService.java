@@ -1,8 +1,10 @@
 package com.tanfed.inventry.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +34,13 @@ public interface AccountsService {
 	public Vouchers getAccountsVoucherByVoucherNoHandler(@RequestParam String formType, @RequestParam String voucherNo,
 			@RequestHeader("Authorization") String jwt) throws Exception;
 
+	@GetMapping("/api/billsaccounts/billsaccountsfilterdata")
+	public Vouchers getBillsAccountsFilteredDataHandler(@RequestParam String formType, @RequestParam String officeName,
+			@RequestParam String voucherStatus,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+			@RequestHeader("Authorization") String jwt) throws Exception;
+
 	@PutMapping("/api/accounts/voucherApproval")
 	@PreAuthorize("hasAnyRole('ROLE_SUPERADMIN', 'ROLE_ACCADMIN', 'ROLE_ROADMIN')")
 	public ResponseEntity<String> voucherApprovalHandler(@RequestBody VoucherApproval obj,
@@ -40,4 +49,12 @@ public interface AccountsService {
 	@PutMapping("/api/billsaccounts/updatesupplieradvance/{supplierAdvanceNo}")
 	public void updateAvlQtyAndAmountHandler(@PathVariable String supplierAdvanceNo, @RequestParam double qty,
 			@RequestParam double amount, @RequestHeader("Authorization") String jwt) throws Exception;
+
+	@PutMapping("/api/billsaccounts/updatefundtransfered")
+	public void updateFundTransferedHandler(@RequestBody List<String> invoiceNoList,
+			@RequestHeader("Authorization") String jwt) throws Exception;
+
+	@PutMapping("/api/billsaccounts/revertfundtransfered")
+	public void revertFundTransferedHandler(@RequestBody List<String> invoiceNoList,
+			@RequestHeader("Authorization") String jwt) throws Exception;
 }

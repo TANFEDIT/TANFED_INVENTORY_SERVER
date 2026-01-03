@@ -50,6 +50,7 @@ public class TermsPrice {
 	
 	@Column
 	private String circularNo;
+	private String purchaseType;
 	
 	@Column
 	private String voucherStatus = "Pending";

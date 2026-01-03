@@ -120,7 +120,7 @@ public class OpeningStockServiceImpl implements OpeningStockService {
 			openingStockRepo.save(ob);
 			try {
 				if (obj.getDcNo() != null) {
-					outwardBatchRepo.save(new OutwardBatch(null, LocalDateTime.now(), obj.getDcNo(),
+					outwardBatchRepo.save(new OutwardBatch(null, LocalDateTime.now(), obj.getDcNo(), obj.getVoucherId(),
 							obj.getOutwardBatchNo(), obj.getQty(), ob.getProductCategory(), ob.getProductGroup(),
 							ob.getSupplierName(), ob.getProductName(), ob.getPacking(), ob.getStandardUnits(), null,
 							ob.getAsOn(), ob.getOfficeName(), ob.getGodownName(), despatchAdviceNo));

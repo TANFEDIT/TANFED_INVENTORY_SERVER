@@ -43,6 +43,8 @@ public class MpaEmployeeData {
 	private String engagedAs;
 
 	private String serviceChargePercentage;
+	
+	private String serviceChargeFlat;
 
 	private String rateDefinedAs;
 

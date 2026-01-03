@@ -72,14 +72,14 @@ public class CodeGenerator {
 		}
 	}
 
-	public String generateTermsNumber(String activity, LocalDate date) throws Exception {
+	public String generateTermsNumber(String activity, LocalDate date, String purchaseType) throws Exception {
 		try {
 			String year = String.valueOf(date.getYear()).substring(2); // Extract last two digits
 			int random = ThreadLocalRandom.current().nextInt(10000, 100000);
 
 			String nxt2Ltr = activityAbbreviation.get(activity);
-
-			String generatedvalue = year + "-" + nxt2Ltr + "-" + random;
+			String prefix = purchaseType.equals("Credit Purchase") ? "CR-" : "CAS-";
+			String generatedvalue = prefix + year + "-" + nxt2Ltr + "-" + random;
 			return generatedvalue;
 		} catch (Exception e) {
 			throw new Exception(e);

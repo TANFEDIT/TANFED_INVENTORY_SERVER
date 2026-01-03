@@ -87,16 +87,12 @@ public class GTN {
 	
 	private Double loadingChargesPerQty;
 	
-	
-	
 	private String rrNo;
 		
 	private String movementDocDate;
 	
 	private String vehicleNo;
 
-	
-	
 	private String issuedGtnNo;
 	
 	private String buyerName;

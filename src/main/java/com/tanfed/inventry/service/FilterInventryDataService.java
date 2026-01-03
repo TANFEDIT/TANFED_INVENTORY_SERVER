@@ -997,6 +997,9 @@ public class FilterInventryDataService {
 		if (item.getPvNo() != null) {
 			pv = accountsService.getAccountsVoucherByVoucherNoHandler("paymentVoucher", item.getPvNo(), jwt);
 		}
+		if(pv == null) {
+			throw new Exception("No pv found");
+		}
 		return new CheckMemoGoodsDto(item.getActivity(), item.getCheckMemoNo(), item.getCmDate(), item.getDesignation(),
 				item.getVoucherStatus(), item.getProductCategory(), item.getProductGroup(), item.getProductName(),
 				item.getStandardUnits(), item.getPacking(), item.getHsnCode(), item.getSupplierName(),
@@ -1037,6 +1040,9 @@ public class FilterInventryDataService {
 		Vouchers pv = null;
 		if (item.getPvNo() != null) {
 			pv = accountsService.getAccountsVoucherByVoucherNoHandler("paymentVoucher", item.getPvNo(), jwt);
+		}
+		if(pv == null) {
+			throw new Exception("No pv found");
 		}
 		Vouchers jv = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", item.getJvNo(), jwt);
 		return new MpaCheckMemoDto(item.getId(), item.getDate(), item.getCheckMemoNo(), item.getOfficeName(), null,

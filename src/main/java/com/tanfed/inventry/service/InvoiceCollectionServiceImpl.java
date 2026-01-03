@@ -56,11 +56,17 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			ft.setEmpId(Arrays.asList(empId));
 			ft.setVoucherStatus("Pending");
 			if (obj.getInvoiceNoList() != null) {
+				List<String> invoiceNoList = new ArrayList<String>();
 				obj.getInvoiceNoList().forEach(item -> {
-					Invoice invoice = invoiceRepo.findByInvoiceNo(item).get();
-					invoice.setTransferDone(true);
-					invoiceRepo.save(invoice);
+					if (item.startsWith("RO")) {
+						Invoice invoice = invoiceRepo.findByInvoiceNo(item).get();
+						invoice.setTransferDone(true);
+						invoiceRepo.save(invoice);
+					} else {
+						invoiceNoList.add(item);
+					}
 				});
+				accountsService.updateFundTransferedHandler(invoiceNoList, jwt);
 			}
 			if (obj.getIdList() != null) {
 				obj.getIdList().forEach(id -> {
@@ -383,14 +389,16 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 								|| temp.getDateOfCollectionFromCcb().equals(date))
 						&& temp.getVoucherStatusICP4().equals("Approved") && temp.getTransferDone().equals(false);
 			}).collect(Collectors.toList());
+			List<SundryDrOb> sdrObData = fetchSdrObData(officeName, jwt, branchName, date);
 			data.setTotalInvoicesValue(RoundToDecimalPlace
-					.roundToTwoDecimalPlaces(invList.stream().mapToDouble(total -> total.getCollectionValue()).sum()));
+					.roundToTwoDecimalPlaces(invList.stream().mapToDouble(total -> total.getCollectionValue()).sum()
+							+ sdrObData.stream().mapToDouble(total -> total.getCollectionValue()).sum()));
 
 			data.setNoOfInvoicesTransferedToHO(fundTransferRepo.findByOfficeName(officeName).stream().filter(temp -> {
 				return temp.getDate().isBefore(date) && temp.getCurrentTransfer() != null;
 			}).mapToDouble(total -> total.getCurrentTransfer()).sum());
 
-			data.setNoOfInvoicesCollected(invList.size());
+			data.setNoOfInvoicesCollected(invList.size() + sdrObData.size());
 			if (transferType != null && !transferType.isEmpty()) {
 				logger.info(transferType);
 				logger.info("{}", bankInfo);
@@ -425,8 +433,9 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 
 				data.setOpeningBalance(ftLst.get(ftLst.size() - 1).getClosingBalance());
 
-				data.setCollection(RoundToDecimalPlace.roundToTwoDecimalPlaces(
-						invList.stream().mapToDouble(item -> item.getCollectionValue()).sum()));
+				data.setCollection(RoundToDecimalPlace
+						.roundToTwoDecimalPlaces(invList.stream().mapToDouble(item -> item.getCollectionValue()).sum()
+								+ sdrObData.stream().mapToDouble(item -> item.getCollectionValue()).sum()));
 
 				List<FundTransfer> receipts = fundTransferRepo.findByToAccountNo(Long.valueOf(accountNo)).stream()
 						.filter(temp -> !temp.getDate().isAfter(date) && temp.getTransferDone().equals(false))
@@ -439,8 +448,27 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 				data.setTotal(data.getOpeningBalance() + data.getCollection() + data.getIbrAmount());
 
 				data.setInvoiceNoList(invList.stream().map(Invoice::getInvoiceNo).toList());
+				data.getInvoiceNoList().addAll(sdrObData.stream().map(item -> item.getInvoiceNo()).toList());
 			}
 		}
+	}
+
+	private List<SundryDrOb> fetchSdrObData(String officeName, String jwt, String branchName, LocalDate date)
+			throws Exception {
+		try {
+			Vouchers vouchers = accountsService.getBillsAccountsFilteredDataHandler("sundryDrOb", officeName, "", null,
+					null, jwt);
+			return vouchers.getSundryDrOb().stream().filter(temp -> {
+				return temp.getDateOfCollectionFromCcb() != null && temp.getCcbBranch().equals(branchName)
+						&& (temp.getDateOfCollectionFromCcb().isBefore(date)
+								|| temp.getDateOfCollectionFromCcb().equals(date))
+						&& temp.getVoucherStatusICP4().equals("Approved") && temp.getTransferDone().equals(false);
+			}).collect(Collectors.toList());
+
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+
 	}
 
 	@Override
@@ -989,11 +1017,17 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 				revertFundTransferPvAcc(fundTransfer, jwt);
 				if (obj.getVoucherStatus().equals("Rejected")) {
 					if (fundTransfer.getInvoiceNoList() != null) {
+						List<String> invoiceNoList = new ArrayList<String>();
 						fundTransfer.getInvoiceNoList().forEach(item -> {
-							Invoice invoice = invoiceRepo.findByInvoiceNo(item).get();
-							invoice.setTransferDone(false);
-							invoiceRepo.save(invoice);
+							if (item.startsWith("RO")) {
+								Invoice invoice = invoiceRepo.findByInvoiceNo(item).get();
+								invoice.setTransferDone(false);
+								invoiceRepo.save(invoice);
+							} else {
+								invoiceNoList.add(item);
+							}
 						});
+						accountsService.revertFundTransferedHandler(invoiceNoList, jwt);
 					}
 					if (fundTransfer.getIdList() != null) {
 						fundTransfer.getIdList().forEach(id -> {

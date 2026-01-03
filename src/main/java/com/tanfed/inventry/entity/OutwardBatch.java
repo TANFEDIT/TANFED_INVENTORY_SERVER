@@ -28,6 +28,8 @@ public class OutwardBatch {
 	
 	private String dcNo;
 	
+	private String voucherId;
+	
 	private String batchNo;
 	
 	private Double qty;

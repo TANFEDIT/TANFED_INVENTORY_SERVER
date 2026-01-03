@@ -102,7 +102,8 @@ public class TcServiceIpml implements TcService {
 				data.setProductName(grn.getProductName());
 				data.setPacking(grn.getPacking());
 				data.setBags(grn.getMaterialReceivedBags());
-				data.setCalcWagonClearanceCharges(RoundToDecimalPlace.roundToThreeDecimalPlaces(grn.getWagonClearanceValue()));
+				data.setCalcWagonClearanceCharges(
+						RoundToDecimalPlace.roundToThreeDecimalPlaces(grn.getWagonClearanceValue()));
 				data.setDate(grn.getDate());
 			}
 		}
@@ -143,7 +144,8 @@ public class TcServiceIpml implements TcService {
 					data.setProductName(grn.getProductName());
 					data.setPacking(grn.getPacking());
 					data.setBags(grn.getMaterialReceivedBags());
-					data.setCalcUnloadingCharges(RoundToDecimalPlace.roundToThreeDecimalPlaces(grn.getUnloadingChargesValue()));
+					data.setCalcUnloadingCharges(
+							RoundToDecimalPlace.roundToThreeDecimalPlaces(grn.getUnloadingChargesValue()));
 					data.setDate(grn.getDate());
 				}
 			}
@@ -375,7 +377,7 @@ public class TcServiceIpml implements TcService {
 					ResponseEntity<String> responseEntity = accountsService
 							.saveAccountsVouchersHandler("journalVoucher", voucher, jwt);
 					String responseString = responseEntity.getBody();
-					if(responseString == null) {
+					if (responseString == null) {
 						throw new Exception("No data found");
 					}
 					String prefix = "JV Number : ";

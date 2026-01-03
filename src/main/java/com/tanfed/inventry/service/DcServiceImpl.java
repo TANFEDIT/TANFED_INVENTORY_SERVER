@@ -142,6 +142,7 @@ public class DcServiceImpl implements DcService {
 						if (!despatchAdviceNo.isEmpty() && despatchAdviceNo != null) {
 							DespatchAdvice despatchAdvice = despatchAdviceService
 									.getDespatchAdviceDataByDespatchAdviceNo(despatchAdviceNo);
+							callRestoreTableData(despatchAdvice);
 							data.setIfmsId(despatchAdvice.getIfmsId());
 							data.setDistrict(despatchAdvice.getDistrict());
 							data.setTaluk(despatchAdvice.getTaluk());
@@ -221,6 +222,12 @@ public class DcServiceImpl implements DcService {
 		}
 	}
 
+	private void callRestoreTableData(DespatchAdvice despatchAdvice) {
+		despatchAdvice.getTableData().forEach(item -> {
+			restoreTableData(despatchAdvice.getOfficeName(), item.getProductName(), despatchAdvice.getGodownName());
+		});
+	}
+
 	private List<TableDataForDc> fecthCombinedTableData(String officeName, String productName, String godownName)
 			throws Exception {
 		List<TableDataForDc> grnTableData = grnService.grnTableData(officeName, productName, godownName, "dc");
@@ -243,24 +250,30 @@ public class DcServiceImpl implements DcService {
 				despatchAdviceService.revertDespatchAdviceQty(item.getDaNo(),
 						Arrays.asList(new DcTableData(null, null, null, null, null, item.getProductName(), null, null,
 								item.getQty(), null, null, null, null, null, null)));
-				if (item.getBatchNo().startsWith("GR")) {
-					GRN grn = grnService.getGrnDataByGrnNo(item.getBatchNo());
-					grn.setGrnQtyAvlForDc(
-							RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnQtyAvlForDc() + item.getQty()));
-					grnRepo.save(grn);
-					outwardBatchRepo.deleteById(item.getId());
-				} else if (item.getBatchNo().startsWith("GT")) {
-					GTN gtn = gtnService.getGtnDataByGtnNo(item.getBatchNo());
-					GtnTableData qtyUpdateForDc = gtn.getGtnTableData().get(0);
-					qtyUpdateForDc.setQtyAvlForDc(RoundToDecimalPlace
-							.roundToTwoDecimalPlaces(qtyUpdateForDc.getQtyAvlForDc() + item.getQty()));
+				if (item.getVoucherId().startsWith("GT")) {
+					GTN gtn = gtnService.getGtnDataByGtnNo(item.getVoucherId());
+					for (var batch : gtn.getGtnTableData()) {
+						if (item.getBatchNo().equals(batch.getOutwardBatchNo())) {
+							batch.setQtyAvlForDc(RoundToDecimalPlace
+									.roundToTwoDecimalPlaces(batch.getQtyAvlForDc() + item.getQty()));
+						}
+					}
 					gtnRepo.save(gtn);
 					outwardBatchRepo.deleteById(item.getId());
-				} else if (item.getBatchNo().startsWith("OB")) {
-					OpeningStock ob = openingStockService.getObById(item.getBatchNo());
-					ob.setQtyAvlForDc(RoundToDecimalPlace.roundToTwoDecimalPlaces(ob.getQtyAvlForDc() + item.getQty()));
-					openingStockRepo.save(ob);
-					outwardBatchRepo.deleteById(item.getId());
+				} else {
+					if (item.getBatchNo().startsWith("GR")) {
+						GRN grn = grnService.getGrnDataByGrnNo(item.getBatchNo());
+						grn.setGrnQtyAvlForDc(
+								RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnQtyAvlForDc() + item.getQty()));
+						grnRepo.save(grn);
+						outwardBatchRepo.deleteById(item.getId());
+					} else if (item.getBatchNo().startsWith("OB")) {
+						OpeningStock ob = openingStockService.getObById(item.getBatchNo());
+						ob.setQtyAvlForDc(
+								RoundToDecimalPlace.roundToTwoDecimalPlaces(ob.getQtyAvlForDc() + item.getQty()));
+						openingStockRepo.save(ob);
+						outwardBatchRepo.deleteById(item.getId());
+					}
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -271,7 +284,6 @@ public class DcServiceImpl implements DcService {
 
 	private List<TableDataForDc> fetchTableData(String officeName, String productName, String godownName)
 			throws Exception {
-		restoreTableData(officeName, productName, godownName);
 		return fecthCombinedTableData(officeName, productName, godownName);
 	}
 
@@ -282,7 +294,8 @@ public class DcServiceImpl implements DcService {
 						&& item.getProductName().equals(productName) && item.getGodownName().equals(godownName))
 				.map(item -> new TableDataForDc(item.getProductCategory(), item.getProductGroup(),
 						item.getSupplierName(), item.getProductName(), item.getPacking(), item.getStandardUnits(),
-						item.getQtyAvlForDc(), item.getObId(), null, "Through CC", item.getB2cMrp(), item.getAsOn()))
+						item.getQtyAvlForDc(), item.getObId(), null, "Through CC", item.getB2cMrp(), item.getAsOn(),
+						"ob"))
 				.collect(Collectors.toList());
 	}
 

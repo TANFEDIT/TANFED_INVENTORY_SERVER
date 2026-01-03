@@ -310,33 +310,36 @@ public class GrnServiceImpl implements GrnService {
 		try {
 
 			obj.forEach(temp -> {
-				if (temp.getOutwardBatchNo().startsWith("GR")) {
-					GRN grn = grnRepo.findByGrnNo(temp.getOutwardBatchNo()).orElse(null);
-					grn.setGrnQtyAvlForDc(
-							RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnQtyAvlForDc() - temp.getQty()));
-					grnRepo.save(grn);
-					try {
-						if (temp.getDcNo() != null) {
-							outwardBatchRepo.save(new OutwardBatch(null, LocalDateTime.now(), temp.getDcNo(),
-									temp.getOutwardBatchNo(), temp.getQty(), grn.getProductCategory(),
-									grn.getProductGroup(), grn.getSupplierName(), grn.getProductName(),
-									grn.getPacking(), grn.getStandardUnits(), fetchMrpFromPoNo(grn.getPoNo()),
-									grn.getDate(), grn.getOfficeName(), grn.getGodownName(), despatchAdviceNo));
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				} else if (temp.getOutwardBatchNo().startsWith("GT")) {
+				if (temp.getVoucherId().startsWith("GT")) {
 					try {
 						gtnService.updateGrnQtyForDc(temp, despatchAdviceNo);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				} else {
-					try {
-						openingStockService.updateGrnQtyForDc(temp, despatchAdviceNo);
-					} catch (Exception e) {
-						e.printStackTrace();
+					if (temp.getOutwardBatchNo().startsWith("GR")) {
+						GRN grn = grnRepo.findByGrnNo(temp.getOutwardBatchNo()).orElse(null);
+						grn.setGrnQtyAvlForDc(
+								RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnQtyAvlForDc() - temp.getQty()));
+						grnRepo.save(grn);
+						try {
+							if (temp.getDcNo() != null) {
+								outwardBatchRepo.save(new OutwardBatch(null, LocalDateTime.now(), temp.getDcNo(),
+										temp.getVoucherId(), temp.getOutwardBatchNo(), temp.getQty(),
+										grn.getProductCategory(), grn.getProductGroup(), grn.getSupplierName(),
+										grn.getProductName(), grn.getPacking(), grn.getStandardUnits(),
+										fetchMrpFromPoNo(grn.getPoNo()), grn.getDate(), grn.getOfficeName(),
+										grn.getGodownName(), despatchAdviceNo));
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					} else {
+						try {
+							openingStockService.updateGrnQtyForDc(temp, despatchAdviceNo);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
 				}
 
@@ -351,22 +354,24 @@ public class GrnServiceImpl implements GrnService {
 	public void revertGrnQtyForDc(List<GrnQtyUpdateForDc> obj) throws Exception {
 		try {
 			obj.forEach(temp -> {
-				if (temp.getOutwardBatchNo().startsWith("GR")) {
-					GRN grn = grnRepo.findByGrnNo(temp.getOutwardBatchNo()).orElse(null);
-					grn.setGrnQtyAvlForDc(
-							RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnQtyAvlForDc() + temp.getQty()));
-					grnRepo.save(grn);
-				} else if (temp.getOutwardBatchNo().startsWith("GT")) {
+				if (temp.getVoucherId().startsWith("GT")) {
 					try {
 						gtnService.revertGrnQtyForDc(temp);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				} else {
-					try {
-						openingStockService.revertGrnQtyForDc(temp);
-					} catch (Exception e) {
-						e.printStackTrace();
+					if (temp.getOutwardBatchNo().startsWith("GR")) {
+						GRN grn = grnRepo.findByGrnNo(temp.getOutwardBatchNo()).orElse(null);
+						grn.setGrnQtyAvlForDc(
+								RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnQtyAvlForDc() + temp.getQty()));
+						grnRepo.save(grn);
+					} else {
+						try {
+							openingStockService.revertGrnQtyForDc(temp);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
 				}
 			});
@@ -477,7 +482,7 @@ public class GrnServiceImpl implements GrnService {
 								RoundToDecimalPlace.roundToThreeDecimalPlaces(item.getGrnQtyAvlForDc()),
 								item.getGrnNo(), poService.getPoByPoNo(item.getPoNo()).getTermsPrice().getTermsNo(),
 								fetchCollectionModeFromPo(item.getPoNo()), fetchMrpFromPoNo(item.getPoNo()),
-								item.getDate());
+								item.getDate(), "grn");
 					} catch (Exception e) {
 						e.printStackTrace();
 						throw new InputMismatchException();

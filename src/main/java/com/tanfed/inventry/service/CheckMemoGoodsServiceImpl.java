@@ -214,6 +214,9 @@ public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
 						ResponseEntity<String> responseEntity = accountsService
 								.saveAccountsVouchersHandler("journalVoucher", voucher, jwt);
 						String responseString = responseEntity.getBody();
+						if(responseString == null) {
+							throw new Exception("No data found");
+						}
 						String prefix = "JV Number : ";
 						int index = responseString.indexOf(prefix);
 						jvNoList.add(responseString.substring(index + prefix.length()).trim());

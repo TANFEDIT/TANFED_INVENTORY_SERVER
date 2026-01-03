@@ -13,5 +13,6 @@ public class GrnQtyUpdateForDc {
 	private String outwardBatchNo;
 	private Double qty;
 	private String productName;
+	private String voucherId;
 
 }

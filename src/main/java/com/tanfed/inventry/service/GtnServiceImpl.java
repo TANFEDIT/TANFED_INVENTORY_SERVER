@@ -417,7 +417,7 @@ public class GtnServiceImpl implements GtnService {
 	private void validateGodownInsurance(GodownInfo godownInfo, LocalDate date) throws Exception {
 		if (date.isBefore(godownInfo.getInsuranceFrom()) || date.isAfter(godownInfo.getInsuranceTo())
 				|| date.isBefore(godownInfo.getValidityFrom()) || date.isAfter(godownInfo.getValidityTo())) {
-			throw new Exception("Update Godown Data!");
+			throw new Exception("Update Godown License and Insurance Data!");
 		}
 	}
 
@@ -501,9 +501,9 @@ public class GtnServiceImpl implements GtnService {
 				.flatMap(itemData -> itemData.getGtnTableData().stream()
 						.map(item -> new TableDataForDc(itemData.getProductCategory(), itemData.getProductGroup(),
 								itemData.getSupplierName(), itemData.getProductName(), item.getPacking(),
-								item.getStandardUnits(), item.getQtyAvlForDc(), itemData.getGtnNo(),
+								item.getStandardUnits(), item.getQtyAvlForDc(), item.getOutwardBatchNo(),
 								fetchTermsNoFromGrnNo(item.getOutwardBatchNo()), item.getCollectionMode(),
-								item.getMrp(), itemData.getDate())))
+								item.getMrp(), itemData.getDate(), itemData.getGtnNo())))
 				.collect(Collectors.toList());
 	}
 
@@ -527,28 +527,21 @@ public class GtnServiceImpl implements GtnService {
 			logger.info("{}", obj);
 
 //				fetch gtn data by grnNo and set new qty and save in repository
-			GTN gtn = gtnRepo.findByGtnNo(obj.getOutwardBatchNo()).orElse(null);
-			double qty = obj.getQty();
+			GTN gtn = gtnRepo.findByGtnNo(obj.getVoucherId()).orElse(null);
 			for (var item : gtn.getGtnTableData()) {
-				if (qty <= 0)
-					break;
-				double available = item.getQtyAvlForDc();
-				if (available >= qty) {
-					item.setQtyAvlForDc(RoundToDecimalPlace.roundToTwoDecimalPlaces(available - qty));
-					qty = 0;
-				} else {
-					item.setQtyAvlForDc(0.0);
-					qty -= available;
+				if (item.getOutwardBatchNo().equals(obj.getOutwardBatchNo())) {
+					item.setQtyAvlForDc(
+							RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getQtyAvlForDc() - obj.getQty()));
 				}
 			}
 			gtnRepo.save(gtn);
 			try {
 				if (obj.getDcNo() != null) {
-					outwardBatchRepo.save(new OutwardBatch(null, LocalDateTime.now(), obj.getDcNo(),
+					outwardBatchRepo.save(new OutwardBatch(null, LocalDateTime.now(), obj.getDcNo(), obj.getVoucherId(),
 							obj.getOutwardBatchNo(), obj.getQty(), gtn.getProductCategory(), gtn.getProductGroup(),
 							gtn.getSupplierName(), gtn.getProductName(), gtn.getGtnTableData().get(0).getPacking(),
 							gtn.getGtnTableData().get(0).getStandardUnits(), gtn.getGtnTableData().get(0).getMrp(),
-							gtn.getDate(), gtn.getOfficeName(), gtn.getGodownName(), despatchAdviceNo));
+							gtn.getDate(), gtn.getOfficeName(), gtn.getDestination(), despatchAdviceNo));
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -564,18 +557,11 @@ public class GtnServiceImpl implements GtnService {
 		try {
 
 //				fetch gtn data by grnNo and set new qty and save in repository
-			GTN gtn = gtnRepo.findByGtnNo(obj.getOutwardBatchNo()).orElse(null);
-			double qty = obj.getQty();
+			GTN gtn = gtnRepo.findByGtnNo(obj.getVoucherId()).orElse(null);
 			for (var item : gtn.getGtnTableData()) {
-				if (qty <= 0)
-					break;
-				double available = item.getQtyAvlForDc();
-				if (available >= qty) {
-					item.setQtyAvlForDc(RoundToDecimalPlace.roundToTwoDecimalPlaces(available + qty));
-					qty = 0;
-				} else {
-					item.setQtyAvlForDc(0.0);
-					qty -= available;
+				if (item.getOutwardBatchNo().equals(obj.getOutwardBatchNo())) {
+					item.setQtyAvlForDc(
+							RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getQtyAvlForDc() + obj.getQty()));
 				}
 			}
 			gtnRepo.save(gtn);
@@ -628,7 +614,7 @@ public class GtnServiceImpl implements GtnService {
 					if (date.equals(LocalDate.of(2025, 3, 30)) && cb == null) {
 						closingStockTableRepo.save(new ClosingStockTable(null, gtn.getOfficeName(), gtn.getDate(),
 								gtn.getProductName(), gtn.getGodownName(),
-								gtn.getGtnTableData().stream().mapToDouble(item -> item.getReceivedQty()).sum()));
+								gtn.getGtnTableData().stream().mapToDouble(item -> item.getQty()).sum()));
 						break;
 					}
 				}
@@ -653,23 +639,23 @@ public class GtnServiceImpl implements GtnService {
 			String region = gtn.getTransactionFor().contains("Other Region") ? gtn.getToRegion() : gtn.getOfficeName();
 
 			ClosingStockTable cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(region,
-					gtn.getProductName(), gtn.getDate(), gtn.getGodownName());
+					gtn.getProductName(), gtn.getDate(), gtn.getDestination());
 			if (cb == null) {
 				int n = 1;
 				while (cb == null) {
 					LocalDate date = gtn.getDate().minusDays(n++);
 					cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(region,
-							gtn.getProductName(), date, gtn.getGodownName());
+							gtn.getProductName(), date, gtn.getDestination());
 					if (date.equals(LocalDate.of(2025, 3, 30)) && cb == null) {
 						closingStockTableRepo.save(new ClosingStockTable(null, region, gtn.getDate(),
-								gtn.getProductName(), gtn.getGodownName(),
+								gtn.getProductName(), gtn.getDestination(),
 								gtn.getGtnTableData().stream().mapToDouble(item -> item.getReceivedQty()).sum()));
 						break;
 					}
 				}
 				if (cb != null) {
 					closingStockTableRepo.save(new ClosingStockTable(null, region, gtn.getDate(), gtn.getProductName(),
-							gtn.getGodownName(), cb.getBalance()
+							gtn.getDestination(), cb.getBalance()
 									+ gtn.getGtnTableData().stream().mapToDouble(item -> item.getReceivedQty()).sum()));
 				}
 			} else {

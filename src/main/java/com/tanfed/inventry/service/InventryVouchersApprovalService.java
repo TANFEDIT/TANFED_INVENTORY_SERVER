@@ -219,7 +219,7 @@ public class InventryVouchersApprovalService {
 				if (obj.getVoucherStatus().equals("Rejected")) {
 					if (gtn.getGtnFor().equals("Issue")) {
 						List<GrnQtyUpdateForDc> collect = gtn.getGtnTableData().stream()
-								.map(item -> new GrnQtyUpdateForDc(null, item.getOutwardBatchNo(), item.getQty(), null))
+								.map(item -> new GrnQtyUpdateForDc(null, item.getOutwardBatchNo(), item.getQty(), null, null))
 								.collect(Collectors.toList());
 
 						grnService.revertGrnQtyForDc(collect);
@@ -292,7 +292,7 @@ public class InventryVouchersApprovalService {
 				}
 				if (obj.getVoucherStatus().equals("Rejected")) {
 					List<GrnQtyUpdateForDc> collect = deliveryChellan.getDcTableData().stream()
-							.map(item -> new GrnQtyUpdateForDc(null, item.getOutwardBatchNo(), item.getQty(), null))
+							.map(item -> new GrnQtyUpdateForDc(null, item.getOutwardBatchNo(), item.getQty(), null, null))
 							.collect(Collectors.toList());
 
 					grnService.revertGrnQtyForDc(collect);

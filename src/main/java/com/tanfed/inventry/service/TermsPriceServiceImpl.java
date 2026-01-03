@@ -41,7 +41,7 @@ public class TermsPriceServiceImpl implements TermsPriceService {
 			String termsNo;
 			do {
 				termsNo = codeGenerator.generateTermsNumber(obj.getMasterData().getActivity(),
-						obj.getMasterData().getDate());
+						obj.getMasterData().getDate(), obj.getPurchaseType());
 			} while (termsPriceRepo.findByTermsNo(termsNo).isPresent());
 			String empId = JwtTokenValidator.getEmailFromJwtToken(jwt);
 			obj.setEmpId(Arrays.asList(empId));
