@@ -246,7 +246,7 @@ public class DcServiceImpl implements DcService {
 			try {
 				despatchAdviceService.revertDespatchAdviceQty(item.getDaNo(),
 						Arrays.asList(new DcTableData(null, null, null, null, null, item.getProductName(), null, null,
-								item.getQty(), null, null, null, null, null, null)));
+								item.getQty(), null, null, null, null, null, null, null)));
 				if (item.getVoucherId().startsWith("GT")) {
 					GTN gtn = gtnService.getGtnDataByGtnNo(item.getVoucherId());
 					for (var batch : gtn.getGtnTableData()) {

@@ -43,4 +43,6 @@ public class DcTableData {
 	private String productGroup;
 	
 	private String collectionMode;
+	
+	private String voucherId;
 }
