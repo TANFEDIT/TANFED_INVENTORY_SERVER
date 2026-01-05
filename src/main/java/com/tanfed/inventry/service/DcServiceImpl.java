@@ -122,8 +122,10 @@ public class DcServiceImpl implements DcService {
 			if (!officeName.isEmpty() && officeName != null) {
 				List<DespatchAdvice> despatchAdviceData = despatchAdviceService
 						.getDespatchAdviceDataByOffficeName(officeName);
-				if(dcNo == null) {
+				if(dcNo.isEmpty()) {
 					data.setDcNo(UUID.randomUUID().toString());					
+				}else {
+					data.setDcNo(dcNo);		
 				}
 				data.setClData(deliveryChellanRepo.findByOfficeName(officeName).stream()
 						.filter(item -> item.getLoadType().equals("Combined Load") && item.getClNo() == null

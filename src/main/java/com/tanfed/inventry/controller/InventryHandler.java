@@ -165,9 +165,9 @@ public class InventryHandler {
 
 	@GetMapping("/fetchdatafordc")
 	public DataForDc getDataForDeliveryChellanHandler(@RequestHeader("Authorization") String jwt,
-			@RequestParam String officeName, @RequestParam String dcNo,
+			@RequestParam String officeName,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-			String ifmsId, String activity, String despatchAdviceNo, String productName, String godownName)
+			String ifmsId, String activity, String despatchAdviceNo, String productName, String godownName, String dcNo)
 			throws Exception {
 		return dcService.getDataForDeliveryChellan(officeName, jwt, ifmsId, activity, date, despatchAdviceNo,
 				productName, godownName, dcNo);
