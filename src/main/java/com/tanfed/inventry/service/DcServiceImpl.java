@@ -116,14 +116,15 @@ public class DcServiceImpl implements DcService {
 
 	@Override
 	public DataForDc getDataForDeliveryChellan(String officeName, String jwt, String ifmsId, String activity,
-			LocalDate date, String despatchAdviceNo, String productName, String godownName) throws Exception {
+			LocalDate date, String despatchAdviceNo, String productName, String godownName, String dcNo) throws Exception {
 		try {
 			DataForDc data = new DataForDc();
 			if (!officeName.isEmpty() && officeName != null) {
 				List<DespatchAdvice> despatchAdviceData = despatchAdviceService
 						.getDespatchAdviceDataByOffficeName(officeName);
-				data.setDcNo(UUID.randomUUID().toString());
-
+				if(dcNo == null) {
+					data.setDcNo(UUID.randomUUID().toString());					
+				}
 				data.setClData(deliveryChellanRepo.findByOfficeName(officeName).stream()
 						.filter(item -> item.getLoadType().equals("Combined Load") && item.getClNo() == null
 								&& !item.getVoucherStatus().equals("Approved"))

@@ -159,18 +159,18 @@ public class InventryHandler {
 	public DataForDespatchAdvice getDataForDespatchAdviceHandler(@RequestParam String officeName, String activity,
 			String nameOfInstitution, String productName, String month, String godownName,
 			@RequestHeader("Authorization") String jwt) throws Exception {
-		return despatchAdviceService.getDataForDespatchAdvice(officeName, activity, nameOfInstitution, productName, jwt, month,
-				godownName);
+		return despatchAdviceService.getDataForDespatchAdvice(officeName, activity, nameOfInstitution, productName, jwt,
+				month, godownName);
 	}
 
 	@GetMapping("/fetchdatafordc")
 	public DataForDc getDataForDeliveryChellanHandler(@RequestHeader("Authorization") String jwt,
-			@RequestParam String officeName,
+			@RequestParam String officeName, @RequestParam String dcNo,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
 			String ifmsId, String activity, String despatchAdviceNo, String productName, String godownName)
 			throws Exception {
 		return dcService.getDataForDeliveryChellan(officeName, jwt, ifmsId, activity, date, despatchAdviceNo,
-				productName, godownName);
+				productName, godownName, dcNo);
 	}
 
 	@GetMapping("/fetchdataforinvoice")

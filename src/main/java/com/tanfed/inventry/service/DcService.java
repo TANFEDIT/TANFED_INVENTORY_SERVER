@@ -24,7 +24,7 @@ public interface DcService {
 	public DeliveryChellan getDcDataByDcNo(String dcNo) throws Exception;
 	
 	public DataForDc getDataForDeliveryChellan(String officeName, String jwt, String ifmsId, String activity, LocalDate date, String despatchAdviceNo,
-			String productName, String godownName) throws Exception;
+			String productName, String godownName, String dcNo) throws Exception;
 
 	public List<DespatchAdviseTable> fetchDcData(String despatchAdviceNo) throws Exception;
 
