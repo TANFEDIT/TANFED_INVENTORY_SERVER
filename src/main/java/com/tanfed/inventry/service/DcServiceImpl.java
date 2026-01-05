@@ -116,16 +116,17 @@ public class DcServiceImpl implements DcService {
 
 	@Override
 	public DataForDc getDataForDeliveryChellan(String officeName, String jwt, String ifmsId, String activity,
-			LocalDate date, String despatchAdviceNo, String productName, String godownName, String dcNo) throws Exception {
+			LocalDate date, String despatchAdviceNo, String productName, String godownName, String dcNo)
+			throws Exception {
 		try {
 			DataForDc data = new DataForDc();
 			if (!officeName.isEmpty() && officeName != null) {
 				List<DespatchAdvice> despatchAdviceData = despatchAdviceService
 						.getDespatchAdviceDataByOffficeName(officeName);
-				if(dcNo.isEmpty()) {
-					data.setDcNo(UUID.randomUUID().toString());					
-				}else {
-					data.setDcNo(dcNo);		
+				if (dcNo.isEmpty()) {
+					data.setDcNo(UUID.randomUUID().toString());
+				} else {
+					data.setDcNo(dcNo);
 				}
 				data.setClData(deliveryChellanRepo.findByOfficeName(officeName).stream()
 						.filter(item -> item.getLoadType().equals("Combined Load") && item.getClNo() == null
@@ -135,6 +136,7 @@ public class DcServiceImpl implements DcService {
 						.collect(Collectors.toList()));
 
 				if (!activity.isEmpty() && activity != null) {
+					restoreTableData(officeName);
 					data.setGodownNameList(
 							despatchAdviceData.stream().filter(item -> item.getVoucherStatus().equals("Approved"))
 									.map(item -> item.getGodownName()).collect(Collectors.toSet()));
@@ -145,7 +147,6 @@ public class DcServiceImpl implements DcService {
 						if (!despatchAdviceNo.isEmpty() && despatchAdviceNo != null) {
 							DespatchAdvice despatchAdvice = despatchAdviceService
 									.getDespatchAdviceDataByDespatchAdviceNo(despatchAdviceNo);
-							callRestoreTableData(despatchAdvice);
 							data.setIfmsId(despatchAdvice.getIfmsId());
 							data.setDistrict(despatchAdvice.getDistrict());
 							data.setTaluk(despatchAdvice.getTaluk());
@@ -208,12 +209,12 @@ public class DcServiceImpl implements DcService {
 
 							if (!productName.isEmpty() && productName != null) {
 								data.setTableData(fetchTableData(officeName, productName, godownName));
-								data.setDespatchAdviseQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+								data.setDespatchAdviseQty(
 										despatchAdviceService.getDespatchAdviceDataByDespatchAdviceNo(despatchAdviceNo)
 												.getTableData().stream()
 												.filter(item -> item.getProductName().equals(productName))
 												.map(item -> item.getQtyAvlForDc()).collect(Collectors.toList())
-												.get(0)));
+												.get(0));
 							}
 						}
 					}
@@ -223,12 +224,6 @@ public class DcServiceImpl implements DcService {
 		} catch (Exception e) {
 			throw new Exception(e);
 		}
-	}
-
-	private void callRestoreTableData(DespatchAdvice despatchAdvice) {
-		despatchAdvice.getTableData().forEach(item -> {
-			restoreTableData(despatchAdvice.getOfficeName(), item.getProductName(), despatchAdvice.getGodownName());
-		});
 	}
 
 	private List<TableDataForDc> fecthCombinedTableData(String officeName, String productName, String godownName)
@@ -241,10 +236,9 @@ public class DcServiceImpl implements DcService {
 
 	}
 
-	private void restoreTableData(String officeName, String productName, String godownName) {
+	private void restoreTableData(String officeName) {
 		List<OutwardBatch> tempTableData = outwardBatchRepo.findAll().stream()
-				.filter(item -> item.getProductName().equals(productName) && item.getOfficeName().equals(officeName)
-						&& item.getGodownName().equals(godownName))
+				.filter(item -> item.getOfficeName().equals(officeName))
 				.filter(item -> item.getTime().isBefore(LocalDateTime.now().minusMinutes(3)))
 				.collect(Collectors.toList());
 
