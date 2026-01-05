@@ -249,11 +249,10 @@ public class InventryHandler {
 	@PreAuthorize("hasAnyRole('ROLE_SUPERADMIN', 'ROLE_ROUSER', 'ROLE_ROADMIN')")
 	public ResponseEntity<String> updateGrnQtyForDcHandler(@RequestBody List<GrnQtyUpdateForDc> obj,
 			@PathVariable String despatchAdviceNo) throws Exception {
-		despatchAdviceService.updateDespatchAdviceQty(despatchAdviceNo,
-				obj.stream()
-						.map(item -> new DcTableData(null, null, item.getOutwardBatchNo(), null, null,
-								item.getProductName(), null, null, item.getQty(), null, null, null, null, null, null))
-						.collect(Collectors.toList()));
+		despatchAdviceService.updateDespatchAdviceQty(despatchAdviceNo, obj.stream()
+				.map(item -> new DcTableData(null, null, item.getOutwardBatchNo(), null, null, item.getProductName(),
+						null, null, item.getQty(), null, null, null, null, null, null, null))
+				.collect(Collectors.toList()));
 		return grnService.updateGrnQtyForDc(obj, despatchAdviceNo);
 	}
 
