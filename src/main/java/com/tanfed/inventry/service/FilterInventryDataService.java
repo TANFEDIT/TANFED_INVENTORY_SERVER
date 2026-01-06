@@ -1044,7 +1044,13 @@ public class FilterInventryDataService {
 		if(pv == null) {
 			throw new Exception("No pv found");
 		}
-		Vouchers jv = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", item.getJvNo(), jwt);
+		Vouchers jv = null;
+		if(item.getJvNo() != null) {
+			jv = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", item.getJvNo(), jwt);
+		}
+		if(jv == null) {
+			throw new Exception("No jv found");
+		}
 		return new MpaCheckMemoDto(item.getId(), item.getDate(), item.getCheckMemoNo(), item.getOfficeName(), null,
 				item.getTotalCalculatedValue(), item.getTotalSgstValue(), item.getTotalCgstValue(),
 				item.getTotalPaymentValue(), item.getRecoveryIfAny(), item.getNetTotalDeduction(), item.getTcsOrTds(),
