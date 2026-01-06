@@ -140,8 +140,8 @@ public class MpaServiceImpl implements MpaService {
 								.stream()
 								.filter(item -> item.getFinancialMonth().equals(financialMonth)
 										&& item.getContractFirm().equals(contractFirm)
-										&& (!item.getVoucherStatus().equals("Approved")
-										|| !item.getVoucherStatus().equals("Rejected")))
+										&& (item.getVoucherStatus().equals("Pending")
+										|| item.getVoucherStatus().equals("Verified")))
 								.collect(Collectors.toList());
 						if (!billEntryForBillMonth.isEmpty()) {
 							throw new FileSystemAlreadyExistsException("Approve Existing Bill Entry!");
