@@ -43,8 +43,8 @@ public class SundryDrOb {
 	private LocalDate addedToPresentDate;
 	private LocalDate dateOfPresent;
 	private String icmNo;
-	private Double collectionValue;
-	private LocalDate dateOfCollectionFromCcb;
+	private List<Double> collectionValue;
+	private List<LocalDate> dateOfCollectionFromCcb;
 	private String voucherStatusICP1;
 	private List<String> designationICP1;
 	private String voucherStatusICP2;
@@ -54,5 +54,6 @@ public class SundryDrOb {
 	private String voucherStatusICP4;
 	private List<String> designationICP4;
 	private Boolean transferDone;
-	private AdjustmentReceiptVoucher adjReceipt;
+	private List<String> adjReceiptStatus;
+	private List<AdjustmentReceiptVoucher> adjReceipt;
 }

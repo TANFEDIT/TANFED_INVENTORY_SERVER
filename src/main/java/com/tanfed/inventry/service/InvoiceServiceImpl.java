@@ -401,9 +401,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 			throws Exception {
 		try {
 			Invoice invoice = invoiceRepo.findByInvoiceNo(invoiceNo).get();
-			invoice.setDateOfCollectionFromCcb(date);
-			invoice.setAdjReceiptNo(voucherNo);
-			invoice.setAdjReceiptStatus("Pending");
+			invoice.setDateOfCollectionFromCcb(Arrays.asList(date));
+			invoice.setAdjReceiptNo(Arrays.asList(voucherNo));
+			invoice.setAdjReceiptStatus(Arrays.asList("Pending"));
 			invoiceRepo.save(invoice);
 			return new ResponseEntity<String>("Invoice Updated Successfully", HttpStatus.ACCEPTED);
 		} catch (Exception e) {
@@ -444,14 +444,14 @@ public class InvoiceServiceImpl implements InvoiceService {
 		try {
 			if (obj != null) {
 				Vouchers vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("adjustmentReceiptVoucher",
-						obj.getAdjReceiptNo(), jwt);
+						obj.getAdjReceiptNo().get(0), jwt);
 				VoucherApproval temp = new VoucherApproval("Rejected",
 						String.valueOf(vouchers.getAdjustmentReceiptVoucherData().getId()), "adjustmentReceiptVoucher");
 				accountsService.voucherApprovalHandler(temp, jwt);
 			}
 			if (adjv != null) {
 				Invoice invoice = invoiceRepo.findByInvoiceNo(adjv.getIcmInvNo()).get();
-				invoice.setAdjReceiptStatus(adjv.getVoucherStatus());
+				invoice.setAdjReceiptStatus(Arrays.asList(adjv.getVoucherStatus()));
 				invoiceRepo.save(invoice);
 			}
 
@@ -464,7 +464,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 	public void approveNonCCInvoice(String invoiceNo) throws Exception {
 		try {
 			Invoice invoice = invoiceRepo.findByInvoiceNo(invoiceNo).get();
-			invoice.setAdjReceiptStatus("Approved");
+			invoice.setAdjReceiptStatus(Arrays.asList("Approved"));
 			invoiceRepo.save(invoice);
 		} catch (Exception e) {
 			throw new Exception(e);

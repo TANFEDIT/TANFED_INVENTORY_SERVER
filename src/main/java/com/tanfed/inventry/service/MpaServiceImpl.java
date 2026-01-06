@@ -240,19 +240,21 @@ public class MpaServiceImpl implements MpaService {
 		try {
 			MpaCheckMemo finalObj = new MpaCheckMemo();
 			Vouchers voucher = new Vouchers();
-			voucher.setJournalVoucherData(obj.getJvData());
-			try {
-				ResponseEntity<String> responseEntity = accountsService.saveAccountsVouchersHandler("journalVoucher",
-						voucher, jwt);
-				String responseString = responseEntity.getBody();
-				if (responseString == null) {
-					throw new Exception("No data found");
-				}
-				String prefix = "JV Number : ";
-				int index = responseString.indexOf(prefix);
-				finalObj.setJvNo(responseString.substring(index + prefix.length()).trim());
-			} catch (Exception e) {
-				e.printStackTrace();
+			if(obj.getJvData() != null) {
+				voucher.setJournalVoucherData(obj.getJvData());
+				try {
+					ResponseEntity<String> responseEntity = accountsService.saveAccountsVouchersHandler("journalVoucher",
+							voucher, jwt);
+					String responseString = responseEntity.getBody();
+					if (responseString == null) {
+						throw new Exception("No data found");
+					}
+					String prefix = "JV Number : ";
+					int index = responseString.indexOf(prefix);
+					finalObj.setJvNo(responseString.substring(index + prefix.length()).trim());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}				
 			}
 			MpaBillEntry mpaBillEntry = mpaBillEntryRepo.findByCheckMemoNo(obj.getCheckMemoNo()).get();
 			mpaBillEntry.setIsMpaCheckMemoDone(true);

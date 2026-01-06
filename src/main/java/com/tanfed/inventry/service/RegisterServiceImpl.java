@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -316,8 +317,9 @@ public class RegisterServiceImpl implements RegisterService {
 			}).map(item -> {
 				return new InvoiceCollectionRegisterTable(item.getActivity(), item.getGodownName(), item.getInvoiceNo(),
 						item.getDate(), item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(),
-						item.getTotalQty(), item.getNetInvoiceAdjustment(), item.getDueDate(), item.getAckEntryDate(),
-						null, null, item.getInvoiceFor(), null, null, null, null, null, null, null, null, null);
+						item.getTotalQty(), Arrays.asList(item.getNetInvoiceAdjustment()), item.getDueDate(),
+						item.getAckEntryDate(), null, null, item.getInvoiceFor(), null, null, null, null, null, null,
+						null, null, null);
 			}).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception("Error while generating Invoice Watching Register data", e);
@@ -347,8 +349,9 @@ public class RegisterServiceImpl implements RegisterService {
 			}).map(item -> {
 				return new InvoiceCollectionRegisterTable(item.getActivity(), null, item.getInvoiceNo(), item.getDate(),
 						item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
-						item.getNetInvoiceAdjustment(), item.getDueDate(), null, item.getDateOfPresent(), null,
-						item.getInvoiceFor(), item.getCcbBranch(), null, null, null, null, null, null, null, null);
+						Arrays.asList(item.getNetInvoiceAdjustment()), item.getDueDate(), null, item.getDateOfPresent(),
+						null, item.getInvoiceFor(), item.getCcbBranch(), null, null, null, null, null, null, null,
+						null);
 			}).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception("Error while generating Invoice Presentation Register data", e);

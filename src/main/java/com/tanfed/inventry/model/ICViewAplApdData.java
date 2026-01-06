@@ -16,5 +16,5 @@ public class ICViewAplApdData {
 	private List<ICP1Data> invoice;
 	private Set<String> icmNoList;
 	private List<FundTransferDto> fundTransfer;
-	private AdjustmentReceiptVoucher adjv;
+	private List<AdjustmentReceiptVoucher> adjv;
 }

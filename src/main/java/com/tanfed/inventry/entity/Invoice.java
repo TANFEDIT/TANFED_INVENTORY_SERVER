@@ -118,9 +118,9 @@ public class Invoice {
 	
 	private String licenseNoGodown;
 
-	private String adjReceiptNo;
+	private List<String> adjReceiptNo;
 
-	private String adjReceiptStatus;
+	private List<String> adjReceiptStatus;
 
 	
 	  
@@ -137,7 +137,7 @@ public class Invoice {
 	
 	
 	
-	
+	private Boolean isShort;
 	
 	
 	
@@ -160,7 +160,7 @@ public class Invoice {
 	
 	private Double ackQty;
 	
-	private Double collectionValue;
+	private List<Double> collectionValue;
 	
 	private LocalDate ackEntryDate;
 	
@@ -172,7 +172,7 @@ public class Invoice {
 	
 	private String icmNo;
 	
-	private LocalDate dateOfCollectionFromCcb;
+	private List<LocalDate> dateOfCollectionFromCcb;
 	  
 	private String voucherStatusICP1;
 	

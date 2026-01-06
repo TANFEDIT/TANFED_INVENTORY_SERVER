@@ -1,6 +1,5 @@
 package com.tanfed.inventry.repository;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,16 +21,9 @@ public interface InvoiceRepo extends JpaRepository<Invoice, Long> {
 	
 	public List<Invoice> findByDespatchAdviceNo(String despatchAdviceNo);
 	
-	public List<Invoice> findByDateOfCollectionFromCcb(LocalDate dateOfCollectionFromCcb);
-	
 	public List<Invoice> findByDcNo(String dcNo);
 	
 	public List<Invoice> findByActivityAndOfficeName(String activity, String officeName);
-	
-	@Query("SELECT e FROM Invoice e WHERE e.activity =:activity AND e.officeName =:officeName AND e.dateOfCollectionFromCcb IS NOT NULL")
-	public List<Invoice> findByActivityAndOfficeNameAftrCollection(@Param("activity") String activity, @Param("officeName") String officeName);
-	
-	
 	
 	
 	

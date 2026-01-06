@@ -446,7 +446,7 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 							.map(itemData -> new NonCCInvoiceTableData(null, item.getIfmsId(),
 									item.getNameOfInstitution(), item.getDistrict(), item.getInvoiceNo(),
 									item.getDate(), itemData.getQty(), item.getNetInvoiceAdjustment(),
-									item.getDateOfCollectionFromCcb())))
+									item.getDateOfCollectionFromCcb().get(0))))
 					.collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception(e);

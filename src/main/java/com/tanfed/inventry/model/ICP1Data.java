@@ -28,9 +28,9 @@ public class ICP1Data {
 	private String ccbBranch;
 	private Long accountNo;
 	private LocalDate dateOfPresent;
-	private LocalDate dateOfCollection;
-	private Double collectionValue;
+	private List<LocalDate> dateOfCollection;
+	private List<Double> collectionValue;
 	private String voucherStatus;
-	private AdjustmentReceiptVoucher adjData;
+	private List<AdjustmentReceiptVoucher> adjData;
 	private List<String> designation;
 }

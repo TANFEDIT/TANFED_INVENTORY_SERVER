@@ -22,7 +22,8 @@ public class InvoiceCollectionP1TableData {
 	private String materialCenter;
 	private Double ackQty;
 	private AdjustmentReceiptVoucher adjData;
-//	private Double collectionValue;
+	private Double collectedValue;
+	private Boolean isShort;
 //	private Double openingBalance;
 //	private Double total;
 //	private Double transfer;

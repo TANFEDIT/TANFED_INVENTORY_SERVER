@@ -1,6 +1,7 @@
 package com.tanfed.inventry.model;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import com.tanfed.inventry.dto.FT_Charges_Dto;
 
@@ -21,16 +22,16 @@ public class InvoiceCollectionRegisterTable {
 	private String nameOfInstitution;
 	private String district;
 	private Double qty;
-	private Double value;
+	private List<Double> value;
 	private LocalDate dueDate;
 	private LocalDate ackEntryDate;
 	private LocalDate dateOfPresent;
-	private LocalDate dateOfCollection;
+	private List<LocalDate> dateOfCollection;
 	private String invoiceType;
 	private String branchName;
-	private String adjNo;
+	private List<String> adjNo;
 	private String icmNo;
-	private LocalDate adjDate;
+	private List<LocalDate> adjDate;
 	private LocalDate icmDate;
 	private FT_Charges_Dto fert;
 	private FT_Charges_Dto agriMark;
