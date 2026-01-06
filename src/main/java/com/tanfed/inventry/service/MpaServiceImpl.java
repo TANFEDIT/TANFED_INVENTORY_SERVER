@@ -140,7 +140,8 @@ public class MpaServiceImpl implements MpaService {
 								.stream()
 								.filter(item -> item.getFinancialMonth().equals(financialMonth)
 										&& item.getContractFirm().equals(contractFirm)
-										&& !item.getVoucherStatus().equals("Approved"))
+										&& !item.getVoucherStatus().equals("Approved")
+										|| !item.getVoucherStatus().equals("Rejected"))
 								.collect(Collectors.toList());
 						if (!billEntryForBillMonth.isEmpty()) {
 							throw new FileSystemAlreadyExistsException("Approve Existing Bill Entry!");
@@ -244,7 +245,7 @@ public class MpaServiceImpl implements MpaService {
 				ResponseEntity<String> responseEntity = accountsService.saveAccountsVouchersHandler("journalVoucher",
 						voucher, jwt);
 				String responseString = responseEntity.getBody();
-				if(responseString == null) {
+				if (responseString == null) {
 					throw new Exception("No data found");
 				}
 				String prefix = "JV Number : ";
