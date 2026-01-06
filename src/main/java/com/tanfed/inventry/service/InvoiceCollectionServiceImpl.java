@@ -219,6 +219,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			String jwt) throws Exception {
 		List<String> godownList = masterService.getGodownInfoByOfficeNameHandler(jwt, officeName).stream()
 				.map(GodownInfo::getGodownName).collect(Collectors.toList());
+		godownList.add("Direct Material Center");
 		data.setMaterialCenterLst(godownList);
 		if (monthOfSales != null && !monthOfSales.isEmpty()) {
 			double[] result = collect.stream().filter(temp -> temp.getDate().getMonth().toString().equals(monthOfSales))
@@ -599,8 +600,36 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 				}).collect(Collectors.toList()).forEach(temp -> {
 					invoiceFilteredLst.add(mapInvoiceDateToIC(temp, formType, null));
 				});
+				accountsService.getBillsAccountsFilteredDataHandler("sundryDrOb", officeName, "", null, null, jwt)
+						.getSundryDrOb().stream().filter(temp -> {
+							LocalDate date = temp.getInvoiceDate();
+							Boolean statusMatch = false;
+							Boolean pageMatch = false;
+							if (formType.equals("invoiceAckEntry") && temp.getAckEntryDate() != null) {
+								statusMatch = voucherStatus.isEmpty()
+										|| voucherStatus.equals(temp.getVoucherStatusICP1());
+								pageMatch = true;
+							}
+							if (formType.equals("invoiceCollectionAvailable") && temp.getCollectionMethod() != null) {
+								statusMatch = voucherStatus.isEmpty()
+										|| voucherStatus.equals(temp.getVoucherStatusICP2());
+								pageMatch = true;
+							}
+							if (formType.equals("presentToCCB") && temp.getDateOfPresent() != null) {
+								statusMatch = voucherStatus.isEmpty()
+										|| voucherStatus.equals(temp.getVoucherStatusICP3());
+								pageMatch = true;
+							}
+							if (formType.equals("collectionUpdate") && temp.getDateOfCollectionFromCcb() != null) {
+								statusMatch = voucherStatus.isEmpty()
+										|| voucherStatus.equals(temp.getVoucherStatusICP4());
+								pageMatch = true;
+							}
+							return pageMatch && !date.isBefore(fromDate) && !date.isAfter(toDate) && statusMatch;
+						}).collect(Collectors.toList()).forEach(temp -> {
+							invoiceFilteredLst.add(mapSdrObDateToIC(temp, formType, null));
+						});
 			}
-			logger.info(formType);
 			switch (formType) {
 			case "invoiceAckEntry": {
 				if (voucherStatus.equals("Pending")) {
@@ -778,7 +807,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 				if (icmNo != null && !icmNo.isEmpty()) {
 					List<Invoice> byIcmNo = invoiceRepo.findByIcmNo(icmNo);
 					if (null == byIcmNo.get(0).getAdjReceiptNo()) {
-						throw new Exception("Adj Recipt not created!");
+						data.setAdjv(null);
 					}
 					Vouchers adjv = accountsService.getAccountsVoucherByVoucherNoHandler("adjustmentReceiptVoucher",
 							byIcmNo.get(0).getAdjReceiptNo(), jwt);
@@ -896,6 +925,78 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			data.setDistrict(temp.getDistrict());
 			data.setQty(temp.getTotalQty());
 			data.setValue(temp.getNetInvoiceAdjustment());
+			data.setCcbBranch(temp.getCcbBranch());
+			data.setDateOfCollection(temp.getDateOfCollectionFromCcb());
+			data.setCollectionValue(temp.getCollectionValue());
+			data.setVoucherStatus(temp.getVoucherStatusICP4());
+			data.setDesignation(temp.getDesignationICP4());
+		}
+		return data;
+	}
+
+	private ICP1Data mapSdrObDateToIC(SundryDrOb temp, String formType, String jwt) {
+		ICP1Data data = new ICP1Data();
+		if (formType.equals("invoiceAckEntry")) {
+			data.setId(temp.getId());
+			data.setActivity(temp.getActivity());
+			data.setInvoiceNo(temp.getInvoiceNo());
+			data.setInvoiceDate(temp.getInvoiceDate());
+			data.setIfmsId(temp.getIfmsId());
+			data.setName(temp.getNameOfInstitution());
+			data.setDistrict(temp.getDistrict());
+			data.setQty(temp.getQty());
+			data.setAckQty(temp.getAckQty());
+			data.setAckEntryDate(temp.getAckEntryDate());
+			data.setVoucherStatus(temp.getVoucherStatusICP1());
+			data.setDesignation(temp.getDesignationICP1());
+		}
+		if (formType.equals("invoiceCollectionAvailable")) {
+			data.setId(temp.getId());
+			data.setActivity(temp.getActivity());
+			data.setInvoiceNo(temp.getInvoiceNo());
+			data.setInvoiceDate(temp.getInvoiceDate());
+			data.setIfmsId(temp.getIfmsId());
+			data.setName(temp.getNameOfInstitution());
+			data.setDistrict(temp.getDistrict());
+			data.setQty(temp.getQty());
+			data.setValue(temp.getAmount());
+			data.setDueDate(temp.getDueDate());
+			data.setDateAddedToPresent(temp.getAddedToPresentDate());
+			data.setVoucherStatus(temp.getVoucherStatusICP2());
+			data.setDesignation(temp.getDesignationICP2());
+			if (temp.getCollectionMethod().equals("AdjReceipt")) {
+				try {
+					data.setAdjData(temp.getAdjReceipt());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		if (formType.equals("presentToCCB")) {
+			data.setId(temp.getId());
+			data.setActivity(temp.getActivity());
+			data.setInvoiceNo(temp.getInvoiceNo());
+			data.setInvoiceDate(temp.getInvoiceDate());
+			data.setIfmsId(temp.getIfmsId());
+			data.setName(temp.getNameOfInstitution());
+			data.setDistrict(temp.getDistrict());
+			data.setQty(temp.getQty());
+			data.setValue(temp.getAmount());
+			data.setCcbBranch(temp.getCcbBranch());
+			data.setDateOfPresent(temp.getDateOfPresent());
+			data.setVoucherStatus(temp.getVoucherStatusICP3());
+			data.setDesignation(temp.getDesignationICP3());
+		}
+		if (formType.equals("collectionUpdate")) {
+			data.setId(temp.getId());
+			data.setActivity(temp.getActivity());
+			data.setInvoiceNo(temp.getInvoiceNo());
+			data.setInvoiceDate(temp.getInvoiceDate());
+			data.setIfmsId(temp.getIfmsId());
+			data.setName(temp.getNameOfInstitution());
+			data.setDistrict(temp.getDistrict());
+			data.setQty(temp.getQty());
+			data.setValue(temp.getAmount());
 			data.setCcbBranch(temp.getCcbBranch());
 			data.setDateOfCollection(temp.getDateOfCollectionFromCcb());
 			data.setCollectionValue(temp.getCollectionValue());
