@@ -1055,7 +1055,7 @@ public class FilterInventryDataService {
 				item.getTotalCalculatedValue(), item.getTotalSgstValue(), item.getTotalCgstValue(),
 				item.getTotalPaymentValue(), item.getRecoveryIfAny(), item.getNetTotalDeduction(), item.getTcsOrTds(),
 				item.getRate(), item.getCalculatedTcsTdsValue(), item.getNetPaymentAfterAdjustment(),
-				item.getDifference(), item.getRemarks(), jv.getJournalVoucherData(),
+				item.getDifference(), item.getRemarks(), item.getJvNo() != null ? jv.getJournalVoucherData() : null,
 				item.getPvNo() != null ? pv.getPaymentVoucherData() : null, item.getFinancialYear(),
 				item.getFinancialMonth(), item.getContractFirm(), item.getClaimBillNo(), item.getClaimBillDate(),
 				item.getTotalBillValue(), item.getDesignation(), item.getVoucherStatus());

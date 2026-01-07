@@ -387,7 +387,7 @@ public class GtnServiceImpl implements GtnService {
 		String originalOffice = officeName;
 		officeName = toRegion;
 
-		if (transactionFor.equals("RH To Other Region Buffer")) {
+		if (transactionFor.contains("Other Region Buffer")) {
 			data.setDesignationList(grnService.getGodownNameList(jwt, officeName, ""));
 
 			if (hasText(destination)) {
@@ -397,7 +397,7 @@ public class GtnServiceImpl implements GtnService {
 				data.setFromIfmsId(fromGodown.getIfmsId());
 			}
 
-		} else if (transactionFor.equals("RH To Other Region Direct")) {
+		} else if (transactionFor.contains("Other Region Direct")) {
 			data.setDesignationList(new HashSet<>(masterService.getBuyerNameByOfficeNameHandler(jwt, officeName)));
 
 			if (hasText(destination)) {

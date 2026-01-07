@@ -33,4 +33,5 @@ public class ICP1Data {
 	private String voucherStatus;
 	private List<AdjustmentReceiptVoucher> adjData;
 	private List<String> designation;
+	private String type;
 }

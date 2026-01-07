@@ -302,7 +302,8 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					return new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(), item.getIfmsId(),
 							item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
 							RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
-							item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), null, null, adj, null, null);
+							item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), null, null, adj, null,
+							null);
 				}).collect(Collectors.toList()));
 		if (invoiceType != null && !invoiceType.isEmpty()) {
 			if (ccbBranch != null && !ccbBranch.isEmpty()) {
@@ -314,8 +315,8 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 				}).map(item -> new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(), item.getIfmsId(),
 						item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
 						RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()),
-						item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), null, null, null, null, null))
-						.collect(Collectors.toList()));
+						item.getDate().plusDays(item.getCreditDays()), item.getCcbBranch(), null, null, null, null,
+						null)).collect(Collectors.toList()));
 			}
 		}
 	}
@@ -685,6 +686,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					if (fromDate == null && toDate == null) {
 						invoiceLst.addAll(invoiceRepo.findICP1ByStatus(officeName).stream()
 								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
+						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
 					} else if (fromDate != null && toDate != null) {
 						invoiceLst.addAll(invoiceFilteredLst);
 					}
@@ -693,6 +695,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					if (fromDate == null && toDate == null) {
 						invoiceLst.addAll(invoiceRepo.findICP1ApprovedByStatus(officeName).stream()
 								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
+						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
 					} else if (fromDate != null && toDate != null) {
 						invoiceLst.addAll(invoiceFilteredLst);
 					}
@@ -703,6 +706,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
 						invoiceLst.addAll(invoiceRepo.findICP1ApprovedByStatus(officeName).stream()
 								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
+						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
 					} else if (fromDate != null && toDate != null) {
 						invoiceLst.addAll(invoiceFilteredLst);
 					}
@@ -715,6 +719,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					if (fromDate == null && toDate == null) {
 						invoiceLst.addAll(invoiceRepo.findICP2ByStatus(officeName).stream()
 								.map(temp -> mapInvoiceDateToIC(temp, formType, jwt)).collect(Collectors.toList()));
+						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
 					} else if (fromDate != null && toDate != null) {
 						invoiceLst.addAll(invoiceFilteredLst);
 					}
@@ -723,6 +728,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					if (fromDate == null && toDate == null) {
 						invoiceLst.addAll(invoiceRepo.findICP2ApprovedByStatus(officeName).stream()
 								.map(temp -> mapInvoiceDateToIC(temp, formType, jwt)).collect(Collectors.toList()));
+						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
 					} else if (fromDate != null && toDate != null) {
 						invoiceLst.addAll(invoiceFilteredLst);
 					}
@@ -733,6 +739,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 								.map(temp -> mapInvoiceDateToIC(temp, formType, jwt)).collect(Collectors.toList()));
 						invoiceLst.addAll(invoiceRepo.findICP2ApprovedByStatus(officeName).stream()
 								.map(temp -> mapInvoiceDateToIC(temp, formType, jwt)).collect(Collectors.toList()));
+						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
 					} else if (fromDate != null && toDate != null) {
 						invoiceLst.addAll(invoiceFilteredLst);
 					}
@@ -741,32 +748,61 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 				return data;
 			}
 			case "presentToCCB": {
-				if (voucherStatus.equals("Pending")) {
-					if (fromDate == null && toDate == null) {
-						invoiceLst.addAll(invoiceRepo.findICP3ByStatus(officeName).stream()
-								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
-					} else if (fromDate != null && toDate != null) {
-						invoiceLst.addAll(invoiceFilteredLst);
+				data.setIcmNoList(invoiceRepo.findByOfficeName(officeName).stream()
+						.filter(item -> item.getDateOfPresent() != null).map(item -> item.getIcmNo())
+						.collect(Collectors.toSet()));
+				data.getIcmNoList()
+						.addAll(accountsService
+								.getBillsAccountsFilteredDataHandler("sundryDrOb", officeName, "", null, null, jwt)
+								.getSundryDrOb().stream()
+								.filter(item -> item.getDateOfPresent() != null
+										&& item.getCollectionMethod().equals("presentToCCB"))
+								.map(item -> item.getIcmNo()).collect(Collectors.toSet()));
+				if (icmNo != null && !icmNo.isEmpty()) {
+					if (icmNo.startsWith("OB")) {
+						List<ICP1Data> byIcmNo = accountsService
+								.getBillsAccountsFilteredDataHandler("sundryDrOb", officeName, "", null, null, jwt)
+								.getSundryDrOb().stream()
+								.filter(item -> item.getDateOfPresent() != null
+										&& item.getCollectionMethod().equals("presentToCCB")
+										&& item.getIcmNo().equals(icmNo))
+								.map(temp -> mapSdrObDateToIC(temp, formType, jwt)).collect(Collectors.toList());
+						invoiceLst.addAll(byIcmNo);
+					} else {
+						List<ICP1Data> byIcmNo = invoiceRepo.findByIcmNo(icmNo).stream()
+								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList());
+						invoiceLst.addAll(byIcmNo);
 					}
 				}
-				if (voucherStatus.equals("Approved")) {
-					if (fromDate == null && toDate == null) {
-						invoiceLst.addAll(invoiceRepo.findICP3ApprovedByStatus(officeName).stream()
-								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
-					} else if (fromDate != null && toDate != null) {
-						invoiceLst.addAll(invoiceFilteredLst);
-					}
-				}
-				if (voucherStatus.isEmpty()) {
-					if (fromDate == null && toDate == null) {
-						invoiceLst.addAll(invoiceRepo.findICP3ByStatus(officeName).stream()
-								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
-						invoiceLst.addAll(invoiceRepo.findICP3ApprovedByStatus(officeName).stream()
-								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
-					} else if (fromDate != null && toDate != null) {
-						invoiceLst.addAll(invoiceFilteredLst);
-					}
-				}
+//				if (voucherStatus.equals("Pending")) {
+//					if (fromDate == null && toDate == null) {
+//						invoiceLst.addAll(invoiceRepo.findICP3ByStatus(officeName).stream()
+//								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
+//						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
+//					} else if (fromDate != null && toDate != null) {
+//						invoiceLst.addAll(invoiceFilteredLst);
+//					}
+//				}
+//				if (voucherStatus.equals("Approved")) {
+//					if (fromDate == null && toDate == null) {
+//						invoiceLst.addAll(invoiceRepo.findICP3ApprovedByStatus(officeName).stream()
+//								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
+//						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
+//					} else if (fromDate != null && toDate != null) {
+//						invoiceLst.addAll(invoiceFilteredLst);
+//					}
+//				}
+//				if (voucherStatus.isEmpty()) {
+//					if (fromDate == null && toDate == null) {
+//						invoiceLst.addAll(invoiceRepo.findICP3ByStatus(officeName).stream()
+//								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
+//						invoiceLst.addAll(invoiceRepo.findICP3ApprovedByStatus(officeName).stream()
+//								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
+//						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
+//					} else if (fromDate != null && toDate != null) {
+//						invoiceLst.addAll(invoiceFilteredLst);
+//					}
+//				}
 				data.setInvoice(invoiceLst);
 				return data;
 			}
@@ -775,6 +811,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					if (fromDate == null && toDate == null) {
 						invoiceLst.addAll(invoiceRepo.findICP4ByStatus(officeName).stream()
 								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
+						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
 					} else if (fromDate != null && toDate != null) {
 						invoiceLst.addAll(invoiceFilteredLst);
 					}
@@ -783,6 +820,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					if (fromDate == null && toDate == null) {
 						invoiceLst.addAll(invoiceRepo.findICP4ApprovedByStatus(officeName).stream()
 								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
+						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
 					} else if (fromDate != null && toDate != null) {
 						invoiceLst.addAll(invoiceFilteredLst);
 					}
@@ -793,6 +831,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
 						invoiceLst.addAll(invoiceRepo.findICP4ApprovedByStatus(officeName).stream()
 								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
+						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
 					} else if (fromDate != null && toDate != null) {
 						invoiceLst.addAll(invoiceFilteredLst);
 					}
@@ -853,41 +892,82 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 				data.setIcmNoList(invoiceRepo.findByOfficeName(officeName).stream().filter(
 						item -> item.getDateOfPresent() != null && item.getVoucherStatusICP3().equals("Approved"))
 						.map(item -> item.getIcmNo()).collect(Collectors.toSet()));
+				data.getIcmNoList()
+						.addAll(accountsService
+								.getBillsAccountsFilteredDataHandler("sundryDrOb", officeName, "", null, null, jwt)
+								.getSundryDrOb().stream()
+								.filter(item -> item.getDateOfPresent() != null
+										&& item.getVoucherStatusICP3().equals("Approved"))
+								.map(item -> item.getIcmNo()).collect(Collectors.toSet()));
 				if (icmNo != null && !icmNo.isEmpty()) {
-					List<Invoice> byIcmNo = invoiceRepo.findByIcmNo(icmNo);
-					if (null == byIcmNo.get(0).getAdjReceiptNo()) {
-						data.setAdjv(null);
-					} else {
-						List<AdjustmentReceiptVoucher> adj = new ArrayList<AdjustmentReceiptVoucher>();
-						byIcmNo.get(0).getAdjReceiptNo().forEach(item -> {
-							Vouchers adjv;
+					if (icmNo.startsWith("OB")) {
+						List<SundryDrOb> byIcmNo = accountsService
+								.getBillsAccountsFilteredDataHandler("sundryDrOb", officeName, "", null, null, jwt)
+								.getSundryDrOb().stream()
+								.filter(item -> item.getDateOfPresent() != null
+										&& item.getCollectionMethod().equals("presentToCCB")
+										&& item.getIcmNo().equals(icmNo))
+								.collect(Collectors.toList());
+						if (null == byIcmNo.get(0).getAdjReceipt()) {
+							data.setAdjv(null);
+						} else {
+							data.setAdjv(byIcmNo.get(0).getAdjReceipt());
+						}
+						data.setInvoice(byIcmNo.stream().map(item -> {
+							Long accountNo = 0l;
 							try {
-								adjv = accountsService.getAccountsVoucherByVoucherNoHandler("adjustmentReceiptVoucher",
-										item, jwt);
-								adj.add(adjv.getAdjustmentReceiptVoucherData());
+								BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName)
+										.stream()
+										.filter(itemData -> itemData.getAccountType().equals("Non PDS A/c")
+												&& itemData.getBranchName().equals(item.getCcbBranch()))
+										.collect(Collectors.toList()).get(0);
+								accountNo = bankInfo.getAccountNumber();
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
-						});
-						data.setAdjv(adj);
-					}
-					data.setInvoice(byIcmNo.stream().map(item -> {
-						Long accountNo = 0l;
-						try {
-							BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName).stream()
-									.filter(itemData -> itemData.getAccountType().equals("Non PDS A/c")
-											&& itemData.getBranchName().equals(item.getCcbBranch()))
-									.collect(Collectors.toList()).get(0);
-							accountNo = bankInfo.getAccountNumber();
-						} catch (Exception e) {
-							e.printStackTrace();
+							return new ICP1Data(item.getId(), item.getActivity(), null, item.getInvoiceNo(),
+									item.getInvoiceDate(), item.getIfmsId(), item.getNameOfInstitution(),
+									item.getDistrict(), item.getQty(), null, null, item.getAmount(), item.getDueDate(),
+									null, item.getCcbBranch(), accountNo, item.getDateOfPresent(), null, null,
+									item.getVoucherStatusICP4(), null, null, null);
+						}).collect(Collectors.toList()));
+					} else {
+						List<Invoice> byIcmNo = invoiceRepo.findByIcmNo(icmNo);
+						if (null == byIcmNo.get(0).getAdjReceiptNo()) {
+							data.setAdjv(null);
+						} else {
+							List<AdjustmentReceiptVoucher> adj = new ArrayList<AdjustmentReceiptVoucher>();
+							byIcmNo.get(0).getAdjReceiptNo().forEach(item -> {
+								Vouchers adjv;
+								try {
+									adjv = accountsService.getAccountsVoucherByVoucherNoHandler(
+											"adjustmentReceiptVoucher", item, jwt);
+									adj.add(adjv.getAdjustmentReceiptVoucherData());
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							});
+							data.setAdjv(adj);
 						}
-						return new ICP1Data(item.getId(), item.getActivity(), item.getGodownName(), item.getInvoiceNo(),
-								item.getDate(), item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(),
-								item.getTotalQty(), null, null, item.getNetInvoiceAdjustment(), item.getDueDate(), null,
-								item.getCcbBranch(), accountNo, item.getDateOfPresent(), null, null,
-								item.getVoucherStatusICP4(), null, null);
-					}).collect(Collectors.toList()));
+						data.setInvoice(byIcmNo.stream().map(item -> {
+							Long accountNo = 0l;
+							try {
+								BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName)
+										.stream()
+										.filter(itemData -> itemData.getAccountType().equals("Non PDS A/c")
+												&& itemData.getBranchName().equals(item.getCcbBranch()))
+										.collect(Collectors.toList()).get(0);
+								accountNo = bankInfo.getAccountNumber();
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+							return new ICP1Data(item.getId(), item.getActivity(), item.getGodownName(),
+									item.getInvoiceNo(), item.getDate(), item.getIfmsId(), item.getNameOfInstitution(),
+									item.getDistrict(), item.getTotalQty(), null, null, item.getNetInvoiceAdjustment(),
+									item.getDueDate(), null, item.getCcbBranch(), accountNo, item.getDateOfPresent(),
+									null, null, item.getVoucherStatusICP4(), null, null, null);
+						}).collect(Collectors.toList()));
+					}
 				}
 				return data;
 			}
@@ -897,6 +977,34 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 		} catch (Exception e) {
 			throw new Exception(e);
 		}
+	}
+
+	private List<ICP1Data> mapSdrobData(String officeName, String jwt, String status, String formType)
+			throws Exception {
+		return accountsService.getBillsAccountsFilteredDataHandler("sundryDrOb", officeName, "", null, null, jwt)
+				.getSundryDrOb().stream().filter(temp -> {
+					Boolean statusMatch = false;
+					Boolean pageMatch = false;
+					if (formType.equals("invoiceAckEntry")) {
+						statusMatch = status.isEmpty() || status.equals(temp.getVoucherStatusICP1());
+						pageMatch = temp.getAckEntryDate() != null;
+					}
+					if (formType.equals("invoiceCollectionAvailable")) {
+						statusMatch = status.isEmpty() || status.equals(temp.getVoucherStatusICP2());
+						pageMatch = temp.getCollectionMethod() != null;
+					}
+					if (formType.equals("presentToCCB")) {
+						statusMatch = status.isEmpty() || status.equals(temp.getVoucherStatusICP3());
+						pageMatch = temp.getDateOfPresent() != null;
+					}
+					if (formType.equals("collectionUpdate")) {
+						statusMatch = status.isEmpty() || status.equals(temp.getVoucherStatusICP4());
+						pageMatch = temp.getTransferDone() != null;
+					}
+					return pageMatch && statusMatch;
+				}).map(item -> {
+					return mapSdrObDateToIC(item, formType, jwt);
+				}).collect(Collectors.toList());
 	}
 
 	private FundTransferDto mapftDataWithPv(FundTransfer item, String jwt) {
@@ -934,6 +1042,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			data.setAckEntryDate(temp.getAckEntryDate());
 			data.setVoucherStatus(temp.getVoucherStatusICP1());
 			data.setDesignation(temp.getDesignationICP1());
+			data.setType("invoice");
 		}
 		if (formType.equals("invoiceCollectionAvailable")) {
 			data.setId(temp.getId());
@@ -949,6 +1058,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			data.setDateAddedToPresent(temp.getAddedToPresentDate());
 			data.setVoucherStatus(temp.getVoucherStatusICP2());
 			data.setDesignation(temp.getDesignationICP2());
+			data.setType("invoice");
 			if (temp.getCollectionMethod().equals("AdjReceipt")) {
 				try {
 					List<AdjustmentReceiptVoucher> adj = new ArrayList<AdjustmentReceiptVoucher>();
@@ -982,6 +1092,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			data.setDateOfPresent(temp.getDateOfPresent());
 			data.setVoucherStatus(temp.getVoucherStatusICP3());
 			data.setDesignation(temp.getDesignationICP3());
+			data.setType("invoice");
 		}
 		if (formType.equals("collectionUpdate")) {
 			data.setId(temp.getId());
@@ -998,6 +1109,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			data.setCollectionValue(temp.getCollectionValue());
 			data.setVoucherStatus(temp.getVoucherStatusICP4());
 			data.setDesignation(temp.getDesignationICP4());
+			data.setType("invoice");
 		}
 		return data;
 	}
@@ -1017,6 +1129,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			data.setAckEntryDate(temp.getAckEntryDate());
 			data.setVoucherStatus(temp.getVoucherStatusICP1());
 			data.setDesignation(temp.getDesignationICP1());
+			data.setType("sdrOb");
 		}
 		if (formType.equals("invoiceCollectionAvailable")) {
 			data.setId(temp.getId());
@@ -1032,6 +1145,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			data.setDateAddedToPresent(temp.getAddedToPresentDate());
 			data.setVoucherStatus(temp.getVoucherStatusICP2());
 			data.setDesignation(temp.getDesignationICP2());
+			data.setType("sdrOb");
 			if (temp.getCollectionMethod().equals("AdjReceipt")) {
 				try {
 					data.setAdjData(temp.getAdjReceipt());
@@ -1054,6 +1168,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			data.setDateOfPresent(temp.getDateOfPresent());
 			data.setVoucherStatus(temp.getVoucherStatusICP3());
 			data.setDesignation(temp.getDesignationICP3());
+			data.setType("sdrOb");
 		}
 		if (formType.equals("collectionUpdate")) {
 			data.setId(temp.getId());
@@ -1070,6 +1185,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			data.setCollectionValue(temp.getCollectionValue());
 			data.setVoucherStatus(temp.getVoucherStatusICP4());
 			data.setDesignation(temp.getDesignationICP4());
+			data.setType("sdrOb");
 		}
 		return data;
 	}
