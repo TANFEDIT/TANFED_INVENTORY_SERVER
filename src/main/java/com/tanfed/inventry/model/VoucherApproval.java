@@ -11,4 +11,5 @@ public class VoucherApproval {
 	private String voucherStatus;
 	private String id;
 	private String formType;
+	private String adjNo;
 }

@@ -446,7 +446,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 				Vouchers vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("adjustmentReceiptVoucher",
 						obj.getAdjReceiptNo().get(0), jwt);
 				VoucherApproval temp = new VoucherApproval("Rejected",
-						String.valueOf(vouchers.getAdjustmentReceiptVoucherData().getId()), "adjustmentReceiptVoucher");
+						String.valueOf(vouchers.getAdjustmentReceiptVoucherData().getId()), "adjustmentReceiptVoucher", null);
 				accountsService.voucherApprovalHandler(temp, jwt);
 			}
 			if (adjv != null) {

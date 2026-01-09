@@ -585,7 +585,7 @@ public class TcServiceIpml implements TcService {
 			try {
 				Vouchers jv = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", jvNo, jwt);
 				accountsService.voucherApprovalHandler(new VoucherApproval(item.getVoucherStatus(),
-						String.valueOf(jv.getJournalVoucherData().getId()), "journalVoucher"), jwt);
+						String.valueOf(jv.getJournalVoucherData().getId()), "journalVoucher", null), jwt);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

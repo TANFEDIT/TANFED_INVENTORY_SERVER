@@ -376,8 +376,7 @@ public class RegisterServiceImpl implements RegisterService {
 					monthFilter = String.format("%s%s%04d", item.getDate().getMonth(), " ", item.getDate().getYear())
 							.equals(month);
 				}
-				return item.getVoucherStatusICP4() != null && item.getVoucherStatusICP4().equals("Approved")
-						&& branchFilter && monthFilter;
+				return branchFilter && monthFilter;
 			}).map(item -> {
 				return new InvoiceCollectionRegisterTable(item.getActivity(), null, item.getInvoiceNo(), item.getDate(),
 						item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),

@@ -265,12 +265,12 @@ public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
 		try {
 			Vouchers pv = accountsService.getAccountsVoucherByVoucherNoHandler("paymentVoucher", item.getPvNo(), jwt);
 			accountsService.voucherApprovalHandler(new VoucherApproval(item.getVoucherStatus(),
-					String.valueOf(pv.getPaymentVoucherData().getId()), "paymentVoucher"), jwt);
+					String.valueOf(pv.getPaymentVoucherData().getId()), "paymentVoucher", null), jwt);
 			item.getJvNoList().forEach(jvNo -> {
 				try {
 					Vouchers jv = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", jvNo, jwt);
 					accountsService.voucherApprovalHandler(new VoucherApproval(item.getVoucherStatus(),
-							String.valueOf(jv.getJournalVoucherData().getId()), "journalVoucher"), jwt);
+							String.valueOf(jv.getJournalVoucherData().getId()), "journalVoucher", null), jwt);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

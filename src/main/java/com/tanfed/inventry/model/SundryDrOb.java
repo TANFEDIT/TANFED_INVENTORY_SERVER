@@ -51,7 +51,6 @@ public class SundryDrOb {
 	private List<String> designationICP2;
 	private String voucherStatusICP3;
 	private List<String> designationICP3;
-	private String voucherStatusICP4;
 	private List<String> designationICP4;
 	private Boolean transferDone;
 	private List<String> adjReceiptStatus;

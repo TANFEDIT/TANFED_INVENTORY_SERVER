@@ -699,7 +699,7 @@ public class GtnServiceImpl implements GtnService {
 		try {
 			Vouchers vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", jvNo, jwt);
 			VoucherApproval data = new VoucherApproval(status, String.valueOf(vouchers.getJournalVoucherData().getId()),
-					"journalVoucher");
+					"journalVoucher", null);
 			accountsService.voucherApprovalHandler(data, jwt);
 		} catch (Exception e) {
 			throw new Exception(e);

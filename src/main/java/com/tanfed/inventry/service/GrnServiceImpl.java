@@ -662,7 +662,7 @@ public class GrnServiceImpl implements GrnService {
 				Vouchers vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher",
 						grn.getJvNo(), jwt);
 				VoucherApproval data = new VoucherApproval("Rejected",
-						String.valueOf(vouchers.getJournalVoucherData().getId()), "journalVoucher");
+						String.valueOf(vouchers.getJournalVoucherData().getId()), "journalVoucher", null);
 				accountsService.voucherApprovalHandler(data, jwt);
 			}
 			if (grnNo != null) {

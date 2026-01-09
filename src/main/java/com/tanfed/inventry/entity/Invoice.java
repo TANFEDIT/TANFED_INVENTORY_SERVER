@@ -186,7 +186,6 @@ public class Invoice {
 	
 	private List<String> designationICP3;
 	
-	private String voucherStatusICP4;
 	
 	private List<String> designationICP4;
 	  
