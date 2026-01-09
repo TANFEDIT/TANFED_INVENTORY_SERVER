@@ -4,9 +4,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tanfed.inventry.dto.FundTransferDto;
-import com.tanfed.inventry.model.AdjustmentReceiptVoucher;
 import com.tanfed.inventry.model.BankInfo;
 import com.tanfed.inventry.model.ICViewAplApdData;
+import com.tanfed.inventry.model.IcmObject;
 import com.tanfed.inventry.model.InventryData;
 import com.tanfed.inventry.model.InvoiceCollectionObject;
 import com.tanfed.inventry.model.InvoiceCollectionRegisterTable;
@@ -166,7 +166,7 @@ public class InvoiceCollectionHandler {
 
 	@PutMapping("/saveAdjReceiptforicm/{type}")
 	public ResponseEntity<String> saveAdjReceiptForIcmInvoicesHandler(@PathVariable String type,
-			@RequestBody AdjustmentReceiptVoucher obj, @RequestHeader("Authorization") String jwt) throws Exception {
+			@RequestBody IcmObject obj, @RequestHeader("Authorization") String jwt) throws Exception {
 		return invoiceCollectionService.saveAdjReceiptForIcmInvoices(obj, jwt, type);
 	}
 }

@@ -29,6 +29,6 @@ public interface InvoiceCollectionService {
 	public InvoiceCollectionResponseData getCollectionAbstractData(String officeName,
 			String branchName, String accountNo, String monthOfFundTransfer, String jwt) throws Exception;
 
-	public ResponseEntity<String> saveAdjReceiptForIcmInvoices(AdjustmentReceiptVoucher obj, String jwt, String type) throws Exception;
+	public ResponseEntity<String> saveAdjReceiptForIcmInvoices(IcmObject obj, String jwt, String type) throws Exception;
 	
 }

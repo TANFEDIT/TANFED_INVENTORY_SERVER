@@ -283,7 +283,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 		data.setAckEntryDate(ackEntryDatelst);
 		data.setAdjTableData(invoiceRepo.findByActivityAndOfficeName(activity, officeName).stream()
 				.filter(temp -> null == temp.getAddedToPresentDate() && null != temp.getVoucherStatusICP2()
-						&& !temp.getVoucherStatusICP2().equals("Approved")
+						&& !temp.getVoucherStatusICP2().equals("Approved") && temp.getAdjReceiptNo() != null
 						&& temp.getCollectionMethod().equals("AdjReceipt"))
 				.map(item -> {
 					AdjustmentReceiptVoucher adj = null;
@@ -363,8 +363,9 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 
 	public void collectionUpdateData(InvoiceCollectionResponseData data, List<Invoice> collect, String icmNo) {
 		List<Invoice> NoOfPresented = collect.stream().filter(temp -> {
-			return temp.getDateOfPresent() != null && temp.getIsShort().equals(false) && temp.getCollectionValue()
-					.stream().mapToDouble(item -> item).sum() < temp.getNetInvoiceAdjustment();
+			return temp.getDateOfPresent() != null && temp.getIsShort().equals(false)
+					&& (temp.getCollectionValue() == null || (temp.getCollectionValue().stream()
+							.mapToDouble(item -> item).sum() < temp.getNetInvoiceAdjustment()));
 		}).collect(Collectors.toList());
 
 		data.setIcmNoList(NoOfPresented.stream().map(item -> item.getIcmNo()).collect(Collectors.toSet()));
@@ -377,8 +378,8 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			data.setTableData(collect.stream()
 					.filter(temp -> temp.getDateOfPresent() != null && icmNo.equals(temp.getIcmNo())
 							&& temp.getIsShort().equals(false) && temp.getVoucherStatusICP3().equals("Approved")
-							&& temp.getCollectionValue().stream().mapToDouble(item -> item).sum() < temp
-									.getNetInvoiceAdjustment())
+							&& (temp.getCollectionValue() == null || (temp.getCollectionValue().stream()
+									.mapToDouble(sum -> sum).sum() < temp.getNetInvoiceAdjustment())))
 					.map(item -> new InvoiceCollectionP1TableData(item.getInvoiceNo(), item.getDate(), item.getIfmsId(),
 							item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
 							RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getNetInvoiceAdjustment()), null,
@@ -496,7 +497,8 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 				data.setTotal(data.getOpeningBalance() + data.getCollection() + data.getIbrAmount());
 
 				data.setInvoiceNoList(invList.stream().map(Invoice::getInvoiceNo).collect(Collectors.toList()));
-				data.getInvoiceNoList().addAll(sdrObData.stream().map(item -> item.getInvoiceNo()).collect(Collectors.toList()));
+				data.getInvoiceNoList()
+						.addAll(sdrObData.stream().map(item -> item.getInvoiceNo()).collect(Collectors.toList()));
 			}
 		}
 	}
@@ -746,9 +748,9 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 				return data;
 			}
 			case "presentToCCB": {
-				data.setIcmNoList(invoiceRepo.findByOfficeName(officeName).stream()
-						.filter(item -> item.getDateOfPresent() != null).map(item -> item.getIcmNo())
-						.collect(Collectors.toSet()));
+				data.setIcmNoList(invoiceRepo.findByOfficeName(officeName).stream().filter(
+						item -> item.getDateOfPresent() != null && item.getCollectionMethod().equals("presentToCCB"))
+						.map(item -> item.getIcmNo()).collect(Collectors.toSet()));
 				data.getIcmNoList()
 						.addAll(accountsService
 								.getBillsAccountsFilteredDataHandler("sundryDrOb", officeName, "", null, null, jwt)
@@ -772,35 +774,6 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 						invoiceLst.addAll(byIcmNo);
 					}
 				}
-//				if (voucherStatus.equals("Pending")) {
-//					if (fromDate == null && toDate == null) {
-//						invoiceLst.addAll(invoiceRepo.findICP3ByStatus(officeName).stream()
-//								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
-//						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
-//					} else if (fromDate != null && toDate != null) {
-//						invoiceLst.addAll(invoiceFilteredLst);
-//					}
-//				}
-//				if (voucherStatus.equals("Approved")) {
-//					if (fromDate == null && toDate == null) {
-//						invoiceLst.addAll(invoiceRepo.findICP3ApprovedByStatus(officeName).stream()
-//								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
-//						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
-//					} else if (fromDate != null && toDate != null) {
-//						invoiceLst.addAll(invoiceFilteredLst);
-//					}
-//				}
-//				if (voucherStatus.isEmpty()) {
-//					if (fromDate == null && toDate == null) {
-//						invoiceLst.addAll(invoiceRepo.findICP3ByStatus(officeName).stream()
-//								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
-//						invoiceLst.addAll(invoiceRepo.findICP3ApprovedByStatus(officeName).stream()
-//								.map(temp -> mapInvoiceDateToIC(temp, formType, null)).collect(Collectors.toList()));
-//						invoiceLst.addAll(mapSdrobData(officeName, jwt, voucherStatus, formType));
-//					} else if (fromDate != null && toDate != null) {
-//						invoiceLst.addAll(invoiceFilteredLst);
-//					}
-//				}
 				data.setInvoice(invoiceLst);
 				return data;
 			}
@@ -906,6 +879,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 										&& item.getCollectionMethod().equals("presentToCCB")
 										&& item.getIcmNo().equals(icmNo))
 								.collect(Collectors.toList());
+
 						Set<AdjustmentReceiptVoucher> adjData = byIcmNo.stream()
 								.flatMap(i -> i.getAdjReceipt().stream()).collect(Collectors.toSet());
 						if (adjData.isEmpty()) {
@@ -933,11 +907,13 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 						}).collect(Collectors.toList()));
 					} else {
 						List<Invoice> byIcmNo = invoiceRepo.findByIcmNo(icmNo);
-						if (null == byIcmNo.get(0).getAdjReceiptNo()) {
+						Set<String> adjNoList = byIcmNo.stream().flatMap(i -> i.getAdjReceiptNo().stream())
+								.collect(Collectors.toSet());
+						if (adjNoList.isEmpty()) {
 							data.setAdjv(null);
 						} else {
 							List<AdjustmentReceiptVoucher> adj = new ArrayList<AdjustmentReceiptVoucher>();
-							byIcmNo.get(0).getAdjReceiptNo().forEach(item -> {
+							adjNoList.forEach(item -> {
 								Vouchers adjv;
 								try {
 									adjv = accountsService.getAccountsVoucherByVoucherNoHandler(
@@ -1274,11 +1250,14 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					List<String> oldDesignationIcp4 = invoice.getDesignationICP4();
 
 					if (obj.getVoucherStatus().equals("Rejected")) {
-						int index = invoice.getAdjReceiptNo().indexOf(obj.getAdjNo());
-						invoice.getAdjReceiptNo().remove(index);
-						invoice.getAdjReceiptStatus().remove(index);
-						invoice.getCollectionValue().remove(index);
-						invoice.getDateOfCollectionFromCcb().remove(index);
+						List<String> adjNoLst = invoice.getAdjReceiptNo().stream().collect(Collectors.toList());
+						if (adjNoLst.contains(obj.getAdjNo())) {
+							int index = adjNoLst.indexOf(obj.getAdjNo());
+							invoice.getAdjReceiptNo().remove(index);
+							invoice.getCollectionValue().remove(index);
+							invoice.getDateOfCollectionFromCcb().remove(index);
+							invoice.setIsShort(false);
+						}
 						invoice.setTransferDone(false);
 					}
 					if (oldDesignationIcp4 == null) {
@@ -1286,7 +1265,6 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					} else {
 						invoice.getDesignationICP4().add(designationIcp4);
 					}
-
 					invoiceRepo.save(invoice);
 				});
 
@@ -1411,17 +1389,18 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 	private AccountsService accountsService;
 
 	@Override
-	public ResponseEntity<String> saveAdjReceiptForIcmInvoices(AdjustmentReceiptVoucher obj, String jwt, String type)
+	public ResponseEntity<String> saveAdjReceiptForIcmInvoices(IcmObject obj, String jwt, String type)
 			throws Exception {
 		try {
-			BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, obj.getOfficeName()).stream()
+			BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, obj.getAdjData().getOfficeName())
+					.stream()
 					.filter(itemData -> itemData.getAccountType().equals("Non PDS A/c")
-							&& itemData.getBranchName().equals(obj.getBranchName()))
+							&& itemData.getBranchName().equals(obj.getAdjData().getBranchName()))
 					.collect(Collectors.toList()).get(0);
-			obj.setAccountType("Non PDS A/c");
-			obj.setAccountNo(bankInfo.getAccountNumber());
+			obj.getAdjData().setAccountType("Non PDS A/c");
+			obj.getAdjData().setAccountNo(bankInfo.getAccountNumber());
 			Vouchers vouchers = new Vouchers();
-			vouchers.setAdjustmentReceiptVoucherData(obj);
+			vouchers.setAdjustmentReceiptVoucherData(obj.getAdjData());
 			ResponseEntity<String> responseEntity = accountsService
 					.saveAccountsVouchersHandler("adjustmentReceiptVoucher", vouchers, jwt);
 			String responseString = responseEntity.getBody();
@@ -1432,19 +1411,25 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			int index = responseString.indexOf(prefix);
 			String voucherNo = responseString.substring(index + prefix.length()).trim();
 			if (type.equals("icm")) {
-				List<Invoice> byIcmNo = invoiceRepo.findByIcmNo(obj.getIcmInvNo());
+				List<String> invoiceList = obj.getInvoices().stream().map(i -> i.getInvoiceNo())
+						.collect(Collectors.toList());
+				List<Invoice> byIcmNo = invoiceRepo.findByIcmNo(obj.getAdjData().getIcmInvNo());
 				byIcmNo.forEach(item -> {
-					if (item.getAdjReceiptNo() == null) {
-						item.setAdjReceiptNo(Arrays.asList(voucherNo));
-						item.setAdjReceiptStatus(Arrays.asList("Pending"));
-					} else {
-						item.getAdjReceiptNo().add(voucherNo);
-						item.getAdjReceiptStatus().add("Pending");
+					if (invoiceList.contains(item.getInvoiceNo())) {
+						try {
+							if (item.getAdjReceiptNo() == null) {
+								item.setAdjReceiptNo(Arrays.asList(voucherNo));
+							} else {
+								item.getAdjReceiptNo().add(voucherNo);
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
 				});
 				invoiceRepo.saveAll(byIcmNo);
 			} else {
-				Invoice invoice = invoiceRepo.findByInvoiceNo(obj.getIcmInvNo()).get();
+				Invoice invoice = invoiceRepo.findByInvoiceNo(obj.getAdjData().getIcmInvNo()).get();
 				invoice.setAdjReceiptNo(Arrays.asList(voucherNo));
 				invoice.setAdjReceiptStatus(Arrays.asList("Pending"));
 				invoiceRepo.save(invoice);
