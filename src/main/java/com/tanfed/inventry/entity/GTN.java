@@ -68,6 +68,8 @@ public class GTN {
 	private String toRegion;
 	
 	private String destination;
+
+	private String daNo;
 	
 	
 	

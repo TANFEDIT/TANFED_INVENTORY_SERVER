@@ -209,12 +209,10 @@ public class DcServiceImpl implements DcService {
 
 							if (!productName.isEmpty() && productName != null) {
 								data.setTableData(fetchTableData(officeName, productName, godownName));
-								data.setDespatchAdviseQty(
-										despatchAdviceService.getDespatchAdviceDataByDespatchAdviceNo(despatchAdviceNo)
-												.getTableData().stream()
-												.filter(item -> item.getProductName().equals(productName))
-												.map(item -> item.getQtyAvlForDc()).collect(Collectors.toList())
-												.get(0));
+								data.setDespatchAdviseQty(despatchAdviceService
+										.getDespatchAdviceDataByDespatchAdviceNo(despatchAdviceNo).getTableData()
+										.stream().filter(item -> item.getProductName().equals(productName))
+										.map(item -> item.getQtyAvlForDc()).collect(Collectors.toList()).get(0));
 							}
 						}
 					}
@@ -288,7 +286,8 @@ public class DcServiceImpl implements DcService {
 	public List<TableDataForDc> getObData(String officeName, String productName, String godownName) {
 		return openingStockRepo.findAll().stream()
 				.filter(item -> item.getQtyAvlForDc() > 0 && item.getOfficeName().equals(officeName)
-						&& item.getProductName().equals(productName) && item.getGodownName().equals(godownName))
+						&& item.getVoucherStatus().equals("Approved") && item.getProductName().equals(productName)
+						&& item.getGodownName().equals(godownName))
 				.map(item -> new TableDataForDc(item.getProductCategory(), item.getProductGroup(),
 						item.getSupplierName(), item.getProductName(), item.getPacking(), item.getStandardUnits(),
 						item.getQtyAvlForDc(), item.getObId(), null, "Through CC", item.getB2cMrp(), item.getAsOn(),

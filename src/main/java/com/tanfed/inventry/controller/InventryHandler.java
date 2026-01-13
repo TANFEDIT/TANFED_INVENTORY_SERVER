@@ -148,11 +148,11 @@ public class InventryHandler {
 			String gtnFor, String month, String suppliedGodown, String invoiceNo,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date, String rrNo,
 			String transactionFor, String godownName, String toRegion, String issuedGtnNo, String destination,
-			String transportCharges, String loadingCharges, String unloadingCharges,
+			String transportCharges, String loadingCharges, String unloadingCharges, String daNo,
 			@RequestHeader("Authorization") String jwt) throws Exception {
 		return gtnService.getDataForGtn(officeName, productName, activity, gtnFor, rrNo, date, transactionFor, jwt,
 				godownName, toRegion, issuedGtnNo, destination, transportCharges, loadingCharges, unloadingCharges,
-				month, suppliedGodown, invoiceNo);
+				month, suppliedGodown, invoiceNo, daNo);
 	}
 
 	@GetMapping("/fetchdatafordespatchadvice")

@@ -94,12 +94,17 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 		}
 	}
 
+	@Autowired
+	private UserService userService;
+
 	@Override
 	public DataForDespatchAdvice getDataForDespatchAdvice(String officeName, String activity, String nameOfInstitution,
 			String productName, String jwt, String month, String godownName) throws Exception {
 		try {
 			DataForDespatchAdvice data = new DataForDespatchAdvice();
 			if (officeName != null && !officeName.isEmpty()) {
+				data.setOfficeNameList(
+						userService.getOfficeList().stream().map(i -> i.getOfficeName()).collect(Collectors.toList()));
 				data.setNameOfInstitutionList(masterService.getBuyerNameByOfficeNameHandler(jwt, officeName));
 				data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
 				data.getGodownNameList().add("Direct Material Center");
@@ -253,4 +258,15 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 		}
 	}
 
+	@Override
+	public List<String> fetchOtherRegionDaNoList(String officeName, String toRegion) throws Exception {
+		try {
+			return getDespatchAdviceDataByOffficeName(toRegion).stream()
+					.filter(i -> i.getVoucherStatus().equals("Approved") && i.getOtherRegion() != null
+							&& i.getOtherRegion().equals(officeName))
+					.map(i -> i.getDespatchAdviceNo()).collect(Collectors.toList());
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
 }

@@ -28,4 +28,6 @@ public interface DespatchAdviceService {
 	public void revertDespatchAdviceQty(String DespatchAdviceNo, List<DcTableData> obj) throws Exception;
 	
 	public void updateDespatchAdviceStatus(Long id) throws Exception;
+
+	public List<String> fetchOtherRegionDaNoList(String officeName, String toRegion) throws Exception;
 }

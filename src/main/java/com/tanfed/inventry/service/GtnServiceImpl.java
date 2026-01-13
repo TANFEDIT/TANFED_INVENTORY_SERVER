@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import com.tanfed.inventry.config.JwtTokenValidator;
 import com.tanfed.inventry.entity.ClosingStockTable;
+import com.tanfed.inventry.entity.DespatchAdvice;
 import com.tanfed.inventry.entity.GRN;
 import com.tanfed.inventry.entity.GTN;
 import com.tanfed.inventry.entity.Invoice;
@@ -189,14 +190,14 @@ public class GtnServiceImpl implements GtnService {
 	public DataForGtn getDataForGtn(String officeName, String productName, String activity, String gtnFor, String rrNo,
 			LocalDate date, String transactionFor, String jwt, String godownName, String toRegion, String issuedGtnNo,
 			String destination, String transportCharges, String loadingCharges, String unloadingCharges, String month,
-			String suppliedGodown, String invoiceNo) throws Exception {
+			String suppliedGodown, String invoiceNo, String daNo) throws Exception {
 		try {
 			DataForGtn data = new DataForGtn();
 
 			switch (gtnFor) {
 			case "Issue":
 				handleIssueGTN(data, officeName, productName, activity, transactionFor, jwt, godownName, toRegion, date,
-						destination, transportCharges, loadingCharges, unloadingCharges, rrNo);
+						destination, transportCharges, loadingCharges, unloadingCharges, rrNo, daNo);
 				break;
 			case "Receipt":
 				handleReceiptGTN(data, officeName, transactionFor, issuedGtnNo, month, suppliedGodown, invoiceNo, jwt,
@@ -236,7 +237,7 @@ public class GtnServiceImpl implements GtnService {
 
 	private void handleIssueGTN(DataForGtn data, String officeName, String productName, String activity,
 			String transactionFor, String jwt, String godownName, String toRegion, LocalDate date, String destination,
-			String transportCharges, String loadingCharges, String unloadingCharges, String rrNo) throws Exception {
+			String transportCharges, String loadingCharges, String unloadingCharges, String rrNo, String daNo) throws Exception {
 
 		data.setProductNameList(fetchProduct(officeName));
 
@@ -269,10 +270,10 @@ public class GtnServiceImpl implements GtnService {
 			if (hasText(rrNo)) {
 				data.setRrDate(grnService.getGrnDataByRrNo(rrNo).getSupplierDocDate());
 			}
+			data.setTableData(grnService.grnTableData(officeName, productName, godownName, "gtn"));
+			data.getTableData().addAll(gtnTableData(officeName, productName, godownName));
+			data.getTableData().addAll(dcService.getObData(officeName, productName, godownName));
 		}
-		data.setTableData(grnService.grnTableData(officeName, productName, godownName, "gtn"));
-		data.getTableData().addAll(gtnTableData(officeName, productName, godownName));
-		data.getTableData().addAll(dcService.getObData(officeName, productName, godownName));
 
 		handleIntraRegionTransfers(data, transactionFor, godownName, date, jwt, officeName, destination);
 
@@ -280,7 +281,7 @@ public class GtnServiceImpl implements GtnService {
 				userService.getOfficeList().stream().map(item -> item.getOfficeName()).collect(Collectors.toList()));
 
 		if (hasText(toRegion)) {
-			handleInterRegionTransfers(data, officeName, toRegion, transactionFor, destination, godownName, jwt);
+			handleInterRegionTransfers(data, officeName, toRegion, transactionFor, destination, godownName, jwt, daNo);
 		}
 
 		if ((hasText(godownName) && hasText(destination)) || hasText(toRegion)) {
@@ -291,6 +292,9 @@ public class GtnServiceImpl implements GtnService {
 
 	@Autowired
 	private InvoiceService invoiceService;
+	
+	@Autowired
+	private DespatchAdviceService despatchAdviceService;
 
 	private void handleReceiptGTN(DataForGtn data, String officeName, String transactionFor, String issuedGtnNo,
 			String month, String suppliedGodown, String invoiceNo, String jwt, String godownName) throws Exception {
@@ -383,7 +387,7 @@ public class GtnServiceImpl implements GtnService {
 	}
 
 	private void handleInterRegionTransfers(DataForGtn data, String officeName, String toRegion, String transactionFor,
-			String destination, String godownName, String jwt) throws Exception {
+			String destination, String godownName, String jwt, String daNo) throws Exception {
 		String originalOffice = officeName;
 		officeName = toRegion;
 
@@ -402,10 +406,19 @@ public class GtnServiceImpl implements GtnService {
 
 			if (hasText(destination)) {
 				BuyerFirmInfo buyer = masterService.getBuyerFirmByFirmNameHandler(jwt, destination);
-				data.setBuyerName(buyer.getIfmsIdNo());
+				data.setBuyerName(buyer.getNameOfInstitution());
 				data.setBuyerDistrict(buyer.getDistrict());
+				data.setBuyerTaluk(buyer.getTaluk());
+				data.setBuyerBlock(buyer.getBlock());
+				data.setBuyerVillage(buyer.getVillage());
 				data.setToIfmsId(buyer.getIfmsIdNo());
 				data.setBuyerGstNo(buyer.getBuyerGstNo());
+				data.setDaNoList(despatchAdviceService.fetchOtherRegionDaNoList(originalOffice, officeName));
+				if (hasText(daNo)) {
+					DespatchAdvice despatchAdvice = despatchAdviceService.getDespatchAdviceDataByDespatchAdviceNo(daNo);
+					data.setDaProduct(despatchAdvice.getTableData().get(0).getProductName());
+					data.setDaQty(despatchAdvice.getTableData().get(0).getQty().toString());
+				}
 				GodownInfo fromGodown = masterService.getGodownInfoByGodownNameHandler(godownName, jwt);
 				data.setFromIfmsId(fromGodown.getIfmsId());
 			}

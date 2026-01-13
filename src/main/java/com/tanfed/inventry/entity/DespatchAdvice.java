@@ -57,6 +57,8 @@ public class DespatchAdvice {
 	
 	private String supplyTo;
 	
+	private String otherRegion;
+	
 	private String village;
 	
 	private String taluk;

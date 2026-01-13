@@ -27,7 +27,10 @@ public class DataForGtn {
 	private String supplierGst;
 	private String packing;
 	private String standardUnits;
+	private String daProduct;
+	private String daQty;
 	
+	private List<String> daNoList;
 	private List<String> officeList;
 	private Set<String> designationList;
 	private List<String> gtnNoList;
@@ -43,6 +46,9 @@ public class DataForGtn {
 	private Double unloadingChargesPerQty;
 	private String buyerName;
 	private String buyerDistrict;
+	private String buyerTaluk;
+	private String buyerBlock;
+	private String buyerVillage;
 	private List<TableDataForDc> tableData;
 	private String fromIfmsId;
 	private String toIfmsId;

@@ -22,7 +22,7 @@ public interface GtnService {
 
 	public DataForGtn getDataForGtn(String officeName, String productName, String activity, String gtnFor, String rrNo, LocalDate date, String transactionFor, 
 			String jwt, String godownName, String toRegion, String issuedGtnNo, String destination, String transportCharges, String loadingCharges,
-			String unloadingCharges, String month, String suppliedGodown, String invoiceNo) throws Exception;
+			String unloadingCharges, String month, String suppliedGodown, String invoiceNo, String daNo) throws Exception;
 
 	public List<TableDataForDc> gtnTableData(String officeName, String productName, String godownName) throws Exception;
 	

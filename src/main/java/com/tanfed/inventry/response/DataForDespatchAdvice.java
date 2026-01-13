@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 public class DataForDespatchAdvice {
 
 	private List<String> nameOfInstitutionList;
+	private List<String> officeNameList;
 	private List<String> productNameList;
 	private Set<String> godownNameList;
 	private List<String> supplyModeList;
