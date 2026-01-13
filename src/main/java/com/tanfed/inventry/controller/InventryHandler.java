@@ -443,6 +443,11 @@ public class InventryHandler {
 						registerService.getDespatchAdviceRegisterData(officeName, month, fromDate, toDate));
 				return data;
 			}
+			case "movementRegister": {
+				data.setMovementRegister(
+						registerService.getMovementRegisterData(officeName, godownName, fromDate, toDate));
+				return data;
+			}
 			default:
 				throw new IllegalArgumentException("Unexpected value: " + formType);
 			}

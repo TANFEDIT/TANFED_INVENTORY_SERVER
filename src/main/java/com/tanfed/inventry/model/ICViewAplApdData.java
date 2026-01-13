@@ -17,4 +17,9 @@ public class ICViewAplApdData {
 	private Set<String> icmNoList;
 	private List<FundTransferDto> fundTransfer;
 	private List<AdjustmentReceiptVoucher> adjv;
+	private String bankName;
+	private String door;
+	private String street;
+	private String district;
+	private Long pincode;	
 }

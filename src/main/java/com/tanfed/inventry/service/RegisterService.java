@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.tanfed.inventry.model.DespatchAdviceRegisterTable;
 import com.tanfed.inventry.model.InvoiceCollectionRegisterTable;
+import com.tanfed.inventry.model.MovementRegister;
 import com.tanfed.inventry.model.PoRegisterTable;
 import com.tanfed.inventry.model.PurchaseDayBookQty;
 import com.tanfed.inventry.model.PurchaseDayBookValue;
@@ -66,4 +67,9 @@ public interface RegisterService {
 	public List<TcBillRegisterTable> getTcBillRegisterData(String officeName, String month, LocalDate fromDate, LocalDate toDate) throws Exception;
 
 	public List<TcBillRegisterTable> getMpaBillRegisterData(String officeName, String month, LocalDate fromDate, LocalDate toDate) throws Exception;
+	
+	public List<MovementRegister> getMovementRegisterData(String officeName, String godownName, LocalDate fromDate, LocalDate toDate) throws Exception;
+	
+	
+	
 }

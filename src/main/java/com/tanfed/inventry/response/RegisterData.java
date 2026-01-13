@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.tanfed.inventry.model.DespatchAdviceRegisterTable;
+import com.tanfed.inventry.model.MovementRegister;
 import com.tanfed.inventry.model.PoRegisterTable;
 import com.tanfed.inventry.model.RegisterTable;
 
@@ -31,4 +32,5 @@ public class RegisterData {
 	private List<PoRegisterTable> poRegister;
 	private List<PoRegisterTable> poAllotmentRegister;
 	private List<DespatchAdviceRegisterTable> despatchAdviceRegister;
+	private List<MovementRegister> movementRegister;
 }

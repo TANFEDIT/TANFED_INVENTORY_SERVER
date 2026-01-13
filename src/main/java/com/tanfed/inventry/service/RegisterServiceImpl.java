@@ -103,8 +103,13 @@ public class RegisterServiceImpl implements RegisterService {
 			}).map(item -> new RegisterTable(item.getGodownName(), null, null, null, null, null, null, null,
 					item.getDcNo(), item.getDate(), item.getInvoiceNo(), item.getDate(), null, item.getIfmsId(),
 					item.getNameOfInstitution(), item.getDistrict(), null,
-					item.getTableData().stream().map(m -> m.getProductName()).collect(Collectors.toList()), null,
-					item.getTotalNoOfBags().toString(), item.getTotalQty(), null, null, item.getTotalBasicValue(),
+					item.getTableData().stream()
+							.filter(i -> i.getProductName().equals(productName) || productName.isEmpty())
+							.map(m -> new ProductDataSalesRegister(m.getProductName(), m.getBags().toString(),
+									m.getQty().toString(), m.getBasicPrice().toString(), m.getCgstAmount().toString(),
+									m.getSgstAmount().toString(), m.getTotal().toString()))
+							.collect(Collectors.toList()),
+					null, item.getTotalNoOfBags().toString(), item.getTotalQty(), null, null, item.getTotalBasicValue(),
 					item.getTotalCgstValue(), item.getTotalSgstValue(), item.getNetInvoiceAdjustment(), null))
 					.sorted(Comparator.comparing(RegisterTable::getInvoiceDate)).collect(Collectors.toList());
 		} catch (Exception e) {
@@ -236,10 +241,11 @@ public class RegisterServiceImpl implements RegisterService {
 				} else {
 					int n = 1;
 					do {
+						LocalDate currDate = currentDate.minusDays(n++);
 						cb = closingStockTableRepo.findByOfficeNameAndProductNameAndDateAndGodownName(officeName,
-								productName, currentDate.minusDays(n++), godownName);
-						if (n == 32) {
-							throw new Exception("No Balance Found!");
+								productName, currDate, godownName);
+						if (currDate.equals(LocalDate.of(2025, 4, 1))) {
+							ob = 0.0;
 						}
 					} while (cb == null);
 					ob = cb.getBalance();
@@ -879,6 +885,33 @@ public class RegisterServiceImpl implements RegisterService {
 			}).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception("Error while generating TC Bill Register data", e);
+		}
+	}
+
+	@Override
+	public List<MovementRegister> getMovementRegisterData(String officeName, String godownName, LocalDate fromDate,
+			LocalDate toDate) throws Exception {
+		try {
+			return dcService.getDeliveryChellanDataByOffficeName(officeName).stream().filter(item -> {
+				Boolean godownFilter = true;
+				if (godownName.isEmpty()) {
+					godownFilter = true;
+				} else {
+					godownFilter = item.getGodownName().equals(godownName);
+				}
+				return godownFilter && !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate)
+						&& item.getVoucherStatus().equals("Approved");
+			}).map(i -> {
+				List<ProductDataMovementRegister> productData = i
+						.getDcTableData().stream().map(k -> new ProductDataMovementRegister(k.getProductName(),
+								k.getBags().toString(), k.getQty().toString(), k.getOutwardBatchNo()))
+						.collect(Collectors.toList());
+
+				return new MovementRegister(i.getActivity(), i.getGodownName(), i.getDcNo(), i.getDate(), i.getIfmsId(),
+						i.getNameOfInstitution(), i.getDistrict(), i.getVehicleNo(), productData);
+			}).collect(Collectors.toList());
+		} catch (Exception e) {
+			throw new Exception("Error while generating Movement Register data", e);
 		}
 	}
 }

@@ -905,6 +905,16 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 									null, item.getCcbBranch(), accountNo, item.getDateOfPresent(), null, null, null,
 									null, null, null);
 						}).collect(Collectors.toList()));
+						BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName)
+								.stream()
+								.filter(itemData -> itemData.getAccountNumber().equals(data.getInvoice().get(0).getAccountNo()))
+								.collect(Collectors.toList()).get(0);
+						data.setBankName(bankInfo.getBankName());
+						data.setDoor(bankInfo.getDoor());
+						data.setStreet(bankInfo.getStreet());
+						data.setDistrict(bankInfo.getDistrict());
+						data.setPincode(bankInfo.getPincode());
+						
 					} else {
 						List<Invoice> byIcmNo = invoiceRepo.findByIcmNo(icmNo);
 						Set<String> adjNoList = byIcmNo.stream().flatMap(i -> i.getAdjReceiptNo().stream())
@@ -943,6 +953,15 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 									item.getDueDate(), null, item.getCcbBranch(), accountNo, item.getDateOfPresent(),
 									null, null, null, null, null, null);
 						}).collect(Collectors.toList()));
+						BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName)
+								.stream()
+								.filter(itemData -> itemData.getAccountNumber().equals(data.getInvoice().get(0).getAccountNo()))
+								.collect(Collectors.toList()).get(0);
+						data.setBankName(bankInfo.getBankName());
+						data.setDoor(bankInfo.getDoor());
+						data.setStreet(bankInfo.getStreet());
+						data.setDistrict(bankInfo.getDistrict());
+						data.setPincode(bankInfo.getPincode());
 					}
 				}
 				return data;
@@ -1197,7 +1216,20 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 
 			case "invoiceCollectionAvailable": {
 				Invoice invoice = invoiceRepo.findById(Long.valueOf(obj.getId())).get();
-				revertIcmAdjAcc(obj, jwt);
+				if (invoice.getCollectionMethod().equals("AdjReceipt")) {
+					Vouchers adjv = accountsService.getAccountsVoucherByVoucherNoHandler("adjustmentReceiptVoucher",
+							obj.getAdjNo(), jwt);
+					accountsService.voucherApprovalHandler(new VoucherApproval(obj.getVoucherStatus(),
+							String.valueOf(adjv.getAdjustmentReceiptVoucherData().getId()), "adjustmentReceiptVoucher",
+							null), jwt);
+					if (obj.getVoucherStatus().equals("Approved")) {
+						invoice.setCollectionValue(
+								Arrays.asList(adjv.getAdjustmentReceiptVoucherData().getReceivedAmount()));
+						invoice.setDateOfCollectionFromCcb(
+								new ArrayList<>(List.of(adjv.getAdjustmentReceiptVoucherData().getDateOfCollection())));
+						invoice.setTransferDone(false);
+					}
+				}
 				designation = userService.getNewDesignation(empId);
 				oldDesignation = invoice.getDesignationICP2();
 
@@ -1399,6 +1431,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					.collect(Collectors.toList()).get(0);
 			obj.getAdjData().setAccountType("Non PDS A/c");
 			obj.getAdjData().setAccountNo(bankInfo.getAccountNumber());
+			obj.getAdjData().setContraEntry("No");
 			Vouchers vouchers = new Vouchers();
 			vouchers.setAdjustmentReceiptVoucherData(obj.getAdjData());
 			ResponseEntity<String> responseEntity = accountsService
