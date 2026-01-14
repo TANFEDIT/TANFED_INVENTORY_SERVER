@@ -29,5 +29,5 @@ public interface DespatchAdviceService {
 	
 	public void updateDespatchAdviceStatus(Long id) throws Exception;
 
-	public List<String> fetchOtherRegionDaNoList(String officeName, String toRegion) throws Exception;
+	public List<String> fetchOtherRegionDaNoList(String officeName, String toRegion, String buyerName) throws Exception;
 }

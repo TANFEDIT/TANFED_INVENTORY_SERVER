@@ -31,6 +31,7 @@ import com.tanfed.inventry.model.ContractorInfo;
 import com.tanfed.inventry.model.GodownInfo;
 import com.tanfed.inventry.model.GrnQtyUpdateForDc;
 import com.tanfed.inventry.model.GtnInvoiceData;
+import com.tanfed.inventry.model.GtnTableData;
 import com.tanfed.inventry.model.JournalVoucher;
 import com.tanfed.inventry.model.ProductMaster;
 import com.tanfed.inventry.model.TableDataForDc;
@@ -78,6 +79,9 @@ public class GtnServiceImpl implements GtnService {
 				obj.getGtnTableData().forEach(item -> {
 					item.setGtn(obj);
 				});
+				if(obj.getGtnFor().equals("Issue")) {
+					utilizeGtnReceiptQtyForIssue(obj.getGtnTableData());
+				}
 				if (!obj.getTransactionFor().equals("Sales Return")) {
 					obj.getGtnTableData().forEach(temp -> {
 						temp.setQtyAvlForDc(temp.getReceivedQty());
@@ -88,6 +92,27 @@ public class GtnServiceImpl implements GtnService {
 				return new ResponseEntity<String>("Created Successfully!" + "\n GTN No :" + gtnNo, HttpStatus.CREATED);
 			} else {
 				return saveSalesReturn(salesReturn, jwt);
+			}
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
+
+	private void utilizeGtnReceiptQtyForIssue(List<GtnTableData> tableData) throws Exception {
+		try {
+			for (var i : tableData) {
+				if (i.getVoucherId().startsWith("GT")) {
+					GTN gtn = gtnRepo.findByGtnNo(i.getVoucherId()).get();
+					for (var item : gtn.getGtnTableData()) {
+						if (item.getOutwardBatchNo().equals(i.getOutwardBatchNo())) {
+							item.setQtyAvlForDc(
+									RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getQtyAvlForDc() - i.getQty()));
+						}
+					}
+					gtnRepo.save(gtn);
+				} else {
+					grnService.utilizeGrnQtyForGtn(i);
+				}
 			}
 		} catch (Exception e) {
 			throw new Exception(e);
@@ -193,7 +218,7 @@ public class GtnServiceImpl implements GtnService {
 			String suppliedGodown, String invoiceNo, String daNo) throws Exception {
 		try {
 			DataForGtn data = new DataForGtn();
-
+			logger.info(daNo);
 			switch (gtnFor) {
 			case "Issue":
 				handleIssueGTN(data, officeName, productName, activity, transactionFor, jwt, godownName, toRegion, date,
@@ -237,7 +262,8 @@ public class GtnServiceImpl implements GtnService {
 
 	private void handleIssueGTN(DataForGtn data, String officeName, String productName, String activity,
 			String transactionFor, String jwt, String godownName, String toRegion, LocalDate date, String destination,
-			String transportCharges, String loadingCharges, String unloadingCharges, String rrNo, String daNo) throws Exception {
+			String transportCharges, String loadingCharges, String unloadingCharges, String rrNo, String daNo)
+			throws Exception {
 
 		data.setProductNameList(fetchProduct(officeName));
 
@@ -292,7 +318,7 @@ public class GtnServiceImpl implements GtnService {
 
 	@Autowired
 	private InvoiceService invoiceService;
-	
+
 	@Autowired
 	private DespatchAdviceService despatchAdviceService;
 
@@ -413,7 +439,8 @@ public class GtnServiceImpl implements GtnService {
 				data.setBuyerVillage(buyer.getVillage());
 				data.setToIfmsId(buyer.getIfmsIdNo());
 				data.setBuyerGstNo(buyer.getBuyerGstNo());
-				data.setDaNoList(despatchAdviceService.fetchOtherRegionDaNoList(originalOffice, officeName));
+				data.setDaNoList(despatchAdviceService.fetchOtherRegionDaNoList(originalOffice, officeName,
+						buyer.getNameOfInstitution()));
 				if (hasText(daNo)) {
 					DespatchAdvice despatchAdvice = despatchAdviceService.getDespatchAdviceDataByDespatchAdviceNo(daNo);
 					data.setDaProduct(despatchAdvice.getTableData().get(0).getProductName());

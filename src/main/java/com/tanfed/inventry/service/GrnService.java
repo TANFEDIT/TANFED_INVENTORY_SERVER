@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import com.tanfed.inventry.entity.GRN;
 import com.tanfed.inventry.model.GrnAttachDto;
 import com.tanfed.inventry.model.GrnQtyUpdateForDc;
+import com.tanfed.inventry.model.GtnTableData;
 import com.tanfed.inventry.model.TableDataForDc;
 import com.tanfed.inventry.model.WagonDataGrn;
 import com.tanfed.inventry.response.DataForGrn;
@@ -56,4 +57,6 @@ public interface GrnService {
 	public void updateClosingBalance(GRN grn) throws Exception;
 
 	public void revertGrnJv(GRN grn, String jwt, String grnNo) throws Exception;
+	
+	public void utilizeGrnQtyForGtn(GtnTableData tableData) throws Exception;
 }

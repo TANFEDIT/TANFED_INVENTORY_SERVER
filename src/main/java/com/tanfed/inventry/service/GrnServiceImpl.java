@@ -24,6 +24,7 @@ import com.tanfed.inventry.entity.*;
 import com.tanfed.inventry.model.*;
 import com.tanfed.inventry.repository.ClosingStockTableRepo;
 import com.tanfed.inventry.repository.GrnRepo;
+import com.tanfed.inventry.repository.OpeningStockRepo;
 import com.tanfed.inventry.repository.OutwardBatchRepo;
 import com.tanfed.inventry.repository.PurchaseOrderRepo;
 import com.tanfed.inventry.response.DataForGrn;
@@ -681,6 +682,27 @@ public class GrnServiceImpl implements GrnService {
 			return grnRepo.findByDcWdnRoNo(rrNo);
 		} catch (Exception e) {
 			throw new Exception("Error Fetching GRN by RR number" + e);
+		}
+	}
+
+
+	@Autowired
+	private OpeningStockRepo openingStockRepo;
+	
+	@Override
+	public void utilizeGrnQtyForGtn(GtnTableData tableData) throws Exception {
+		try {
+				if(tableData.getOutwardBatchNo().startsWith("GR")) {
+					GRN grnData = grnRepo.findByGrnNo(tableData.getOutwardBatchNo()).get();
+					grnData.setGrnQtyAvlForDc(grnData.getGrnQtyAvlForDc() - tableData.getQty());
+					grnRepo.save(grnData);
+				} else {
+					OpeningStock openingStock = openingStockRepo.findByObId(tableData.getOutwardBatchNo()).get();
+					openingStock.setQtyAvlForDc(openingStock.getQtyAvlForDc() - tableData.getQty());
+					openingStockRepo.save(openingStock);
+				}
+		} catch (Exception e) {
+			throw new Exception(e);
 		}
 	}
 }

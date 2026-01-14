@@ -37,6 +37,7 @@ public class GtnTableData {
 	private Double QtyAvlForDc;
 	private String collectionMode;
 	private String termsNo;
+	private String voucherId;
 	
 	@ManyToOne
 	@JoinColumn(name = "gtn")
