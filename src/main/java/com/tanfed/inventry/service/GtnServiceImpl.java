@@ -116,6 +116,9 @@ public class GtnServiceImpl implements GtnService {
 										null, i.getQty(), null, null, null, null, null, null, null))
 								.collect(Collectors.toList()));
 					}
+				} else {
+					GTN gtn = gtnRepo.findByGtnNo(obj.getIssuedGtnNo()).get();
+					obj.setDaNo(gtn.getDaNo());
 				}
 				if (!obj.getTransactionFor().equals("Sales Return")) {
 					obj.getGtnTableData().forEach(temp -> {
