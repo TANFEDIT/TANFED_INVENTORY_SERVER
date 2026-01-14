@@ -66,12 +66,10 @@ public class DcServiceImpl implements DcService {
 		try {
 			logger.info("{}", obj);
 //			setting values to entity
-			for (int i = 0; i < obj.getDcTableData().size(); i++) {
-				DcTableData dcData = obj.getDcTableData().get(i);
-				ProductMaster productMaster = masterService.getProductDataByProductNameHandler(jwt,
-						dcData.getProductName());
-				dcData.setHsnCode(productMaster.getHsnCode());
-				dcData.setGstRate(productMaster.getGstRate());
+			for (var i : obj.getDcTableData()) {
+				ProductMaster productMaster = masterService.getProductDataByProductNameHandler(jwt, i.getProductName());
+				i.setHsnCode(productMaster.getHsnCode());
+				i.setGstRate(productMaster.getGstRate());
 			}
 			outwardBatchRepo.deleteItemsByDcNo(obj.getDcNo());
 			obj.setDcNo(codeGenerator.dcNoGenerator(obj.getOfficeName(), obj.getDate()));
@@ -390,6 +388,56 @@ public class DcServiceImpl implements DcService {
 					closingStockTableRepo.save(cb);
 				}
 			});
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
+
+	@Override
+	public void createDcForOtherRegionReceipt(GTN gtn, String jwt) throws Exception {
+		try {
+			String empId = JwtTokenValidator.getEmailFromJwtToken(jwt);
+			DeliveryChellan dc = new DeliveryChellan();
+			dc.setEmpId(Arrays.asList(empId));
+			dc.setOfficeName(gtn.getOfficeName());
+			dc.setVoucherStatus("Approved");
+			dc.setLoadType("Single Load");
+			dc.setDcNo(codeGenerator.dcNoGenerator(gtn.getOfficeName(), gtn.getDate()));
+			dc.setDate(gtn.getDate());
+			dc.setApprovedDate(LocalDate.now());
+
+			DespatchAdvice despatchAdvice = despatchAdviceService
+					.getDespatchAdviceDataByDespatchAdviceNo(gtn.getDaNo());
+			dc.setIfmsId(despatchAdvice.getIfmsId());
+			dc.setNameOfInstitution(despatchAdvice.getNameOfInstitution());
+			dc.setLicenseNo(despatchAdvice.getLicenseNo());
+			dc.setSupplyTo(despatchAdvice.getSupplyTo());
+			dc.setBuyerGstNo(despatchAdvice.getBuyerGstNo());
+			dc.setVillage(despatchAdvice.getVillage());
+			dc.setBlock(despatchAdvice.getBlock());
+			dc.setTaluk(despatchAdvice.getTaluk());
+			dc.setDistrict(despatchAdvice.getDistrict());
+			dc.setActivity(gtn.getActivity());
+			dc.setSupplyMode(despatchAdvice.getSupplyMode());
+			dc.setTransporterName(gtn.getTransporterName());
+			dc.setGodownName(gtn.getGodownName());
+			dc.setDespatchAdviceNo(gtn.getDaNo());
+			dc.setTotalBags(gtn.getGtnTableData().stream().mapToDouble(i -> i.getBags()).sum());
+			dc.setTotalQty(gtn.getGtnTableData().stream().mapToDouble(i -> i.getQty()).sum());
+			dc.setKm(gtn.getKm());
+			dc.setTransportChargesValue(gtn.getTransportChargesValue());
+			dc.setLoadingChargesValue(gtn.getLoadingChargesValue());
+			ProductMaster productMaster = masterService.getProductDataByProductNameHandler(jwt, gtn.getProductName());
+			dc.setDcTableData(gtn.getGtnTableData().stream()
+					.map(i -> new DcTableData(null, i.getTermsNo(), i.getOutwardBatchNo(),
+							productMaster.getProductCategory(), productMaster.getSupplierName(),
+							productMaster.getProductName(), i.getPacking(), i.getBags(), i.getQty(),
+							productMaster.getHsnCode(), productMaster.getGstRate(), i.getMrp(), null,
+							productMaster.getProductGroup(), i.getCollectionMode(), i.getVoucherId()))
+					.collect(Collectors.toList()));
+			dc.setBillEntry(false);
+
+			deliveryChellanRepo.save(dc);
 		} catch (Exception e) {
 			throw new Exception(e);
 		}

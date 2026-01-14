@@ -259,12 +259,14 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 	}
 
 	@Override
-	public List<String> fetchOtherRegionDaNoList(String officeName, String toRegion, String buyerName)
-			throws Exception {
+	public List<String> fetchOtherRegionDaNoList(String officeName, String toRegion, String buyerName,
+			String productName) throws Exception {
 		try {
 			return getDespatchAdviceDataByOffficeName(toRegion).stream()
 					.filter(i -> i.getVoucherStatus().equals("Approved") && i.getOtherRegion() != null
-							&& i.getOtherRegion().equals(officeName) && i.getNameOfInstitution().equals(buyerName))
+							&& i.getOtherRegion().equals(officeName) && i.getNameOfInstitution().equals(buyerName)
+							&& i.getTableData().stream()
+									.anyMatch(k -> k.getProductName().equals(productName) && k.getQtyAvlForDc() > 0))
 					.map(i -> i.getDespatchAdviceNo()).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception(e);

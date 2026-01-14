@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import com.tanfed.inventry.config.JwtTokenValidator;
 import com.tanfed.inventry.entity.ClosingStockTable;
+import com.tanfed.inventry.entity.DcTableData;
 import com.tanfed.inventry.entity.DespatchAdvice;
 import com.tanfed.inventry.entity.GRN;
 import com.tanfed.inventry.entity.GTN;
@@ -64,6 +65,33 @@ public class GtnServiceImpl implements GtnService {
 	@Autowired
 	private OutwardBatchRepo outwardBatchRepo;
 
+	@Autowired
+	private MasterService masterService;
+
+	@Autowired
+	private GrnService grnService;
+
+	@Autowired
+	private DcService dcService;
+
+	@Autowired
+	private OpeningStockService openingStockService;
+
+	@Autowired
+	private InvoiceService invoiceService;
+
+	@Autowired
+	private DespatchAdviceService despatchAdviceService;
+
+	@Autowired
+	private PoService poService;
+
+	@Autowired
+	private ClosingStockTableRepo closingStockTableRepo;
+
+	@Autowired
+	private AccountsService accountsService;
+
 	private static Logger logger = LoggerFactory.getLogger(GtnServiceImpl.class);
 
 	@Override
@@ -79,8 +107,15 @@ public class GtnServiceImpl implements GtnService {
 				obj.getGtnTableData().forEach(item -> {
 					item.setGtn(obj);
 				});
-				if(obj.getGtnFor().equals("Issue")) {
+				if (obj.getGtnFor().equals("Issue")) {
 					utilizeGtnReceiptQtyForIssue(obj.getGtnTableData());
+					if (obj.getTransactionFor().endsWith("Region Direct")) {
+						despatchAdviceService.updateDespatchAdviceQty(obj.getDaNo(),
+								obj.getGtnTableData().stream()
+								.map(i -> new DcTableData(null, null, null, null, null, obj.getProductName(), null,
+										null, i.getQty(), null, null, null, null, null, null, null))
+								.collect(Collectors.toList()));
+					}
 				}
 				if (!obj.getTransactionFor().equals("Sales Return")) {
 					obj.getGtnTableData().forEach(temp -> {
@@ -199,18 +234,6 @@ public class GtnServiceImpl implements GtnService {
 		}
 	}
 
-	@Autowired
-	private MasterService masterService;
-
-	@Autowired
-	private GrnService grnService;
-
-	@Autowired
-	private DcService dcService;
-
-	@Autowired
-	private OpeningStockService openingStockService;
-
 	@Override
 	public DataForGtn getDataForGtn(String officeName, String productName, String activity, String gtnFor, String rrNo,
 			LocalDate date, String transactionFor, String jwt, String godownName, String toRegion, String issuedGtnNo,
@@ -307,20 +330,14 @@ public class GtnServiceImpl implements GtnService {
 				userService.getOfficeList().stream().map(item -> item.getOfficeName()).collect(Collectors.toList()));
 
 		if (hasText(toRegion)) {
-			handleInterRegionTransfers(data, officeName, toRegion, transactionFor, destination, godownName, jwt, daNo);
+			handleInterRegionTransfers(data, officeName, toRegion, transactionFor, destination, godownName, jwt, daNo, productName);
 		}
 
 		if ((hasText(godownName) && hasText(destination)) || hasText(toRegion)) {
 			validateChargesNeed(data, transactionFor, jwt, officeName, godownName, destination, transportCharges,
-					loadingCharges, unloadingCharges);
+					loadingCharges);
 		}
 	}
-
-	@Autowired
-	private InvoiceService invoiceService;
-
-	@Autowired
-	private DespatchAdviceService despatchAdviceService;
 
 	private void handleReceiptGTN(DataForGtn data, String officeName, String transactionFor, String issuedGtnNo,
 			String month, String suppliedGodown, String invoiceNo, String jwt, String godownName) throws Exception {
@@ -413,7 +430,7 @@ public class GtnServiceImpl implements GtnService {
 	}
 
 	private void handleInterRegionTransfers(DataForGtn data, String officeName, String toRegion, String transactionFor,
-			String destination, String godownName, String jwt, String daNo) throws Exception {
+			String destination, String godownName, String jwt, String daNo, String productName) throws Exception {
 		String originalOffice = officeName;
 		officeName = toRegion;
 
@@ -440,7 +457,7 @@ public class GtnServiceImpl implements GtnService {
 				data.setToIfmsId(buyer.getIfmsIdNo());
 				data.setBuyerGstNo(buyer.getBuyerGstNo());
 				data.setDaNoList(despatchAdviceService.fetchOtherRegionDaNoList(originalOffice, officeName,
-						buyer.getNameOfInstitution()));
+						buyer.getNameOfInstitution(), productName));
 				if (hasText(daNo)) {
 					DespatchAdvice despatchAdvice = despatchAdviceService.getDespatchAdviceDataByDespatchAdviceNo(daNo);
 					data.setDaProduct(despatchAdvice.getTableData().get(0).getProductName());
@@ -480,10 +497,13 @@ public class GtnServiceImpl implements GtnService {
 	}
 
 	private void validateChargesNeed(DataForGtn data, String transactionFor, String jwt, String officeName,
-			String godownName, String destination, String transportCharges, String loadingCharges,
-			String unloadingCharges) throws Exception {
+			String godownName, String destination, String transportCharges, String loadingCharges) throws Exception {
 
 		ContractorInfo contractorInfo = getContractor(jwt, officeName, godownName);
+
+	    if (contractorInfo.getChargesData() == null || contractorInfo.getChargesData().isEmpty()) {
+	        throw new IllegalStateException("Contractor charges data not available");
+	    }
 		ContractorChargesData contractorChargesData = contractorInfo.getChargesData()
 				.get(contractorInfo.getChargesData().size() - 1);
 		data.setTransporterName(contractorInfo.getContractFirm());
@@ -546,9 +566,6 @@ public class GtnServiceImpl implements GtnService {
 								item.getMrp(), itemData.getDate(), itemData.getGtnNo())))
 				.collect(Collectors.toList());
 	}
-
-	@Autowired
-	private PoService poService;
 
 	@Override
 	public String fetchTermsNoFromGrnNo(String grnNo) {
@@ -637,9 +654,6 @@ public class GtnServiceImpl implements GtnService {
 		}
 	}
 
-	@Autowired
-	private ClosingStockTableRepo closingStockTableRepo;
-
 	@Override
 	public void updateClosingBalanceIssue(GTN gtn) throws Exception {
 		try {
@@ -707,9 +721,6 @@ public class GtnServiceImpl implements GtnService {
 			throw new Exception(e);
 		}
 	}
-
-	@Autowired
-	private AccountsService accountsService;
 
 	@Override
 	public ResponseEntity<String> updateJvForSalesReturn(String gtnNo, JournalVoucher jv, String jwt) throws Exception {

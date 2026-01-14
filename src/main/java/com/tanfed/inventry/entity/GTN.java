@@ -70,6 +70,7 @@ public class GTN {
 	private String destination;
 
 	private String daNo;
+	private String dcNo;
 	
 	
 	

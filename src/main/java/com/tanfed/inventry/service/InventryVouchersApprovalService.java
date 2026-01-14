@@ -214,17 +214,25 @@ public class InventryVouchersApprovalService {
 						gtnService.updateClosingBalanceIssue(gtn);
 					} else {
 						gtnService.updateClosingBalanceReceipt(gtn);
+						dcService.createDcForOtherRegionReceipt(gtn, jwt);
 					}
 				}
 				if (obj.getVoucherStatus().equals("Rejected")) {
 					if (gtn.getGtnFor().equals("Issue")) {
 						List<GrnQtyUpdateForDc> collect = gtn
 								.getGtnTableData().stream().map(item -> new GrnQtyUpdateForDc(null,
-										item.getOutwardBatchNo(), item.getQty(), null, null))
+										item.getOutwardBatchNo(), item.getQty(), null, item.getVoucherId()))
 								.collect(Collectors.toList());
 
 						grnService.revertGrnQtyForDc(collect);
-					} else if (gtn.getGtnFor().equals("Receipt")) {
+						if (gtn.getTransactionFor().endsWith("Region Direct")) {
+							despatchAdviceService.revertDespatchAdviceQty(gtn.getDaNo(),
+									gtn.getGtnTableData().stream()
+									.map(i -> new DcTableData(null, null, null, null, null, gtn.getProductName(), null,
+											null, i.getQty(), null, null, null, null, null, null, null))
+									.collect(Collectors.toList()));
+						}
+					} else {
 						gtn.setIssuedGtnNo(null);
 					}
 				}

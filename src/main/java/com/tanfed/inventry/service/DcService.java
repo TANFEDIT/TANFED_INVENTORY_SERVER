@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 
 import com.tanfed.inventry.entity.DeliveryChellan;
+import com.tanfed.inventry.entity.GTN;
 import com.tanfed.inventry.model.CompondLoadDcData;
 import com.tanfed.inventry.model.DespatchAdviseTable;
 import com.tanfed.inventry.model.TableDataForDc;
@@ -35,4 +36,6 @@ public interface DcService {
 	public void updateClosingBalance(DeliveryChellan dc) throws Exception;
 
 	public List<TableDataForDc> getObData(String officeName, String productName, String godownName);
+
+	public void createDcForOtherRegionReceipt(GTN gtn, String jwt) throws Exception;
 }
