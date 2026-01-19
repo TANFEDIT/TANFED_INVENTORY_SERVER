@@ -20,6 +20,7 @@ public class RegisterData {
 	private Set<String> godownNameList;
 	private Set<String> productNameList;
 	private Set<String> supplierNameList;
+	private Set<String> outwardBatchNoList;
 	
 	private List<RegisterTable> receiptRegister;
 	private List<RegisterTable> salesRegister;

@@ -378,8 +378,8 @@ public class InventryHandler {
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
 			@RequestHeader("Authorization") String jwt, @RequestParam String poNo, @RequestParam String supplierName,
-			@RequestParam String godownName, @RequestParam String productName, @RequestParam String month)
-			throws Exception {
+			@RequestParam String godownName, @RequestParam String productName, @RequestParam String month,
+			@RequestParam String outwardBatchNo) throws Exception {
 		RegisterData data = new RegisterData();
 
 		data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
@@ -444,8 +444,21 @@ public class InventryHandler {
 				return data;
 			}
 			case "movementRegister": {
-				data.setMovementRegister(
-						registerService.getMovementRegisterData(officeName, godownName, fromDate, toDate));
+				data.setMovementRegister(registerService.getMovementRegisterData(officeName, godownName, fromDate,
+						toDate, outwardBatchNo));
+				if (fromDate != null && toDate != null) {
+					data.setOutwardBatchNoList(
+							dcService.getDeliveryChellanDataByOffficeName(officeName).stream().filter(item -> {
+								Boolean godownFilter = true;
+								if (!godownName.isEmpty()) {
+									godownFilter = item.getGodownName().equals(godownName);
+								}
+								return godownFilter && !item.getDate().isBefore(fromDate)
+										&& !item.getDate().isAfter(toDate)
+										&& item.getVoucherStatus().equals("Approved");
+							}).flatMap(i -> i.getDcTableData().stream().map(p -> p.getOutwardBatchNo()))
+									.collect(Collectors.toSet()));
+				}
 				return data;
 			}
 			default:

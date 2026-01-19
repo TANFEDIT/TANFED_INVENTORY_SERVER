@@ -70,7 +70,6 @@ public class Invoice {
 	  
 	private String ifmsId;
 	
-	private String invoiceFor;
 	
 	private String firmType;
 	  

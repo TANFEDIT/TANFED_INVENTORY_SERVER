@@ -68,7 +68,7 @@ public interface RegisterService {
 
 	public List<TcBillRegisterTable> getMpaBillRegisterData(String officeName, String month, LocalDate fromDate, LocalDate toDate) throws Exception;
 	
-	public List<MovementRegister> getMovementRegisterData(String officeName, String godownName, LocalDate fromDate, LocalDate toDate) throws Exception;
+	public List<MovementRegister> getMovementRegisterData(String officeName, String godownName, LocalDate fromDate, LocalDate toDate, String outwardBatchNo) throws Exception;
 	
 	
 	

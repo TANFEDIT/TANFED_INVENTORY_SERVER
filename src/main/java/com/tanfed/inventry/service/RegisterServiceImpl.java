@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -323,9 +324,10 @@ public class RegisterServiceImpl implements RegisterService {
 			}).map(item -> {
 				return new InvoiceCollectionRegisterTable(item.getActivity(), item.getGodownName(), item.getInvoiceNo(),
 						item.getDate(), item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(),
-						item.getTotalQty(), Arrays.asList(item.getNetInvoiceAdjustment()), item.getDueDate(),
-						item.getAckEntryDate(), null, null, item.getInvoiceFor(), null, null, null, null, null, null,
-						null, null, null);
+						RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getTotalQty()),
+						Arrays.asList(RoundToDecimalPlace.roundToThreeDecimalPlaces(item.getNetInvoiceAdjustment())),
+						item.getDueDate(), item.getAckEntryDate(), null, null, null, null, null, null, null, null, null,
+						null, null);
 			}).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception("Error while generating Invoice Watching Register data", e);
@@ -356,8 +358,7 @@ public class RegisterServiceImpl implements RegisterService {
 				return new InvoiceCollectionRegisterTable(item.getActivity(), null, item.getInvoiceNo(), item.getDate(),
 						item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
 						Arrays.asList(item.getNetInvoiceAdjustment()), item.getDueDate(), null, item.getDateOfPresent(),
-						null, item.getInvoiceFor(), item.getCcbBranch(), null, null, null, null, null, null, null,
-						null);
+						null, item.getCcbBranch(), null, null, null, null, null, null, null, null);
 			}).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception("Error while generating Invoice Presentation Register data", e);
@@ -387,8 +388,8 @@ public class RegisterServiceImpl implements RegisterService {
 				return new InvoiceCollectionRegisterTable(item.getActivity(), null, item.getInvoiceNo(), item.getDate(),
 						item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
 						item.getCollectionValue(), null, null, null, item.getDateOfCollectionFromCcb(),
-						item.getInvoiceFor(), item.getCcbBranch(), item.getAdjReceiptNo(), item.getIcmNo(),
-						item.getDateOfCollectionFromCcb(), item.getDateOfPresent(), null, null, null, null);
+						item.getCcbBranch(), item.getAdjReceiptNo(), item.getIcmNo(), item.getDateOfCollectionFromCcb(),
+						item.getDateOfPresent(), null, null, null, null);
 			}).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception("Error while generating Invoice Collection Register data", e);
@@ -890,7 +891,7 @@ public class RegisterServiceImpl implements RegisterService {
 
 	@Override
 	public List<MovementRegister> getMovementRegisterData(String officeName, String godownName, LocalDate fromDate,
-			LocalDate toDate) throws Exception {
+			LocalDate toDate, String outwardBatchNo) throws Exception {
 		try {
 			return dcService.getDeliveryChellanDataByOffficeName(officeName).stream().filter(item -> {
 				Boolean godownFilter = true;
@@ -902,14 +903,19 @@ public class RegisterServiceImpl implements RegisterService {
 				return godownFilter && !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate)
 						&& item.getVoucherStatus().equals("Approved");
 			}).map(i -> {
-				List<ProductDataMovementRegister> productData = i
-						.getDcTableData().stream().map(k -> new ProductDataMovementRegister(k.getProductName(),
-								k.getBags().toString(), k.getQty().toString(), k.getOutwardBatchNo()))
+				List<ProductDataMovementRegister> productData = i.getDcTableData().stream()
+						.filter(o -> (o.getOutwardBatchNo().equals(outwardBatchNo) || outwardBatchNo.isEmpty()))
+						.map(k -> new ProductDataMovementRegister(k.getProductName(), k.getBags().toString(),
+								k.getQty().toString(), k.getOutwardBatchNo()))
 						.collect(Collectors.toList());
-
-				return new MovementRegister(i.getActivity(), i.getGodownName(), i.getDcNo(), i.getDate(), i.getIfmsId(),
-						i.getNameOfInstitution(), i.getDistrict(), i.getVehicleNo(), productData);
-			}).collect(Collectors.toList());
+				if (productData.isEmpty()) {
+					return java.util.Optional.<MovementRegister>empty();
+				} else {
+					return Optional.of(new MovementRegister(i.getActivity(), i.getGodownName(), i.getDcNo(),
+							i.getDate(), i.getIfmsId(), i.getNameOfInstitution(), i.getDistrict(), i.getVehicleNo(),
+							productData));
+				}
+			}).flatMap(Optional<MovementRegister>::stream).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception("Error while generating Movement Register data", e);
 		}

@@ -120,7 +120,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 								item.getDate().getYear());
 						return month.equals(invoiceMonth) && item.getCollectionMode().equals("Non CC")
 								&& item.getAdjReceiptNo() == null;
-					}).map(item -> new InvoiceDataTable(item.getInvoiceNo(), item.getInvoiceFor(),
+					}).map(item -> new InvoiceDataTable(item.getInvoiceNo(),
 							item.getTableData().stream().map(TableDataInvoice::getProductCategory)
 									.collect(Collectors.toList()),
 							item.getTableData().stream().map(TableDataInvoice::getSupplierName)

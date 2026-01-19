@@ -27,7 +27,6 @@ public class InvoiceCollectionRegisterTable {
 	private LocalDate ackEntryDate;
 	private LocalDate dateOfPresent;
 	private List<LocalDate> dateOfCollection;
-	private String invoiceType;
 	private String branchName;
 	private List<String> adjNo;
 	private String icmNo;

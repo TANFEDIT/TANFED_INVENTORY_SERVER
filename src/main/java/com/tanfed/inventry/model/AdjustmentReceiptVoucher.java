@@ -31,7 +31,6 @@ public class AdjustmentReceiptVoucher {
 	private LocalDate date;
 	
 	private String receivedFrom;
-	private String ifmsIdNo;
 	private String icmInvNo;
 	private String voucherFor;
 	private Double receivedAmount;

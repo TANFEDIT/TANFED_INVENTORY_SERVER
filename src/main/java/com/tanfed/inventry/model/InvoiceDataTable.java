@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 public class InvoiceDataTable {
 
 	private String invoiceNo;
-	private String invoiceFor;
 	private List<String> productCategory;
 	private List<String> supplierName;
 	private List<String> productName;
