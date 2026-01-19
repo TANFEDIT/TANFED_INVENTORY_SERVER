@@ -919,7 +919,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 						List<Invoice> byIcmNo = invoiceRepo.findByIcmNo(icmNo);
 						Set<String> adjNoList = byIcmNo.stream().flatMap(i -> i.getAdjReceiptNo().stream())
 								.collect(Collectors.toSet());
-						if (adjNoList.isEmpty()) {
+						if (adjNoList.isEmpty() || adjNoList == null) {
 							data.setAdjv(null);
 						} else {
 							List<AdjustmentReceiptVoucher> adj = new ArrayList<AdjustmentReceiptVoucher>();
