@@ -214,7 +214,9 @@ public class InventryVouchersApprovalService {
 						gtnService.updateClosingBalanceIssue(gtn);
 					} else {
 						gtnService.updateClosingBalanceReceipt(gtn);
-						dcService.createDcForOtherRegionReceipt(gtn, jwt);
+						if (gtn.getTransactionFor().endsWith("Region Direct")) {
+							dcService.createDcForOtherRegionReceipt(gtn, jwt);							
+						}
 					}
 				}
 				if (obj.getVoucherStatus().equals("Rejected")) {
