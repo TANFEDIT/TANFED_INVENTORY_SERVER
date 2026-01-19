@@ -905,20 +905,20 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 									null, item.getCcbBranch(), accountNo, item.getDateOfPresent(), null, null, null,
 									null, null, null);
 						}).collect(Collectors.toList()));
-						BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName)
-								.stream()
-								.filter(itemData -> itemData.getAccountNumber().equals(data.getInvoice().get(0).getAccountNo()))
+						BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName).stream()
+								.filter(itemData -> itemData.getAccountNumber()
+										.equals(data.getInvoice().get(0).getAccountNo()))
 								.collect(Collectors.toList()).get(0);
 						data.setBankName(bankInfo.getBankName());
 						data.setDoor(bankInfo.getDoor());
 						data.setStreet(bankInfo.getStreet());
 						data.setDistrict(bankInfo.getDistrict());
 						data.setPincode(bankInfo.getPincode());
-						
+
 					} else {
 						List<Invoice> byIcmNo = invoiceRepo.findByIcmNo(icmNo);
-						Set<String> adjNoList = byIcmNo.stream().flatMap(i -> i.getAdjReceiptNo().stream())
-								.collect(Collectors.toSet());
+						Set<String> adjNoList = byIcmNo.stream().filter(i -> i.getAdjReceiptNo() != null)
+								.flatMap(i -> i.getAdjReceiptNo().stream()).collect(Collectors.toSet());
 						if (adjNoList.isEmpty() || adjNoList == null) {
 							data.setAdjv(null);
 						} else {
@@ -953,9 +953,9 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 									item.getDueDate(), null, item.getCcbBranch(), accountNo, item.getDateOfPresent(),
 									null, null, null, null, null, null);
 						}).collect(Collectors.toList()));
-						BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName)
-								.stream()
-								.filter(itemData -> itemData.getAccountNumber().equals(data.getInvoice().get(0).getAccountNo()))
+						BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName).stream()
+								.filter(itemData -> itemData.getAccountNumber()
+										.equals(data.getInvoice().get(0).getAccountNo()))
 								.collect(Collectors.toList()).get(0);
 						data.setBankName(bankInfo.getBankName());
 						data.setDoor(bankInfo.getDoor());
