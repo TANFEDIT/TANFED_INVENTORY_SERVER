@@ -445,6 +445,9 @@ public class RegisterServiceImpl implements RegisterService {
 		} else {
 			data.setSpai(obj);
 		}
+		if (data.getFert() == null) {
+			data.setFert(new FT_Charges_Dto(0.0, 0.0));
+		}
 		if (data.getAgriMark() == null) {
 			data.setAgriMark(new FT_Charges_Dto(0.0, 0.0));
 		}
