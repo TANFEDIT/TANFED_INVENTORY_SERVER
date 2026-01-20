@@ -383,6 +383,7 @@ public class InventryHandler {
 		RegisterData data = new RegisterData();
 
 		data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
+		data.getGodownNameList().add("Direct Material Center");
 		data.setSupplierNameList(masterService.getProductDataHandler(jwt).stream()
 				.filter(item -> !item.getSupplierName().startsWith("TANFED")).map(ProductMaster::getSupplierName)
 				.collect(Collectors.toSet()));
