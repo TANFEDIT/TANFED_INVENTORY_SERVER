@@ -134,7 +134,8 @@ public class TcServiceIpml implements TcService {
 					data.setProductName(gtn.getProductName());
 					Double sum = gtn.getGtnTableData().stream().mapToDouble(item -> item.getReceivedBags()).sum();
 					data.setBags(sum.toString());
-					data.setCalcUnloadingCharges(RoundToDecimalPlace.roundToThreeDecimalPlaces(gtn.getTotalUnloadingCharges()));
+					data.setCalcUnloadingCharges(
+							RoundToDecimalPlace.roundToThreeDecimalPlaces(gtn.getTotalUnloadingCharges()));
 					data.setDate(gtn.getDate());
 					data.setPacking(gtn.getGtnTableData().get(0).getPacking());
 				} else {
@@ -195,7 +196,8 @@ public class TcServiceIpml implements TcService {
 						GTN gtn = gtnService.getGtnDataByGtnNo(idNo);
 						data.setIfmsId(gtn.getToIfmsId());
 						data.setGodownBuyerName(gtn.getDestination());
-						data.setQty(gtn.getGtnTableData().stream().mapToDouble(item -> item.getQty()).sum());
+						data.setQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+								gtn.getGtnTableData().stream().mapToDouble(item -> item.getQty()).sum()));
 						data.setTransportCharges(gtn.getTransportChargesValue());
 						data.setTransportChargesPerQty(gtn.getTransportChargesPerQty());
 						data.setTableData(gtn
@@ -203,14 +205,14 @@ public class TcServiceIpml implements TcService {
 										gtn.getProductName(), item.getMrp(), item.getQty(), null, null))
 								.collect(Collectors.toList()));
 						GTN receiptGtn = gtnService.getReceiptGtnDataByGtnNo(idNo);
-						data.setAckQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(receiptGtn.getGtnTableData().stream()
-								.mapToDouble(item -> item.getReceivedQty()).sum()));
+						data.setAckQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(receiptGtn.getGtnTableData()
+								.stream().mapToDouble(item -> item.getReceivedQty()).sum()));
 					} else {
 						DeliveryChellan deliveryChellan = dcService.getDcDataByDcNo(idNo);
 						data.setTransportCharges(deliveryChellan.getTransportChargesValue());
 						data.setIfmsId(deliveryChellan.getIfmsId());
 						data.setGodownBuyerName(deliveryChellan.getNameOfInstitution());
-						data.setQty(deliveryChellan.getTotalQty());
+						data.setQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(deliveryChellan.getTotalQty()));
 						data.setTransportChargesPerQty(
 								deliveryChellan.getTransportChargesValue() / deliveryChellan.getTotalQty());
 						data.setTableData(deliveryChellan
@@ -262,7 +264,8 @@ public class TcServiceIpml implements TcService {
 						GTN gtn = gtnService.getGtnDataByGtnNo(idNo);
 						data.setIfmsId(gtn.getToIfmsId());
 						data.setGodownBuyerName(gtn.getDestination());
-						data.setQty(gtn.getGtnTableData().stream().mapToDouble(item -> item.getQty()).sum());
+						data.setQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+								gtn.getGtnTableData().stream().mapToDouble(item -> item.getQty()).sum()));
 						data.setTransportCharges(gtn.getTransportChargesValue());
 						data.setLoadingCharges(gtn.getLoadingChargesValue());
 						data.setLoadingChargesPerQty(gtn.getLoadingChargesPerQty());
@@ -272,15 +275,15 @@ public class TcServiceIpml implements TcService {
 										gtn.getProductName(), item.getMrp(), item.getQty(), null, null))
 								.collect(Collectors.toList()));
 						GTN receiptGtn = gtnService.getReceiptGtnDataByGtnNo(idNo);
-						data.setAckQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(receiptGtn.getGtnTableData().stream()
-								.mapToDouble(item -> item.getReceivedQty()).sum()));
+						data.setAckQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(receiptGtn.getGtnTableData()
+								.stream().mapToDouble(item -> item.getReceivedQty()).sum()));
 					} else {
 						DeliveryChellan deliveryChellan = dcService.getDcDataByDcNo(idNo);
 						data.setTransportCharges(deliveryChellan.getTransportChargesValue());
 						data.setLoadingCharges(deliveryChellan.getLoadingChargesValue());
 						data.setIfmsId(deliveryChellan.getIfmsId());
 						data.setGodownBuyerName(deliveryChellan.getNameOfInstitution());
-						data.setQty(deliveryChellan.getTotalQty());
+						data.setQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(deliveryChellan.getTotalQty()));
 						data.setTransportChargesPerQty(
 								deliveryChellan.getTransportChargesValue() / deliveryChellan.getTotalQty());
 						data.setLoadingChargesPerQty(
