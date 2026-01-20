@@ -158,7 +158,7 @@ public class TcServiceIpml implements TcService {
 			if (loadType != null && !loadType.isEmpty()) {
 				if (loadType.equals("Single Load")) {
 					data.setIdNoList(dcService.getDeliveryChellanDataByOffficeName(officeName).stream()
-							.filter(item -> !item.getSupplyMode().equals("FOL")
+							.filter(item -> item.getSupplyMode().equals("FOL")
 									&& item.getLoadType().equals("Single Load") && !item.getDate().isBefore(fromDate)
 									&& !item.getDate().isAfter(toDate) && item.getGodownName().equals(godownName)
 									&& item.getVoucherStatus().equals("Approved") && item.getBillEntry().equals(false))
@@ -180,7 +180,7 @@ public class TcServiceIpml implements TcService {
 //							}).map(item -> item.getGtnNo()).collect(Collectors.toList()));
 				} else {
 					data.setClNoList(dcService.getDeliveryChellanDataByOffficeName(officeName).stream()
-							.filter(item -> !item.getSupplyMode().equals("FOL")
+							.filter(item -> item.getSupplyMode().equals("FOL")
 									&& item.getLoadType().equals("Combined Load")
 									&& item.getVoucherStatus().equals("Approved") && item.getBillEntry().equals(false)
 									&& item.getGodownName().equals(godownName))
@@ -229,7 +229,7 @@ public class TcServiceIpml implements TcService {
 			if (loadType != null && !loadType.isEmpty()) {
 				if (loadType.equals("Single Load")) {
 					data.setIdNoList(dcService.getDeliveryChellanDataByOffficeName(officeName).stream()
-							.filter(item -> !item.getSupplyMode().equals("FOL")
+							.filter(item -> item.getSupplyMode().equals("FOL")
 									&& item.getVoucherStatus().equals("Approved")
 									&& item.getLoadType().equals("Single Load") && item.getBillEntry().equals(false)
 									&& !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate)
