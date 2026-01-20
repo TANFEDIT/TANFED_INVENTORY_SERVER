@@ -378,10 +378,11 @@ public class RegisterServiceImpl implements RegisterService {
 				}
 				Boolean monthFilter;
 				if (month.isEmpty()) {
-					monthFilter = !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate);
+					monthFilter = item.getDateOfCollectionFromCcb().stream()
+							.anyMatch(i -> !i.isBefore(fromDate) && !i.isAfter(toDate));
 				} else {
-					monthFilter = String.format("%s%s%04d", item.getDate().getMonth(), " ", item.getDate().getYear())
-							.equals(month);
+					monthFilter = item.getDateOfCollectionFromCcb().stream()
+							.anyMatch(i -> String.format("%s%s%04d", i.getMonth(), " ", i.getYear()).equals(month));
 				}
 				return branchFilter && monthFilter;
 			}).map(item -> {
