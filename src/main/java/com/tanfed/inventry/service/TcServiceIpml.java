@@ -164,20 +164,20 @@ public class TcServiceIpml implements TcService {
 									&& item.getVoucherStatus().equals("Approved") && item.getBillEntry().equals(false))
 							.map(item -> item.getDcNo()).collect(Collectors.toList()));
 
-					data.getIdNoList().addAll(gtnService.getGtnDataByOffficeName(officeName).stream()
-							.filter(item -> item.getGodownName().equals(godownName) && item.getGtnFor().equals("Issue")
-									&& item.getTransactionFor().equals("RH to Buffer (Intra)")
-									&& !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate)
-									&& item.getVoucherStatus().equals("Approved") && item.getBillEntry().equals(false))
-							.filter(item -> {
-								GTN receiptGtn;
-								try {
-									receiptGtn = gtnService.getReceiptGtnDataByGtnNo(item.getGtnNo());
-									return receiptGtn != null;
-								} catch (Exception e) {
-									return false;
-								}
-							}).map(item -> item.getGtnNo()).collect(Collectors.toList()));
+//					data.getIdNoList().addAll(gtnService.getGtnDataByOffficeName(officeName).stream()
+//							.filter(item -> item.getGodownName().equals(godownName) && item.getGtnFor().equals("Issue")
+//									&& item.getTransactionFor().equals("RH to Buffer (Intra)")
+//									&& !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate)
+//									&& item.getVoucherStatus().equals("Approved") && item.getBillEntry().equals(false))
+//							.filter(item -> {
+//								GTN receiptGtn;
+//								try {
+//									receiptGtn = gtnService.getReceiptGtnDataByGtnNo(item.getGtnNo());
+//									return receiptGtn != null;
+//								} catch (Exception e) {
+//									return false;
+//								}
+//							}).map(item -> item.getGtnNo()).collect(Collectors.toList()));
 				} else {
 					data.setClNoList(dcService.getDeliveryChellanDataByOffficeName(officeName).stream()
 							.filter(item -> !item.getSupplyMode().equals("FOL")
@@ -236,15 +236,15 @@ public class TcServiceIpml implements TcService {
 									&& item.getGodownName().equals(godownName))
 							.map(item -> item.getDcNo()).collect(Collectors.toList()));
 
-					data.getIdNoList().addAll(gtnService.getGtnDataByOffficeName(officeName).stream()
-							.filter(item -> item.getGodownName().equals(godownName) && item.getGtnFor().equals("Issue")
-									&& !item.getTransactionFor().equals("RH to Buffer (Intra)")
-									&& !item.getTransactionFor().equals("Wholesale To Retail (Intra)")
-									&& (item.getTransportCharges().equals("TANFED")
-											&& item.getLoadingCharges().equals("TANFED"))
-									&& !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate)
-									&& item.getVoucherStatus().equals("Approved") && item.getBillEntry().equals(false))
-							.map(item -> item.getGtnNo()).collect(Collectors.toList()));
+//					data.getIdNoList().addAll(gtnService.getGtnDataByOffficeName(officeName).stream()
+//							.filter(item -> item.getGodownName().equals(godownName) && item.getGtnFor().equals("Issue")
+//									&& !item.getTransactionFor().equals("RH to Buffer (Intra)")
+//									&& !item.getTransactionFor().equals("Wholesale To Retail (Intra)")
+//									&& (item.getTransportCharges().equals("TANFED")
+//											&& item.getLoadingCharges().equals("TANFED"))
+//									&& !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate)
+//									&& item.getVoucherStatus().equals("Approved") && item.getBillEntry().equals(false))
+//							.map(item -> item.getGtnNo()).collect(Collectors.toList()));
 				} else {
 					data.setClNoList(dcService.getDeliveryChellanDataByOffficeName(officeName).stream()
 							.filter(item -> item.getSupplyMode().equals("FOL")
