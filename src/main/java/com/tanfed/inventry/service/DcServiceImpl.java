@@ -207,10 +207,12 @@ public class DcServiceImpl implements DcService {
 
 							if (!productName.isEmpty() && productName != null) {
 								data.setTableData(fetchTableData(officeName, productName, godownName));
-								data.setDespatchAdviseQty(despatchAdviceService
-										.getDespatchAdviceDataByDespatchAdviceNo(despatchAdviceNo).getTableData()
-										.stream().filter(item -> item.getProductName().equals(productName))
-										.map(item -> item.getQtyAvlForDc()).collect(Collectors.toList()).get(0));
+								data.setDespatchAdviseQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+										despatchAdviceService.getDespatchAdviceDataByDespatchAdviceNo(despatchAdviceNo)
+												.getTableData().stream()
+												.filter(item -> item.getProductName().equals(productName))
+												.map(item -> item.getQtyAvlForDc()).collect(Collectors.toList())
+												.get(0)));
 							}
 						}
 					}
@@ -288,8 +290,8 @@ public class DcServiceImpl implements DcService {
 						&& item.getGodownName().equals(godownName))
 				.map(item -> new TableDataForDc(item.getProductCategory(), item.getProductGroup(),
 						item.getSupplierName(), item.getProductName(), item.getPacking(), item.getStandardUnits(),
-						item.getQtyAvlForDc(), item.getObId(), null, "Through CC", item.getB2cMrp(), item.getAsOn(),
-						"ob"))
+						RoundToDecimalPlace.roundToThreeDecimalPlaces(item.getQtyAvlForDc()), item.getObId(), null,
+						"Through CC", item.getB2cMrp(), item.getAsOn(), "ob"))
 				.collect(Collectors.toList());
 	}
 

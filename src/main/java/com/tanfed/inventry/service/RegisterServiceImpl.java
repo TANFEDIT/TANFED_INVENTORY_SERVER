@@ -389,9 +389,10 @@ public class RegisterServiceImpl implements RegisterService {
 				return branchFilter && monthFilter;
 			}).map(item -> {
 				return new InvoiceCollectionRegisterTable(item.getActivity(), null, item.getInvoiceNo(), item.getDate(),
-						item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(), item.getTotalQty(),
-						item.getCollectionValue(), null, null, null, item.getDateOfCollectionFromCcb(),
-						item.getCcbBranch(), item.getAdjReceiptNo(), item.getIcmNo(), item.getDateOfCollectionFromCcb(),
+						item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(),
+						RoundToDecimalPlace.roundToThreeDecimalPlaces(item.getTotalQty()), item.getCollectionValue(),
+						null, null, null, item.getDateOfCollectionFromCcb(), item.getCcbBranch(),
+						item.getAdjReceiptNo(), item.getIcmNo(), item.getDateOfCollectionFromCcb(),
 						item.getDateOfPresent(), null, null, null, null);
 			}).collect(Collectors.toList());
 		} catch (Exception e) {
