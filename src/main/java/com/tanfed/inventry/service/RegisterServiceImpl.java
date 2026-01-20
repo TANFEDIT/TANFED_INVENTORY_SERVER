@@ -370,19 +370,21 @@ public class RegisterServiceImpl implements RegisterService {
 			LocalDate fromDate, String branchName, LocalDate toDate) throws Exception {
 		try {
 			return invoiceService.getInvoiceDataByOffficeName(officeName).stream().filter(item -> {
-				Boolean branchFilter = true;
+				Boolean branchFilter = false;
 				if (branchName.isEmpty()) {
 					branchFilter = true;
 				} else {
 					branchFilter = item.getCcbBranch().equals(branchName);
 				}
-				Boolean monthFilter;
-				if (month.isEmpty()) {
-					monthFilter = item.getDateOfCollectionFromCcb().stream()
-							.anyMatch(i -> !i.isBefore(fromDate) && !i.isAfter(toDate));
-				} else {
-					monthFilter = item.getDateOfCollectionFromCcb().stream()
-							.anyMatch(i -> String.format("%s%s%04d", i.getMonth(), " ", i.getYear()).equals(month));
+				Boolean monthFilter = false;
+				if (item.getDateOfCollectionFromCcb() != null) {
+					if (month.isEmpty()) {
+						monthFilter = item.getDateOfCollectionFromCcb().stream()
+								.anyMatch(i -> !i.isBefore(fromDate) && !i.isAfter(toDate));
+					} else {
+						monthFilter = item.getDateOfCollectionFromCcb().stream()
+								.anyMatch(i -> String.format("%s%s%04d", i.getMonth(), " ", i.getYear()).equals(month));
+					}
 				}
 				return branchFilter && monthFilter;
 			}).map(item -> {
