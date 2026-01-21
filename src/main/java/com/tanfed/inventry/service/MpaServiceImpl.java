@@ -141,7 +141,7 @@ public class MpaServiceImpl implements MpaService {
 								.filter(item -> item.getFinancialMonth().equals(financialMonth)
 										&& item.getContractFirm().equals(contractFirm)
 										&& (item.getVoucherStatus().equals("Pending")
-										|| item.getVoucherStatus().equals("Verified")))
+												|| item.getVoucherStatus().equals("Verified")))
 								.collect(Collectors.toList());
 						if (!billEntryForBillMonth.isEmpty()) {
 							throw new FileSystemAlreadyExistsException("Approve Existing Bill Entry!");
@@ -171,8 +171,9 @@ public class MpaServiceImpl implements MpaService {
 			DataForMpaCheckMemo data = new DataForMpaCheckMemo();
 			if (officeName != null && !officeName.isEmpty()) {
 				data.setCheckMemoNoList(mpaBillEntryRepo.findByOfficeName(officeName).stream()
-						.filter(item -> item.getIsMpaCheckMemoDone().equals(false)).map(item -> item.getCheckMemoNo())
-						.collect(Collectors.toList()));
+						.filter(item -> item.getIsMpaCheckMemoDone().equals(false)
+								&& item.getVoucherStatus().equals("Approved"))
+						.map(item -> item.getCheckMemoNo()).collect(Collectors.toList()));
 				if (month != null && !month.isEmpty()) {
 					data.setCmData(mpaCheckMemoRepo.findByOfficeName(officeName).stream().filter(item -> {
 						String cmMonth = String.format("%s%s%04d", item.getDate().getMonth(), " ",
@@ -240,11 +241,11 @@ public class MpaServiceImpl implements MpaService {
 		try {
 			MpaCheckMemo finalObj = new MpaCheckMemo();
 			Vouchers voucher = new Vouchers();
-			if(obj.getJvData() != null) {
+			if (obj.getJvData() != null) {
 				voucher.setJournalVoucherData(obj.getJvData());
 				try {
-					ResponseEntity<String> responseEntity = accountsService.saveAccountsVouchersHandler("journalVoucher",
-							voucher, jwt);
+					ResponseEntity<String> responseEntity = accountsService
+							.saveAccountsVouchersHandler("journalVoucher", voucher, jwt);
 					String responseString = responseEntity.getBody();
 					if (responseString == null) {
 						throw new Exception("No data found");
@@ -254,7 +255,7 @@ public class MpaServiceImpl implements MpaService {
 					finalObj.setJvNo(responseString.substring(index + prefix.length()).trim());
 				} catch (Exception e) {
 					e.printStackTrace();
-				}				
+				}
 			}
 			MpaBillEntry mpaBillEntry = mpaBillEntryRepo.findByCheckMemoNo(obj.getCheckMemoNo()).get();
 			mpaBillEntry.setIsMpaCheckMemoDone(true);
