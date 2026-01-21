@@ -110,7 +110,7 @@ public class InvoiceCollectionHandler {
 		}
 		case "invoiceCollectionRegister": {
 			List<InvoiceCollectionRegisterTable> invoiceCollectionRegister = registerService
-					.getInvoiceCollectionRegister(officeName, month, fromDate, branchName, toDate);
+					.getInvoiceCollectionRegister(officeName, month, fromDate, branchName, toDate, jwt);
 			data.setInvoiceCollectionRegister(invoiceCollectionRegister);
 			return data;
 		}

@@ -32,6 +32,10 @@ public class RegisterServiceImpl implements RegisterService {
 
 	@Autowired
 	private GrnService grnService;
+
+	@Autowired
+	private AccountsService accountsService;
+
 	private static Logger logger = LoggerFactory.getLogger(RegisterServiceImpl.class);
 
 	@Override
@@ -367,34 +371,70 @@ public class RegisterServiceImpl implements RegisterService {
 
 	@Override
 	public List<InvoiceCollectionRegisterTable> getInvoiceCollectionRegister(String officeName, String month,
-			LocalDate fromDate, String branchName, LocalDate toDate) throws Exception {
+			LocalDate fromDate, String branchName, LocalDate toDate, String jwt) throws Exception {
 		try {
-			return invoiceService.getInvoiceDataByOffficeName(officeName).stream().filter(item -> {
-				Boolean branchFilter = false;
-				if (branchName.isEmpty()) {
-					branchFilter = true;
-				} else {
-					branchFilter = item.getCcbBranch().equals(branchName);
-				}
-				Boolean monthFilter = false;
-				if (item.getDateOfCollectionFromCcb() != null) {
-					if (month.isEmpty()) {
-						monthFilter = item.getDateOfCollectionFromCcb().stream()
-								.anyMatch(i -> !i.isBefore(fromDate) && !i.isAfter(toDate));
-					} else {
-						monthFilter = item.getDateOfCollectionFromCcb().stream()
-								.anyMatch(i -> String.format("%s%s%04d", i.getMonth(), " ", i.getYear()).equals(month));
-					}
-				}
-				return branchFilter && monthFilter;
-			}).map(item -> {
-				return new InvoiceCollectionRegisterTable(item.getActivity(), null, item.getInvoiceNo(), item.getDate(),
-						item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(),
-						RoundToDecimalPlace.roundToThreeDecimalPlaces(item.getTotalQty()), item.getCollectionValue(),
-						null, null, null, item.getDateOfCollectionFromCcb(), item.getCcbBranch(),
-						item.getAdjReceiptNo(), item.getIcmNo(), item.getDateOfCollectionFromCcb(),
-						item.getDateOfPresent(), null, null, null, null);
-			}).collect(Collectors.toList());
+			List<InvoiceCollectionRegisterTable> invoiceCollectionRegister = new ArrayList<InvoiceCollectionRegisterTable>();
+			invoiceCollectionRegister
+					.addAll(invoiceService.getInvoiceDataByOffficeName(officeName).stream().filter(item -> {
+						Boolean branchFilter = false;
+						if (branchName.isEmpty()) {
+							branchFilter = true;
+						} else {
+							branchFilter = item.getCcbBranch().equals(branchName);
+						}
+						Boolean monthFilter = false;
+						if (item.getDateOfCollectionFromCcb() != null) {
+							if (month.isEmpty()) {
+								monthFilter = item.getDateOfCollectionFromCcb().stream()
+										.anyMatch(i -> !i.isBefore(fromDate) && !i.isAfter(toDate));
+							} else {
+								monthFilter = item.getDateOfCollectionFromCcb().stream().anyMatch(
+										i -> String.format("%s%s%04d", i.getMonth(), " ", i.getYear()).equals(month));
+							}
+						}
+						return branchFilter && monthFilter;
+					}).map(item -> {
+						return new InvoiceCollectionRegisterTable(item.getActivity(), null, item.getInvoiceNo(),
+								item.getDate(), item.getIfmsId(), item.getNameOfInstitution(), item.getDistrict(),
+								RoundToDecimalPlace.roundToThreeDecimalPlaces(item.getTotalQty()),
+								item.getCollectionValue(), null, null, null, item.getDateOfCollectionFromCcb(),
+								item.getCcbBranch(), item.getAdjReceiptNo(), item.getIcmNo(),
+								item.getDateOfCollectionFromCcb(), item.getDateOfPresent(), null, null, null, null);
+					}).collect(Collectors.toList()));
+
+			invoiceCollectionRegister.addAll(
+					accountsService.getBillsAccountsFilteredDataHandler("sundryDrOb", officeName, "", null, null, jwt)
+							.getSundryDrOb().stream().filter(i -> {
+								Boolean branchFilter = false;
+								if (branchName.isEmpty()) {
+									branchFilter = true;
+								} else {
+									branchFilter = i.getCcbBranch().equals(branchName);
+								}
+								Boolean monthFilter = false;
+								if (i.getDateOfCollectionFromCcb() != null) {
+									if (month.isEmpty()) {
+										monthFilter = i.getDateOfCollectionFromCcb().stream()
+												.anyMatch(k -> !k.isBefore(fromDate) && !k.isAfter(toDate));
+									} else {
+										monthFilter = i.getDateOfCollectionFromCcb().stream().anyMatch(k -> String
+												.format("%s%s%04d", k.getMonth(), " ", k.getYear()).equals(month));
+									}
+								}
+								return branchFilter && monthFilter;
+							}).map(item -> {
+								return new InvoiceCollectionRegisterTable(item.getActivity(), null, item.getInvoiceNo(),
+										item.getInvoiceDate(), item.getIfmsId(), item.getNameOfInstitution(),
+										item.getDistrict(),
+										RoundToDecimalPlace.roundToThreeDecimalPlaces(item.getQty()),
+										item.getCollectionValue(), null, null, null, item.getDateOfCollectionFromCcb(),
+										item.getCcbBranch(),
+										item.getAdjReceipt().stream().map(i -> i.getVoucherNo())
+												.collect(Collectors.toList()),
+										item.getIcmNo(), item.getDateOfCollectionFromCcb(), item.getDateOfPresent(),
+										null, null, null, null);
+							}).collect(Collectors.toList()));
+			return invoiceCollectionRegister;
 		} catch (Exception e) {
 			throw new Exception("Error while generating Invoice Collection Register data", e);
 		}
