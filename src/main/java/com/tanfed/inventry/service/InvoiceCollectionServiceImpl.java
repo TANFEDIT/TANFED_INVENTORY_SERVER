@@ -434,22 +434,22 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			if (transferType != null && !transferType.isEmpty()) {
 				logger.info(transferType);
 				logger.info("{}", bankInfo);
-				data.setBranchNameList(bankInfo.stream().filter(temp -> temp.getAccountType().equals("Non PDS A/c"))
+				data.setBranchNameList(bankInfo.stream().filter(temp -> temp.getAccountType().equals("Non PDS A/c Fert"))
 						.map(BankInfo::getBranchName).collect(Collectors.toSet()));
 				if (branchName != null && !branchName.isEmpty()) {
 					data.setAccountNoList(bankInfo.stream().filter(temp -> {
-						return branchName.equals(temp.getBranchName()) && "Non PDS A/c".equals(temp.getAccountType());
+						return branchName.equals(temp.getBranchName()) && "Non PDS A/c Fert".equals(temp.getAccountType());
 					}).map(BankInfo::getAccountNumber).collect(Collectors.toList()));
 				}
 				if (transferType.equals("Branch To Branch")) {
 					data.setToBranchNameList(bankInfo.stream()
 							.filter(temp -> !temp.getBranchName().equals(branchName)
-									&& temp.getAccountType().equals("Non PDS A/c"))
+									&& temp.getAccountType().equals("Non PDS A/c Fert"))
 							.map(BankInfo::getBranchName).collect(Collectors.toSet()));
 					if (toBranchName != null && !toBranchName.isEmpty()) {
 						data.setToAccountNoList(bankInfo.stream().filter(temp -> {
 							return toBranchName.equals(temp.getBranchName())
-									&& "Non PDS A/c".equals(temp.getAccountType());
+									&& "Non PDS A/c Fert".equals(temp.getAccountType());
 						}).map(BankInfo::getAccountNumber).collect(Collectors.toList()));
 						logger.info("{}", data.getToAccountNoList());
 					}
@@ -528,11 +528,11 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 			String accountNo, String monthOfFundTransfer, String jwt) throws Exception {
 		InvoiceCollectionResponseData data = new InvoiceCollectionResponseData();
 //		List<BankInfo> bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName);
-//		data.setBranchNameList(bankInfo.stream().filter(item -> item.getAccountType().equals("Non PDS A/c"))
+//		data.setBranchNameList(bankInfo.stream().filter(item -> item.getAccountType().equals("Non PDS A/c Fert"))
 //				.map(BankInfo::getBranchName).collect(Collectors.toSet()));
 //		if (branchName != null && !branchName.isEmpty()) {
 //			data.setAccountNoList(bankInfo.stream().filter(temp -> {
-//				return branchName.equals(temp.getBranchName()) && "Non PDS A/c".equals(temp.getAccountType());
+//				return branchName.equals(temp.getBranchName()) && "Non PDS A/c Fert".equals(temp.getAccountType());
 //			}).map(BankInfo::getAccountNumber).collect(Collectors.toList()));
 //			if (monthOfFundTransfer != null && !monthOfFundTransfer.isEmpty()) {
 //
@@ -892,7 +892,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 							try {
 								BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName)
 										.stream()
-										.filter(itemData -> itemData.getAccountType().equals("Non PDS A/c")
+										.filter(itemData -> itemData.getAccountType().equals("Non PDS A/c Fert")
 												&& itemData.getBranchName().equals(item.getCcbBranch()))
 										.collect(Collectors.toList()).get(0);
 								accountNo = bankInfo.getAccountNumber();
@@ -940,7 +940,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 							try {
 								BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName)
 										.stream()
-										.filter(itemData -> itemData.getAccountType().equals("Non PDS A/c")
+										.filter(itemData -> itemData.getAccountType().equals("Non PDS A/c Fert")
 												&& itemData.getBranchName().equals(item.getCcbBranch()))
 										.collect(Collectors.toList()).get(0);
 								accountNo = bankInfo.getAccountNumber();
@@ -1426,10 +1426,10 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 		try {
 			BankInfo bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, obj.getAdjData().getOfficeName())
 					.stream()
-					.filter(itemData -> itemData.getAccountType().equals("Non PDS A/c")
+					.filter(itemData -> itemData.getAccountType().equals("Non PDS A/c Fert")
 							&& itemData.getBranchName().equals(obj.getAdjData().getBranchName()))
 					.collect(Collectors.toList()).get(0);
-			obj.getAdjData().setAccountType("Non PDS A/c");
+			obj.getAdjData().setAccountType("Non PDS A/c Fert");
 			obj.getAdjData().setAccountNo(bankInfo.getAccountNumber());
 			obj.getAdjData().setContraEntry("No");
 			Vouchers vouchers = new Vouchers();

@@ -93,7 +93,7 @@ public class InvoiceCollectionHandler {
 		IcRegisters data = new IcRegisters();
 		data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
 		List<BankInfo> bankInfo = masterService.getBankInfoByOfficeNameHandler(jwt, officeName);
-		data.setBranchNameList(bankInfo.stream().filter(item -> item.getAccountType().equals("Non PDS A/c"))
+		data.setBranchNameList(bankInfo.stream().filter(item -> item.getAccountType().equals("Non PDS A/c Fert"))
 				.map(BankInfo::getBranchName).collect(Collectors.toSet()));
 		switch (formType) {
 		case "invoiceWatchingRegister": {

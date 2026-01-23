@@ -167,9 +167,10 @@ public class DcServiceImpl implements DcService {
 
 								ContractorInfo contractorInfo = masterService.getContractFirmByGodownNameHandler(jwt,
 										officeName, godownName);
-								ContractorChargesData contractorChargesData = contractorInfo.getChargesData()
-										.get(contractorInfo.getChargesData().size() - 1);
-
+								ContractorChargesData contractorChargesData = contractorInfo.getChargesData().stream()
+										.filter(i -> (!date.isBefore(i.getRateFrom())
+												|| !date.isAfter(i.getRateFrom())))
+										.collect(Collectors.toList()).get(0);
 								final double[] isHillKmPresent = { 0.0 };
 								masterService.getDistanceData(jwt, officeName, godownName).forEach(item -> {
 									item.getTableData().forEach(itemData -> {
