@@ -167,7 +167,9 @@ public class TcServiceIpml implements TcService {
 
 					data.getIdNoList().addAll(gtnService.getGtnDataByOffficeName(officeName).stream()
 							.filter(item -> item.getGodownName().equals(godownName) && item.getGtnFor().equals("Issue")
-									&& item.getTransactionFor().equals("RH to Buffer (Intra)")
+									&& (item.getTransactionFor().equals("RH to Buffer (Intra)")
+											|| item.getTransactionFor().equals("RH To Other Region Buffer")
+											|| item.getTransactionFor().equals("RH To Other Region Direct"))
 									&& !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate)
 									&& item.getVoucherStatus().equals("Approved") && item.getBillEntry().equals(false))
 							.filter(item -> {
@@ -240,8 +242,9 @@ public class TcServiceIpml implements TcService {
 
 					data.getIdNoList().addAll(gtnService.getGtnDataByOffficeName(officeName).stream()
 							.filter(item -> item.getGodownName().equals(godownName) && item.getGtnFor().equals("Issue")
-									&& !item.getTransactionFor().equals("RH to Buffer (Intra)")
-									&& !item.getTransactionFor().equals("Wholesale To Retail (Intra)")
+									&& (item.getTransactionFor().equals("Buffer To Buffer (Intra)")
+											|| item.getTransactionFor().equals("Buffer To Other Region Buffer")
+											|| item.getTransactionFor().equals("Buffer To Other Region Direct"))
 									&& (item.getTransportCharges().equals("TANFED")
 											&& item.getLoadingCharges().equals("TANFED"))
 									&& !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate)
