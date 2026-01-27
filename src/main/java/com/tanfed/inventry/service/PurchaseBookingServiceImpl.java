@@ -111,7 +111,7 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 					ResponseEntity<String> responseEntity = accountsService
 							.saveAccountsVouchersHandler("journalVoucher", voucher, jwt);
 					String responseString = responseEntity.getBody();
-					if(responseString == null) {
+					if (responseString == null) {
 						throw new Exception("No data found");
 					}
 					String prefix = "JV Number : ";
@@ -214,6 +214,7 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 												.mapToDouble(sum -> sum.getTotalQty()).sum());
 
 										PurchaseOrder purchaseOrder = poService.getPoByPoNo(poNo);
+										data.setPoDate(purchaseOrder.getDate());
 										data.setTotalPoQty(purchaseOrder.getTableData().stream()
 												.mapToDouble(item -> item.getPoIssueQty()).sum());
 

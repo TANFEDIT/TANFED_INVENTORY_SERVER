@@ -35,6 +35,7 @@ public class RegisterTable {
 	private String buyerName;
 	private String district;
 	
+	private String supplierName;
 	private String productName;
 	private List<ProductDataSalesRegister> productNameList;
 	private String packing;

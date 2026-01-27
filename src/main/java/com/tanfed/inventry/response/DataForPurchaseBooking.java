@@ -1,5 +1,6 @@
 package com.tanfed.inventry.response;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -29,7 +30,7 @@ public class DataForPurchaseBooking {
 	private String productGroup;
 	private String packing;
 	private String standardUnits;
-	
+	private LocalDate poDate;
 	private String termsNo;
 	private Double totalPoQty;
 	private Double bookedQty;

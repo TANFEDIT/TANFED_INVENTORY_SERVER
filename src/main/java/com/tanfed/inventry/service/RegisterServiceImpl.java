@@ -67,10 +67,11 @@ public class RegisterServiceImpl implements RegisterService {
 				return item.getVoucherStatus().equals("Approved") && godownFilter && productFilter && monthFilter;
 			}).map(item -> new RegisterTable(item.getGodownName(), null, item.getGrnNo(), item.getDate(), null, null,
 					item.getDcWdnRoNo(), item.getSupplierDocDate(), null, null, null, null, item.getAckDate(),
-					item.getFirstPointIfmsId(), null, null, item.getProductName(), null, item.getPacking(),
-					item.getMaterialSuppliedBags(), item.getMaterialSuppliedQuantity(), item.getMaterialReceivedBags(),
-					item.getMaterialReceivedQuantity(), null, null, null, null, item.getBillNo()))
-					.sorted(Comparator.comparing(RegisterTable::getGrnDate)).collect(Collectors.toList());
+					item.getFirstPointIfmsId(), null, null, item.getSupplierName(), item.getProductName(), null,
+					item.getPacking(), item.getMaterialSuppliedBags(), item.getMaterialSuppliedQuantity(),
+					item.getMaterialReceivedBags(), item.getMaterialReceivedQuantity(), null, null, null, null,
+					item.getBillNo())).sorted(Comparator.comparing(RegisterTable::getGrnDate))
+					.collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception(e);
 		}
@@ -107,7 +108,7 @@ public class RegisterServiceImpl implements RegisterService {
 				return item.getVoucherStatus().equals("Approved") && godownFilter && productFilter && monthFilter;
 			}).map(item -> new RegisterTable(item.getGodownName(), null, null, null, null, null, null, null,
 					item.getDcNo(), item.getDate(), item.getInvoiceNo(), item.getDate(), null, item.getIfmsId(),
-					item.getNameOfInstitution(), item.getDistrict(), null,
+					item.getNameOfInstitution(), item.getDistrict(), null, null,
 					item.getTableData().stream()
 							.filter(i -> i.getProductName().equals(productName) || productName.isEmpty())
 							.map(m -> new ProductDataSalesRegister(m.getProductName(), m.getBags().toString(),
@@ -155,9 +156,9 @@ public class RegisterServiceImpl implements RegisterService {
 				Double bags = item.getGtnTableData().stream().mapToDouble(sum -> sum.getBags()).sum();
 				Double qty = item.getGtnTableData().stream().mapToDouble(sum -> sum.getQty()).sum();
 				return new RegisterTable(item.getGodownName(), null, null, null, item.getGtnNo(), item.getDate(), null,
-						null, null, null, null, null, null, null, null, null, item.getProductName(), null,
-						item.getGtnTableData().get(0).getPacking(), bags.toString(), qty, null, null, null, null, null,
-						null, null);
+						null, null, null, null, null, null, null, null, null, item.getSupplierName(),
+						item.getProductName(), null, item.getGtnTableData().get(0).getPacking(), bags.toString(), qty,
+						null, null, null, null, null, null, null);
 			}).sorted(Comparator.comparing(RegisterTable::getGtnDate)).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception(e);
@@ -196,8 +197,9 @@ public class RegisterServiceImpl implements RegisterService {
 						Double qty = item.getGtnTableData().stream().mapToDouble(sum -> sum.getQty()).sum();
 						return new RegisterTable(item.getGodownName(), item.getDestination(), null, null,
 								item.getGtnNo(), item.getDate(), null, null, null, null, null, null, null, null, null,
-								null, item.getProductName(), null, item.getGtnTableData().get(0).getPacking(), null,
-								null, bags.toString(), qty, null, null, null, null, null);
+								null, item.getSupplierName(), item.getProductName(), null,
+								item.getGtnTableData().get(0).getPacking(), null, null, bags.toString(), qty, null,
+								null, null, null, null);
 					}).sorted(Comparator.comparing(RegisterTable::getGtnDate)).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception(e);

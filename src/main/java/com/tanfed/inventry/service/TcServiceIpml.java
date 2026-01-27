@@ -540,8 +540,7 @@ public class TcServiceIpml implements TcService {
 	private List<StockRecoveryTable> mapRecoveryData(TcBillEntry tcBillEntry) {
 		return tcBillEntry.getChargesData().stream()
 				.filter(item -> (item.getClaimFor().equals("Transport Only")
-						|| item.getClaimFor().equals("Transport + Loading Charges")) && item.getIdNo().startsWith("RO")
-						&& item.getDisallowedQty() != null)
+						|| item.getClaimFor().equals("Transport + Loading Charges")) && item.getDisallowedQty() != null)
 				.flatMap(item -> item.getTableData().stream()
 						.map(itemData -> new StockRecoveryTable(null, item.getIdNo(), itemData.getProductName(),
 								itemData.getMrp(), itemData.getDisallowedQty(), itemData.getDisallowedValue())))

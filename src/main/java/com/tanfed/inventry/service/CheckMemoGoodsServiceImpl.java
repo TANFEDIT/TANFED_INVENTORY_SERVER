@@ -21,7 +21,6 @@ import com.tanfed.inventry.dto.DataForCheckMemoGoods;
 import com.tanfed.inventry.entity.CheckMemoGoods;
 import com.tanfed.inventry.entity.PurchaseBooking;
 import com.tanfed.inventry.entity.PurchaseOrder;
-import com.tanfed.inventry.model.BeneficiaryMaster;
 import com.tanfed.inventry.model.GrnTableDataForPurchaseBooking;
 import com.tanfed.inventry.model.JournalVoucher;
 import com.tanfed.inventry.model.ProductMaster;
