@@ -337,7 +337,7 @@ public class GtnServiceImpl implements GtnService {
 					productName);
 		}
 
-		if ((hasText(godownName) && hasText(destination)) || hasText(toRegion)) {
+		if ((hasText(godownName) && hasText(destination))) {
 			validateChargesNeed(data, transactionFor, jwt, officeName, date, godownName, destination, transportCharges,
 					loadingCharges);
 		}
