@@ -354,10 +354,6 @@ public class TcServiceIpml implements TcService {
 					tcBillEntryTempTableRepo.deleteItemsByClaimBillNo(item.getClaimBillNo());
 				});
 			}
-			TcBillEntry tcBillEntry = tcBillEntryRepo.findByClaimBillNo(obj.getClaimBillNo());
-			if (tcBillEntry != null) {
-				throw new AlreadyBoundException("Bill Number Already Exists!");
-			}
 			tcBillEntryRepo.save(obj);
 			return new ResponseEntity<String>("Created Successfully!" + "\n CheckMemo No :" + code, HttpStatus.CREATED);
 		} catch (Exception e) {
