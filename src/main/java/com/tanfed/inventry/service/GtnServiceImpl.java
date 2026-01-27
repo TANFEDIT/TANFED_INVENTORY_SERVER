@@ -112,9 +112,9 @@ public class GtnServiceImpl implements GtnService {
 					if (obj.getTransactionFor().endsWith("Region Direct")) {
 						despatchAdviceService.updateDespatchAdviceQty(obj.getDaNo(),
 								obj.getGtnTableData().stream()
-								.map(i -> new DcTableData(null, null, null, null, null, obj.getProductName(), null,
-										null, i.getQty(), null, null, null, null, null, null, null))
-								.collect(Collectors.toList()));
+										.map(i -> new DcTableData(null, null, null, null, null, obj.getProductName(),
+												null, null, i.getQty(), null, null, null, null, null, null, null))
+										.collect(Collectors.toList()));
 					}
 				} else {
 					GTN gtn = gtnRepo.findByGtnNo(obj.getIssuedGtnNo()).get();
@@ -252,7 +252,7 @@ public class GtnServiceImpl implements GtnService {
 				break;
 			case "Receipt":
 				handleReceiptGTN(data, officeName, transactionFor, issuedGtnNo, month, suppliedGodown, invoiceNo, jwt,
-						godownName);
+						godownName, date);
 				break;
 			}
 			if (hasText(month)) {
@@ -333,17 +333,19 @@ public class GtnServiceImpl implements GtnService {
 				userService.getOfficeList().stream().map(item -> item.getOfficeName()).collect(Collectors.toList()));
 
 		if (hasText(toRegion)) {
-			handleInterRegionTransfers(data, officeName, toRegion, transactionFor, destination, godownName, jwt, daNo, productName);
+			handleInterRegionTransfers(data, officeName, toRegion, transactionFor, destination, godownName, jwt, daNo,
+					productName);
 		}
 
 		if ((hasText(godownName) && hasText(destination)) || hasText(toRegion)) {
-			validateChargesNeed(data, transactionFor, jwt, officeName, godownName, destination, transportCharges,
+			validateChargesNeed(data, transactionFor, jwt, officeName, date, godownName, destination, transportCharges,
 					loadingCharges);
 		}
 	}
 
 	private void handleReceiptGTN(DataForGtn data, String officeName, String transactionFor, String issuedGtnNo,
-			String month, String suppliedGodown, String invoiceNo, String jwt, String godownName) throws Exception {
+			String month, String suppliedGodown, String invoiceNo, String jwt, String godownName, LocalDate date)
+			throws Exception {
 		if (hasText(transactionFor)) {
 
 			if (transactionFor.equals("Sales Return") && hasText(month)) {
@@ -369,8 +371,9 @@ public class GtnServiceImpl implements GtnService {
 				data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
 				if (hasText(godownName)) {
 					ContractorInfo contractorInfo = getContractor(jwt, officeName, godownName);
-					ContractorChargesData contractorChargesData = contractorInfo.getChargesData()
-							.get(contractorInfo.getChargesData().size() - 1);
+					ContractorChargesData contractorChargesData = contractorInfo.getChargesData().stream()
+							.filter(i -> (!date.isBefore(i.getRateFrom()) || !date.isAfter(i.getRateFrom())))
+							.collect(Collectors.toList()).get(0);
 					if (invoice == null) {
 						throw new Exception("No Invoice found");
 					}
@@ -395,9 +398,10 @@ public class GtnServiceImpl implements GtnService {
 				GTN gtn = gtnOpt.get();
 				data.setGtnData(gtn);
 				ContractorInfo contractor = getContractor(jwt, gtn.getOfficeName(), gtn.getGodownName());
-				ContractorChargesData lastCharge = contractor.getChargesData()
-						.get(contractor.getChargesData().size() - 1);
-				data.setUnloadingChargesPerQty(lastCharge.getUnloadingCharges());
+				ContractorChargesData contractorChargesData = contractor.getChargesData().stream()
+						.filter(i -> (!date.isBefore(i.getRateFrom()) || !date.isAfter(i.getRateFrom())))
+						.collect(Collectors.toList()).get(0);
+				data.setUnloadingChargesPerQty(contractorChargesData.getUnloadingCharges());
 			}
 		}
 	}
@@ -500,27 +504,21 @@ public class GtnServiceImpl implements GtnService {
 	}
 
 	private void validateChargesNeed(DataForGtn data, String transactionFor, String jwt, String officeName,
-			String godownName, String destination, String transportCharges, String loadingCharges) throws Exception {
+			LocalDate date, String godownName, String destination, String transportCharges, String loadingCharges)
+			throws Exception {
 
 		ContractorInfo contractorInfo = getContractor(jwt, officeName, godownName);
 
-	    if (contractorInfo.getChargesData() == null || contractorInfo.getChargesData().isEmpty()) {
-	        throw new IllegalStateException("Contractor charges data not available");
-	    }
-		ContractorChargesData contractorChargesData = contractorInfo.getChargesData()
-				.get(contractorInfo.getChargesData().size() - 1);
+		if (contractorInfo.getChargesData() == null || contractorInfo.getChargesData().isEmpty()) {
+			throw new IllegalStateException("Contractor charges data not available");
+		}
+		ContractorChargesData contractorChargesData = contractorInfo.getChargesData().stream()
+				.filter(i -> (!date.isBefore(i.getRateFrom()) || !date.isAfter(i.getRateFrom())))
+				.collect(Collectors.toList()).get(0);
 		data.setTransporterName(contractorInfo.getContractFirm());
-		if (transactionFor.equals("RH to Buffer (Intra)")) {
+		if (transactionFor.startsWith("RH") || transactionFor.startsWith("Buffer")) {
 			calculateCharges(data, jwt, officeName, godownName, destination, contractorChargesData);
-		} else if (transactionFor.equals("Buffer To Buffer (Intra)")
-				|| transactionFor.equals("RH To Other Region Buffer")
-				|| transactionFor.equals("RH To Other Region Direct")) {
-			if (transportCharges.equals("TANFED")) {
-				calculateCharges(data, jwt, officeName, godownName, destination, contractorChargesData);
-			}
-			if (loadingCharges.equals("TANFED")) {
-				data.setLoadingChargesPerQty(contractorChargesData.getLoadingCharges());
-			}
+			data.setLoadingChargesPerQty(contractorChargesData.getLoadingCharges());
 		}
 	}
 

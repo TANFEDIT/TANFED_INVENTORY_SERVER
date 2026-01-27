@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class SobData {
 
 	private SupplierInvoiceDetails supplierInvoiceDetails;
-//	private List<SupplierInvoiceDetails> supplierInvoice;
+	private List<SupplierInvoiceDetails> supplierInvoice;
 	
 	private PurchaseBooking purchaseBookingData;
 	private List<PurchaseBookingDto> purchaseBooking;
@@ -28,7 +28,7 @@ public class SobData {
 	
 	private PurchaseOrder purchaseOrderData;
 	private List<PurchaseOrder> purchaseOrder;
-	private List<PurchaseOrder> supplierInvoice;
+	private List<PurchaseOrder> grnAttach;
 	
 	private List<MpaBillEntry> mpaBillEntry;
 	private List<MpaCheckMemoDto> mpaCheckMemo;

@@ -386,6 +386,9 @@ public class InventryVouchersApprovalService {
 	private CheckMemoGoodsRepo checkMemoGoodsRepo;
 
 	@Autowired
+	private SupplierInvoiceDetailsRepo supplierInvoiceDetailsRepo;
+
+	@Autowired
 	private MpaBillEntryRepo mpaBillEntryRepo;
 
 	@Autowired
@@ -458,14 +461,34 @@ public class InventryVouchersApprovalService {
 				return designation;
 			}
 			case "supplierInvoice": {
-				PurchaseOrder purchaseOrder = purchaseOrderRepo.findById(Long.valueOf(obj.getId())).orElse(null);
+				SupplierInvoiceDetails supplierInvoiceDetails = supplierInvoiceDetailsRepo.findById(Long.valueOf(obj.getId())).orElse(null);
+				
+				designation = userService.getNewDesignation(empId);
+				oldDesignation = supplierInvoiceDetails.getDesignation();
 
+				supplierInvoiceDetails.setVoucherStatus(obj.getVoucherStatus());
+				supplierInvoiceDetails.getEmpId().add(empId);
+
+				if (obj.getVoucherStatus().equals("Approved")) {
+					supplierInvoiceDetails.setApprovedDate(LocalDate.now());
+				}
+				if (oldDesignation == null) {
+					supplierInvoiceDetails.setDesignation(Arrays.asList(designation));
+				} else {
+					supplierInvoiceDetails.getDesignation().add(designation);
+				}
+				supplierInvoiceDetailsRepo.save(supplierInvoiceDetails);
+				return designation;
+			}
+			case "grnAttach": {
+				PurchaseOrder purchaseOrder = purchaseOrderRepo.findById(Long.valueOf(obj.getId())).orElse(null);
+				
 				designation = userService.getNewDesignation(empId);
 				oldDesignation = purchaseOrder.getSobDesignation();
-
+				
 				purchaseOrder.setSobVoucherStatus(obj.getVoucherStatus());
 				purchaseOrder.getEmpId().add(empId);
-
+				
 				if (obj.getVoucherStatus().equals("Approved")) {
 					purchaseOrder.setSobApprovedDate(LocalDate.now());
 				}

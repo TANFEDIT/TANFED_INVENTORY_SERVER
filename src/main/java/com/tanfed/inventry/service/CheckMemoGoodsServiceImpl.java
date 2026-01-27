@@ -86,12 +86,14 @@ public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
 					data.setGstData(productMaster.getGstData());
 					logger.info("{}", productMaster.getSupplierName());
 
-					List<BeneficiaryMaster> beneficiaryMasterByName = masterService.getBeneficiaryMasterByName(jwt,
-							productMaster.getSupplierName(), "Head Office");
-
-					BeneficiaryMaster beneficiaryMaster = beneficiaryMasterByName
-							.get(beneficiaryMasterByName.size() - 1);
-					data.setSupplierAccountNo(beneficiaryMaster.getAccountNo().toString());
+//					List<BeneficiaryMaster> beneficiaryMasterByName = masterService.getBeneficiaryMasterByName(jwt,
+//							productMaster.getSupplierName(), "Head Office");
+//					if(beneficiaryMasterByName.isEmpty()) {
+//						throw new Exception("No Beneficiary Found!");
+//					}
+//					BeneficiaryMaster beneficiaryMaster = beneficiaryMasterByName
+//							.get(beneficiaryMasterByName.size() - 1);
+//					data.setSupplierAccountNo(beneficiaryMaster.getAccountNo().toString());
 
 					PurchaseOrder purchaseOrder = poService.getPoByPoNo(purchaseBooking.getPoNo());
 					data.setPoDate(purchaseOrder.getDate());

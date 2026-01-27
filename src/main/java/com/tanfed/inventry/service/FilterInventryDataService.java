@@ -537,48 +537,54 @@ public class FilterInventryDataService {
 
 	@Autowired
 	private TcCheckMemoRepo tcCheckMemoRepo;
+	
+	@Autowired
+	private SupplierInvoiceService supplierInvoiceService;
 
+	@Autowired
+	private SupplierInvoiceDetailsRepo supplierInvoiceDetailsRepo;
+	
 	public SobData filterSobData(String formType, LocalDate fromDate, LocalDate toDate, String officeName,
 			String voucherStatus, String jwt) throws Exception {
 		try {
 			SobData data = new SobData();
 			switch (formType) {
-//			case "supplierInvoice": {
-//				List<SupplierInvoiceDetails> supplierInvoiceDetailsList = new ArrayList<SupplierInvoiceDetails>();
-//				List<SupplierInvoiceDetails> filteredLst = null;
-//				if (fromDate != null && toDate != null) {
-//					filteredLst = supplierInvoiceService.getSupplierInvoiceDetails().stream()
-//							.filter(item -> (item.getVoucherStatus().equals(voucherStatus) || voucherStatus.isEmpty())
-//									&& !item.getDate().isBefore(fromDate)
-//									&& !item.getDate().isAfter(toDate))
-//							.collect(Collectors.toList());
-//				}
-//				if (voucherStatus.equals("Pending")) {
-//					if (fromDate == null && toDate == null) {
-//						supplierInvoiceDetailsList.addAll(supplierInvoiceDetailsRepo.findPendingData());
-//					} else if (fromDate != null && toDate != null) {
-//						supplierInvoiceDetailsList.addAll(filteredLst);
-//					}
-//				}
-//				if (voucherStatus.equals("Approved")) {
-//					if (fromDate == null && toDate == null) {
-//						supplierInvoiceDetailsList.addAll(supplierInvoiceDetailsRepo.findApprovedData());
-//					} else if (fromDate != null && toDate != null) {
-//						supplierInvoiceDetailsList.addAll(filteredLst);
-//					}
-//				}
-//				if (voucherStatus.isEmpty()) {
-//					if (fromDate == null && toDate == null) {
-//						supplierInvoiceDetailsList.addAll(supplierInvoiceDetailsRepo.findPendingData());
-//						supplierInvoiceDetailsList.addAll(supplierInvoiceDetailsRepo.findApprovedData());
-//					} else if (fromDate != null && toDate != null) {
-//						supplierInvoiceDetailsList.addAll(filteredLst);
-//					}
-//				}
-//				data.setSupplierInvoice(supplierInvoiceDetailsList);
-//				return data;
-//			}
 			case "supplierInvoice": {
+				List<SupplierInvoiceDetails> supplierInvoiceDetailsList = new ArrayList<SupplierInvoiceDetails>();
+				List<SupplierInvoiceDetails> filteredLst = null;
+				if (fromDate != null && toDate != null) {
+					filteredLst = supplierInvoiceService.getSupplierInvoiceDetails().stream()
+							.filter(item -> (item.getVoucherStatus().equals(voucherStatus) || voucherStatus.isEmpty())
+									&& !item.getDate().isBefore(fromDate)
+									&& !item.getDate().isAfter(toDate))
+							.collect(Collectors.toList());
+				}
+				if (voucherStatus.equals("Pending")) {
+					if (fromDate == null && toDate == null) {
+						supplierInvoiceDetailsList.addAll(supplierInvoiceDetailsRepo.findPendingData());
+					} else if (fromDate != null && toDate != null) {
+						supplierInvoiceDetailsList.addAll(filteredLst);
+					}
+				}
+				if (voucherStatus.equals("Approved")) {
+					if (fromDate == null && toDate == null) {
+						supplierInvoiceDetailsList.addAll(supplierInvoiceDetailsRepo.findApprovedData());
+					} else if (fromDate != null && toDate != null) {
+						supplierInvoiceDetailsList.addAll(filteredLst);
+					}
+				}
+				if (voucherStatus.isEmpty()) {
+					if (fromDate == null && toDate == null) {
+						supplierInvoiceDetailsList.addAll(supplierInvoiceDetailsRepo.findPendingData());
+						supplierInvoiceDetailsList.addAll(supplierInvoiceDetailsRepo.findApprovedData());
+					} else if (fromDate != null && toDate != null) {
+						supplierInvoiceDetailsList.addAll(filteredLst);
+					}
+				}
+				data.setSupplierInvoice(supplierInvoiceDetailsList);
+				return data;
+			}
+			case "grnAttach": {
 				List<PurchaseOrder> purchaseOrderList = new ArrayList<PurchaseOrder>();
 				List<PurchaseOrder> filteredLst = null;
 				if (fromDate != null && toDate != null) {
@@ -615,7 +621,7 @@ public class FilterInventryDataService {
 					}
 				}
 				purchaseOrderList.sort(Comparator.comparing(PurchaseOrder::getId).reversed());
-				data.setSupplierInvoice(purchaseOrderList);
+				data.setGrnAttach(purchaseOrderList);
 				return data;
 			}
 			case "purchaseBooking": {
