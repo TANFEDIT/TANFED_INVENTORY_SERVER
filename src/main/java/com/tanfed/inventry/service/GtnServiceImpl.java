@@ -516,7 +516,7 @@ public class GtnServiceImpl implements GtnService {
 				.filter(i -> (!date.isBefore(i.getRateFrom()) || !date.isAfter(i.getRateFrom())))
 				.collect(Collectors.toList()).get(0);
 		data.setTransporterName(contractorInfo.getContractFirm());
-		if (transactionFor.startsWith("RH") || transactionFor.startsWith("Buffer")) {
+		if (transactionFor.startsWith("RH") || transactionFor.startsWith("Buffer") && hasText(destination)) {
 			calculateCharges(data, jwt, officeName, godownName, destination, contractorChargesData);
 			data.setLoadingChargesPerQty(contractorChargesData.getLoadingCharges());
 		}
