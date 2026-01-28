@@ -306,6 +306,12 @@ public class SettlementsOfBillsHandler {
 			throws Exception {
 		return mpaService.updatePvNoMpaCheckMemo(id, pvNo);
 	}
+	
+	@PutMapping("/updatepvintccm/{id}/{pvNo}")
+	public ResponseEntity<String> updatePvNoTcCheckMemoHandler(@PathVariable Long id, @PathVariable String pvNo)
+			throws Exception {
+		return tcService.updatePvNoTcCheckMemo(id, pvNo);
+	}
 
 	@PutMapping("/reverttcdatatemptable/{id}")
 	public ResponseEntity<String> revertTcDataInTempTableHandler(@PathVariable Long id) throws Exception {

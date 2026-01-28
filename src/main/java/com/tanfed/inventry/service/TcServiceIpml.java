@@ -602,4 +602,19 @@ public class TcServiceIpml implements TcService {
 		}
 	}
 
+	@Override
+	public ResponseEntity<String> updatePvNoTcCheckMemo(Long id, String pvNo) throws Exception {
+		try {
+			TcCheckMemo tcCheckMemo = tcCheckMemoRepo.findById(id).get();
+			String prefix = "Voucher Number : ";
+			int index = pvNo.indexOf(prefix);
+			String code = pvNo.substring(index + prefix.length()).trim();
+			tcCheckMemo.setPvNo(code);
+			tcCheckMemoRepo.save(tcCheckMemo);
+			return new ResponseEntity<String>("Updated Successfully!", HttpStatus.ACCEPTED);
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
+
 }

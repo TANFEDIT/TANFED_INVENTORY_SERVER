@@ -51,6 +51,7 @@ public class TcCheckMemo {
 	private Double percentageValue;
 	private Double netPaymentAfterTdsTcs;
 	private String remarks;
+	private String pvNo;
 	private List<String> jvNo;
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<TcCheckMemoChargesTable> chargesData;

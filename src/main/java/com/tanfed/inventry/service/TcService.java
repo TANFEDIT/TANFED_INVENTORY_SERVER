@@ -35,4 +35,6 @@ public interface TcService {
 	
 	public TcCheckMemo getTcCheckMemoByCheckMemoNo(String checkMemoNo) throws Exception;
 
+	public ResponseEntity<String> updatePvNoTcCheckMemo(Long id, String pvNo) throws Exception;
+
 }
