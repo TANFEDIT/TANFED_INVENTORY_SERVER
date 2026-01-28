@@ -81,6 +81,9 @@ public class FilterInventryDataService {
 	@Autowired
 	private InvoiceRepo invoiceRepo;
 
+	@Autowired
+	private MasterService masterService;
+
 	public InventryData filterInventryData(String formType, LocalDate fromDate, LocalDate toDate, String officeName,
 			String activity, String voucherStatus, String financialMonth, String jwt, String gtnFor) throws Exception {
 		try {
@@ -537,13 +540,13 @@ public class FilterInventryDataService {
 
 	@Autowired
 	private TcCheckMemoRepo tcCheckMemoRepo;
-	
+
 	@Autowired
 	private SupplierInvoiceService supplierInvoiceService;
 
 	@Autowired
 	private SupplierInvoiceDetailsRepo supplierInvoiceDetailsRepo;
-	
+
 	public SobData filterSobData(String formType, LocalDate fromDate, LocalDate toDate, String officeName,
 			String voucherStatus, String jwt) throws Exception {
 		try {
@@ -555,8 +558,7 @@ public class FilterInventryDataService {
 				if (fromDate != null && toDate != null) {
 					filteredLst = supplierInvoiceService.getSupplierInvoiceDetails().stream()
 							.filter(item -> (item.getVoucherStatus().equals(voucherStatus) || voucherStatus.isEmpty())
-									&& !item.getDate().isBefore(fromDate)
-									&& !item.getDate().isAfter(toDate))
+									&& !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate))
 							.collect(Collectors.toList());
 				}
 				if (voucherStatus.equals("Pending")) {
@@ -962,7 +964,7 @@ public class FilterInventryDataService {
 					salesReturn.getVoucherStatus(), salesReturn.getDesignation(), salesReturn.getEmpId(),
 					salesReturn.getApprovedDate(), salesReturn.getDate(), salesReturn.getGtnNo(),
 					salesReturn.getActivity(), salesReturn.getMonth(), salesReturn.getSuppliedGodown(),
-					salesReturn.getGodownName(), jv, salesReturn.getInvoiceNo(), salesReturn.getInvoice(), 
+					salesReturn.getGodownName(), jv, salesReturn.getInvoiceNo(), salesReturn.getInvoice(),
 					salesReturn.getInvoiceTableData(), salesReturn.getBillEntry());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1003,7 +1005,7 @@ public class FilterInventryDataService {
 		if (item.getPvNo() != null) {
 			pv = accountsService.getAccountsVoucherByVoucherNoHandler("paymentVoucher", item.getPvNo(), jwt);
 		}
-		if(pv == null) {
+		if (pv == null) {
 			throw new Exception("No pv found");
 		}
 		return new CheckMemoGoodsDto(item.getActivity(), item.getCheckMemoNo(), item.getCmDate(), item.getDesignation(),
@@ -1032,6 +1034,7 @@ public class FilterInventryDataService {
 				e.printStackTrace();
 			}
 		});
+
 		return new TcCheckMemoDto(item.getDesignation(), item.getVoucherStatus(), item.getId(), item.getOfficeName(),
 				item.getCheckMemoNo(), item.getFinancialYear(), item.getFinancialMonth(), item.getContractFirm(),
 				item.getClaimBillNo(), item.getClaimBillDate(), item.getTotalBillValue(), item.getGstReturnType(),
@@ -1039,7 +1042,30 @@ public class FilterInventryDataService {
 				item.getTotalPaymentValue(), item.getTotalRecoveryValue(), item.getRecoveryIfAny(),
 				item.getNetPaymentAfterAdjustment(), item.getTcsOrTds(), item.getRate(), item.getPercentageValue(),
 				item.getNetPaymentAfterTdsTcs(), item.getRemarks(), jvData, item.getChargesData(),
-				item.getRecoveryData());
+				mapchargesAndGstData(item, jwt), item.getRecoveryData());
+	}
+
+	private List<TcCheckMemoGstData> mapchargesAndGstData(TcCheckMemo item, String jwt) {
+		try {
+			ContractorInfo contractorInfo = masterService.getContarctorInfoByOfficeName(jwt, item.getOfficeName())
+					.stream().filter(i -> i.getContractFirm().equals(item.getContractFirm()))
+					.collect(Collectors.toList()).get(0);
+			List<ContractorGstData> gstData = contractorInfo.getGstData();
+			List<TcCheckMemoChargesTable> chargesData = item.getChargesData();
+			return chargesData.stream().map(i -> {
+				ContractorGstData contractorGstData = gstData.stream()
+						.filter(g -> g.getGstRateFor().equals(i.getHeadName())).collect(Collectors.toList()).get(0);
+				return new TcCheckMemoGstData(i.getHeadName(), contractorGstData.getGstCategory(),
+						contractorGstData.getGstRate(), contractorGstData.getSgstRate(),
+						contractorGstData.getCgstRate(), contractorGstData.getIgstRate(),
+						((i.getValue() / 100) * contractorGstData.getCgstRate()),
+						((i.getValue() / 100) * contractorGstData.getSgstRate()));
+			}).collect(Collectors.toList());
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	private MpaCheckMemoDto mapMpaDataToDto(MpaCheckMemo item, String jwt) throws Exception {
@@ -1047,14 +1073,14 @@ public class FilterInventryDataService {
 		if (item.getPvNo() != null) {
 			pv = accountsService.getAccountsVoucherByVoucherNoHandler("paymentVoucher", item.getPvNo(), jwt);
 		}
-		if(pv == null) {
+		if (pv == null) {
 			throw new Exception("No pv found");
 		}
 		Vouchers jv = null;
-		if(item.getJvNo() != null) {
+		if (item.getJvNo() != null) {
 			jv = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", item.getJvNo(), jwt);
 		}
-		if(jv == null) {
+		if (jv == null) {
 			throw new Exception("No jv found");
 		}
 		return new MpaCheckMemoDto(item.getId(), item.getDate(), item.getCheckMemoNo(), item.getOfficeName(), null,

@@ -6,6 +6,7 @@ import java.util.List;
 import com.tanfed.inventry.model.JournalVoucher;
 import com.tanfed.inventry.model.StockRecoveryTable;
 import com.tanfed.inventry.model.TcCheckMemoChargesTable;
+import com.tanfed.inventry.model.TcCheckMemoGstData;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -45,6 +46,7 @@ public class TcCheckMemoDto {
 	private String remarks;
 	private List<JournalVoucher> jvData;
 	private List<TcCheckMemoChargesTable> chargesData;
-	
+	private List<TcCheckMemoGstData> gstData;
+
 	private List<StockRecoveryTable> recoveryData;
 }
