@@ -328,13 +328,18 @@ public class MpaServiceImpl implements MpaService {
 	@Override
 	public void updateAccPvJv(MpaCheckMemo item, String jwt) throws Exception {
 		try {
-			Vouchers pv = accountsService.getAccountsVoucherByVoucherNoHandler("paymentVoucher", item.getPvNo(), jwt);
-			accountsService.voucherApprovalHandler(new VoucherApproval(item.getVoucherStatus(),
-					String.valueOf(pv.getPaymentVoucherData().getId()), "paymentVoucher", null), jwt);
-
-			Vouchers jv = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", item.getJvNo(), jwt);
-			accountsService.voucherApprovalHandler(new VoucherApproval(item.getVoucherStatus(),
-					String.valueOf(jv.getJournalVoucherData().getId()), "journalVoucher", null), jwt);
+			if (item.getPvNo() != null) {
+				Vouchers pv = accountsService.getAccountsVoucherByVoucherNoHandler("paymentVoucher", item.getPvNo(),
+						jwt);
+				accountsService.voucherApprovalHandler(new VoucherApproval(item.getVoucherStatus(),
+						String.valueOf(pv.getPaymentVoucherData().getId()), "paymentVoucher", null), jwt);
+			}
+			if (item.getJvNo() != null) {
+				Vouchers jv = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", item.getJvNo(),
+						jwt);
+				accountsService.voucherApprovalHandler(new VoucherApproval(item.getVoucherStatus(),
+						String.valueOf(jv.getJournalVoucherData().getId()), "journalVoucher", null), jwt);
+			}
 		} catch (Exception e) {
 			throw new Exception(e);
 		}
