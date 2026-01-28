@@ -1,6 +1,5 @@
 package com.tanfed.inventry.service;
 
-import java.rmi.AlreadyBoundException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -445,9 +444,9 @@ public class TcServiceIpml implements TcService {
 		try {
 			DataForTcCheckMemo data = new DataForTcCheckMemo();
 			if (officeName != null && !officeName.isEmpty()) {
-				data.setCheckMemoNoList(tcBillEntryRepo.findByOfficeName(officeName).stream()
-						.filter(item -> item.getIsTcCheckMemoDone().equals(false)).map(item -> item.getCheckMemoNo())
-						.collect(Collectors.toList()));
+				data.setCheckMemoNoList(tcBillEntryRepo.findByOfficeName(officeName).stream().filter(
+						item -> item.getIsTcCheckMemoDone().equals(false) && item.getVoucherStatus().equals("Approved"))
+						.map(item -> item.getCheckMemoNo()).collect(Collectors.toList()));
 				if (month != null && !month.isEmpty()) {
 					data.setTcCheckMemoData(fetchTcCheckMemoByOfficeName(officeName).stream().filter(item -> {
 						String cmMonth = String.format("%s%s%04d", item.getDate().getMonth(), " ",
