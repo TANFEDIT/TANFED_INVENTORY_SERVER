@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.tanfed.inventry.model.JournalVoucher;
+import com.tanfed.inventry.model.PaymentVoucher;
 import com.tanfed.inventry.model.StockRecoveryTable;
 import com.tanfed.inventry.model.TcCheckMemoChargesTable;
 import com.tanfed.inventry.model.TcCheckMemoGstData;
@@ -47,6 +48,6 @@ public class TcCheckMemoDto {
 	private List<JournalVoucher> jvData;
 	private List<TcCheckMemoChargesTable> chargesData;
 	private List<TcCheckMemoGstData> gstData;
-
+	private PaymentVoucher pvData;
 	private List<StockRecoveryTable> recoveryData;
 }

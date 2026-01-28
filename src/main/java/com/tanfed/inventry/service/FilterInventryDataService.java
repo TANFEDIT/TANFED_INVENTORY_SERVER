@@ -1034,7 +1034,7 @@ public class FilterInventryDataService {
 				e.printStackTrace();
 			}
 		});
-
+		PaymentVoucher pv = item.getPvNo() == null ? null : fetchPv(item.getPvNo(), jwt);
 		return new TcCheckMemoDto(item.getDesignation(), item.getVoucherStatus(), item.getId(), item.getOfficeName(),
 				item.getCheckMemoNo(), item.getFinancialYear(), item.getFinancialMonth(), item.getContractFirm(),
 				item.getClaimBillNo(), item.getClaimBillDate(), item.getTotalBillValue(), item.getGstReturnType(),
@@ -1042,7 +1042,17 @@ public class FilterInventryDataService {
 				item.getTotalPaymentValue(), item.getTotalRecoveryValue(), item.getRecoveryIfAny(),
 				item.getNetPaymentAfterAdjustment(), item.getTcsOrTds(), item.getRate(), item.getPercentageValue(),
 				item.getNetPaymentAfterTdsTcs(), item.getRemarks(), jvData, item.getChargesData(),
-				mapchargesAndGstData(item, jwt), item.getRecoveryData());
+				mapchargesAndGstData(item, jwt), pv, item.getRecoveryData());
+	}
+
+	private PaymentVoucher fetchPv(String pvNo, String jwt) {
+		try {
+			Vouchers pv = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", pvNo, jwt);
+			return pv.getPaymentVoucherData();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	private List<TcCheckMemoGstData> mapchargesAndGstData(TcCheckMemo item, String jwt) {
