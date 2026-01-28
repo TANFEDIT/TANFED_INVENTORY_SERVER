@@ -1079,28 +1079,27 @@ public class FilterInventryDataService {
 	}
 
 	private MpaCheckMemoDto mapMpaDataToDto(MpaCheckMemo item, String jwt) throws Exception {
-		Vouchers pv = null;
+		PaymentVoucher pv = null;
 		if (item.getPvNo() != null) {
-			pv = accountsService.getAccountsVoucherByVoucherNoHandler("paymentVoucher", item.getPvNo(), jwt);
+			Vouchers pvData = accountsService.getAccountsVoucherByVoucherNoHandler("paymentVoucher", item.getPvNo(),
+					jwt);
+			pv = pvData.getPaymentVoucherData();
 		}
-		if (pv == null) {
-			throw new Exception("No pv found");
-		}
-		Vouchers jv = null;
+		JournalVoucher jv = null;
 		if (item.getJvNo() != null) {
-			jv = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", item.getJvNo(), jwt);
+			Vouchers jvData = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", item.getJvNo(),
+					jwt);
+			jv = jvData.getJournalVoucherData();
 		}
-		if (jv == null) {
-			throw new Exception("No jv found");
-		}
+
 		return new MpaCheckMemoDto(item.getId(), item.getDate(), item.getCheckMemoNo(), item.getOfficeName(), null,
 				item.getTotalCalculatedValue(), item.getTotalSgstValue(), item.getTotalCgstValue(),
 				item.getTotalPaymentValue(), item.getRecoveryIfAny(), item.getNetTotalDeduction(), item.getTcsOrTds(),
 				item.getRate(), item.getCalculatedTcsTdsValue(), item.getNetPaymentAfterAdjustment(),
-				item.getDifference(), item.getRemarks(), item.getJvNo() != null ? jv.getJournalVoucherData() : null,
-				item.getPvNo() != null ? pv.getPaymentVoucherData() : null, item.getFinancialYear(),
-				item.getFinancialMonth(), item.getContractFirm(), item.getClaimBillNo(), item.getClaimBillDate(),
-				item.getTotalBillValue(), item.getDesignation(), item.getVoucherStatus());
+				item.getDifference(), item.getRemarks(), item.getJvNo() != null ? jv : null,
+				item.getPvNo() != null ? pv : null, item.getFinancialYear(), item.getFinancialMonth(),
+				item.getContractFirm(), item.getClaimBillNo(), item.getClaimBillDate(), item.getTotalBillValue(),
+				item.getDesignation(), item.getVoucherStatus());
 	}
 
 	private List<PurchaseOrder> filterPo(List<PurchaseOrder> list) {
