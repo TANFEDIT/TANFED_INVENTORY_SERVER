@@ -137,13 +137,16 @@ public class MpaServiceImpl implements MpaService {
 							.collect(Collectors.toList());
 					if (financialMonth != null && !financialMonth.isEmpty()) {
 						List<MpaBillEntry> billEntryForBillMonth = mpaBillEntryRepo.findByOfficeName(officeName)
-								.stream()
+								.stream().filter(item -> item.getFinancialMonth().equals(financialMonth)
+										&& item.getContractFirm().equals(contractFirm))
+								.collect(Collectors.toList());
+						List<MpaBillEntry> pendingBillEntry = billEntryForBillMonth.stream()
 								.filter(item -> item.getFinancialMonth().equals(financialMonth)
 										&& item.getContractFirm().equals(contractFirm)
 										&& (item.getVoucherStatus().equals("Pending")
 												|| item.getVoucherStatus().equals("Verified")))
 								.collect(Collectors.toList());
-						if (!billEntryForBillMonth.isEmpty()) {
+						if (!pendingBillEntry.isEmpty()) {
 							throw new FileSystemAlreadyExistsException("Approve Existing Bill Entry!");
 						}
 						List<MpaBillEntry> approvedBillEntryForBillMonth = billEntryForBillMonth.stream()
@@ -178,7 +181,7 @@ public class MpaServiceImpl implements MpaService {
 					data.setCmData(mpaCheckMemoRepo.findByOfficeName(officeName).stream().filter(item -> {
 						String cmMonth = String.format("%s%s%04d", item.getDate().getMonth(), " ",
 								item.getDate().getYear());
-						return cmMonth.equals(month);
+						return cmMonth.equals(month) && !item.getVoucherStatus().equals("Rejected");
 					}).collect(Collectors.toList()));
 				}
 				if (checkMemoNo != null && !checkMemoNo.isEmpty()) {
@@ -287,6 +290,17 @@ public class MpaServiceImpl implements MpaService {
 			mpaCheckMemoRepo.save(finalObj);
 			return new ResponseEntity<String>("Created Successfully!" + "\n Jv No :" + finalObj.getJvNo(),
 					HttpStatus.CREATED);
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
+
+	@Override
+	public void revertCheckMemo(String cmNo) throws Exception {
+		try {
+			MpaBillEntry mpaBillEntry = mpaBillEntryRepo.findByCheckMemoNo(cmNo).get();
+			mpaBillEntry.setIsMpaCheckMemoDone(false);
+			mpaBillEntryRepo.save(mpaBillEntry);
 		} catch (Exception e) {
 			throw new Exception(e);
 		}

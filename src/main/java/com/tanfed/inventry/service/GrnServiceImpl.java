@@ -193,6 +193,9 @@ public class GrnServiceImpl implements GrnService {
 								Boolean isDateMatch = !item.getDate().isBefore(date.minusDays(30));
 								return issuedQty > grnCreated && isDateMatch;
 							}).collect(Collectors.toList());
+					if(poData.isEmpty()) {
+						throw new Exception("No Po Available!");
+					}
 					data.setPoData(poData);
 
 					List<String> productList = poData.stream().map(item -> item.getProductName())

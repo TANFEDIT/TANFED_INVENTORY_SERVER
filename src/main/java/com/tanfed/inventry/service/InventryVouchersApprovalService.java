@@ -215,7 +215,7 @@ public class InventryVouchersApprovalService {
 					} else {
 						gtnService.updateClosingBalanceReceipt(gtn);
 						if (gtn.getTransactionFor().endsWith("Region Direct")) {
-							dcService.createDcForOtherRegionReceipt(gtn, jwt);							
+							dcService.createDcForOtherRegionReceipt(gtn, jwt);
 						}
 					}
 				}
@@ -228,8 +228,7 @@ public class InventryVouchersApprovalService {
 
 						grnService.revertGrnQtyForDc(collect);
 						if (gtn.getTransactionFor().endsWith("Region Direct")) {
-							despatchAdviceService.revertDespatchAdviceQty(gtn.getDaNo(),
-									gtn.getGtnTableData().stream()
+							despatchAdviceService.revertDespatchAdviceQty(gtn.getDaNo(), gtn.getGtnTableData().stream()
 									.map(i -> new DcTableData(null, null, null, null, null, gtn.getProductName(), null,
 											null, i.getQty(), null, null, null, null, null, null, null))
 									.collect(Collectors.toList()));
@@ -461,8 +460,9 @@ public class InventryVouchersApprovalService {
 				return designation;
 			}
 			case "supplierInvoice": {
-				SupplierInvoiceDetails supplierInvoiceDetails = supplierInvoiceDetailsRepo.findById(Long.valueOf(obj.getId())).orElse(null);
-				
+				SupplierInvoiceDetails supplierInvoiceDetails = supplierInvoiceDetailsRepo
+						.findById(Long.valueOf(obj.getId())).orElse(null);
+
 				designation = userService.getNewDesignation(empId);
 				oldDesignation = supplierInvoiceDetails.getDesignation();
 
@@ -482,13 +482,13 @@ public class InventryVouchersApprovalService {
 			}
 			case "grnAttach": {
 				PurchaseOrder purchaseOrder = purchaseOrderRepo.findById(Long.valueOf(obj.getId())).orElse(null);
-				
+
 				designation = userService.getNewDesignation(empId);
 				oldDesignation = purchaseOrder.getSobDesignation();
-				
+
 				purchaseOrder.setSobVoucherStatus(obj.getVoucherStatus());
 				purchaseOrder.getEmpId().add(empId);
-				
+
 				if (obj.getVoucherStatus().equals("Approved")) {
 					purchaseOrder.setSobApprovedDate(LocalDate.now());
 				}
@@ -517,6 +517,9 @@ public class InventryVouchersApprovalService {
 				} else {
 					tcBillEntry.getDesignation().add(designation);
 				}
+				if (obj.getVoucherStatus().equals("Rejected")) {
+					tcService.revertBillEntryData(jwt, tcBillEntry);
+				}
 				tcBillEntryRepo.save(tcBillEntry);
 				return designation;
 			}
@@ -528,7 +531,7 @@ public class InventryVouchersApprovalService {
 
 				tcCheckMemo.setVoucherStatus(obj.getVoucherStatus());
 				tcCheckMemo.getEmpId().add(empId);
-				tcService.updateAccJv(tcCheckMemo, jwt);
+				tcService.updateAccJvAndPv(tcCheckMemo, jwt);
 				if (obj.getVoucherStatus().equals("Approved")) {
 					tcCheckMemo.setApprovedDate(LocalDate.now());
 				}
@@ -536,6 +539,9 @@ public class InventryVouchersApprovalService {
 					tcCheckMemo.setDesignation(Arrays.asList(designation));
 				} else {
 					tcCheckMemo.getDesignation().add(designation);
+				}
+				if (obj.getVoucherStatus().equals("Rejected")) {
+					tcService.revertCheckMemo(jwt, tcCheckMemo);
 				}
 				tcCheckMemoRepo.save(tcCheckMemo);
 				return designation;
@@ -576,6 +582,9 @@ public class InventryVouchersApprovalService {
 					mpaCheckMemo.setDesignation(Arrays.asList(designation));
 				} else {
 					mpaCheckMemo.getDesignation().add(designation);
+				}
+				if (obj.getVoucherStatus().equals("Rejected")) {
+					mpaService.revertCheckMemo(mpaCheckMemo.getCheckMemoNo());
 				}
 				mpaCheckMemoRepo.save(mpaCheckMemo);
 				return designation;

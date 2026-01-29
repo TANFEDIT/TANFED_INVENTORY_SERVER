@@ -31,10 +31,14 @@ public interface TcService {
 
 	public ResponseEntity<String> revertTcDataInTempTable(Long id) throws Exception;
 
-	public void updateAccJv(TcCheckMemo tcCheckMemo, String jwt) throws Exception;
+	public void updateAccJvAndPv(TcCheckMemo tcCheckMemo, String jwt) throws Exception;
 	
 	public TcCheckMemo getTcCheckMemoByCheckMemoNo(String checkMemoNo) throws Exception;
 
 	public ResponseEntity<String> updatePvNoTcCheckMemo(Long id, String pvNo) throws Exception;
+
+	public void revertBillEntryData(String jwt, TcBillEntry obj) throws Exception;
+
+	public void revertCheckMemo(String jwt, TcCheckMemo tcCheckMemo) throws Exception;
 
 }

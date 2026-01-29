@@ -332,6 +332,51 @@ public class TcServiceIpml implements TcService {
 		}
 	}
 
+	@Override
+	public void revertBillEntryData(String jwt, TcBillEntry obj) throws Exception {
+		try {
+			obj.getChargesData().forEach(i -> {
+				try {
+					if (i.getIdNo().startsWith("GT")) {
+						GTN gtn;
+						gtn = gtnService.getGtnDataByGtnNo(i.getIdNo());
+						gtn.setBillEntry(false);
+						gtnService.saveGtn(gtn);
+					} else if (i.getIdNo().startsWith("GR")) {
+						GRN grn = grnService.getGrnDataByGrnNo(i.getIdNo());
+						if (i.getClaimFor().equals("Wagon Clearance Charges")) {
+							grn.setWagonBillEntry(false);
+						}
+						if (i.getClaimFor().equals("Unloading Charges")) {
+							grn.setUnloadingBillEntry(false);
+							grn.setBillNo(null);
+						}
+						grnService.saveGrn(grn);
+					} else {
+						DeliveryChellan deliveryChellan = dcService.getDcDataByDcNo(i.getIdNo());
+						deliveryChellan.setBillEntry(false);
+						deliveryChellan.setBillNo(null);
+						dcService.saveDc(deliveryChellan);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
+
+	public void revertCheckMemo(String jwt, TcCheckMemo tcCheckMemo) throws Exception {
+		try {
+			TcBillEntry tcBillEntry = tcBillEntryRepo.findByCheckMemoNo(tcCheckMemo.getCheckMemoNo()).get();
+			tcBillEntry.setIsTcCheckMemoDone(false);
+			tcBillEntryRepo.save(tcBillEntry);
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
+	
 	@Autowired
 	private TcBillEntryRepo tcBillEntryRepo;
 
@@ -581,7 +626,7 @@ public class TcServiceIpml implements TcService {
 	}
 
 	@Override
-	public void updateAccJv(TcCheckMemo item, String jwt) throws Exception {
+	public void updateAccJvAndPv(TcCheckMemo item, String jwt) throws Exception {
 		item.getJvNo().forEach(jvNo -> {
 			try {
 				Vouchers jv = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", jvNo, jwt);
@@ -591,6 +636,11 @@ public class TcServiceIpml implements TcService {
 				e.printStackTrace();
 			}
 		});
+		if (item.getPvNo() != null) {
+			Vouchers pv = accountsService.getAccountsVoucherByVoucherNoHandler("paymentVoucher", item.getPvNo(), jwt);
+			accountsService.voucherApprovalHandler(new VoucherApproval(item.getVoucherStatus(),
+					String.valueOf(pv.getPaymentVoucherData().getId()), "paymentVoucher", null), jwt);
+		}
 	}
 
 	@Override
