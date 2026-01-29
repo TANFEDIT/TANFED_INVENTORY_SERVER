@@ -1047,7 +1047,7 @@ public class FilterInventryDataService {
 
 	private PaymentVoucher fetchPv(String pvNo, String jwt) {
 		try {
-			Vouchers pv = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", pvNo, jwt);
+			Vouchers pv = accountsService.getAccountsVoucherByVoucherNoHandler("paymentVoucher", pvNo, jwt);
 			return pv.getPaymentVoucherData();
 		} catch (Exception e) {
 			e.printStackTrace();
