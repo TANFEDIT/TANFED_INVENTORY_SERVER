@@ -134,12 +134,12 @@ public class PoServiceImpl implements PoService {
 				return acc1;
 			});
 			boolean isProductMatch = item.getTableData().stream()
-					.anyMatch(temp -> productName.equals(temp.getProductName()));
+					.allMatch(temp -> productName.equals(temp.getProductName()));
 			return sum[0] > sum[1] && isProductMatch && "Approved".equals(item.getVoucherStatus());
 		}).collect(Collectors.toList());
 		data.setOfficeList(
 				poReqNotFullfilledData.stream().map(item -> item.getOfficeName()).collect(Collectors.toSet()));
-
+		data.setNoOfRegionRequested(data.getOfficeList().size());
 		if (!officeName.isEmpty() && officeName != null) {
 			List<PoReqDataForPo> reqData = poReqNotFullfilledData.stream()
 					.filter(item -> officeName.equals(item.getOfficeName())

@@ -25,7 +25,7 @@ public class DataForPo {
 	private String productGroup;
 	private String packing;
 	private TermsPrice termsPrice;
-	
+	private Integer noOfRegionRequested;
 	private Set<String> officeList;
 	private List<PoReqDataForPo> poReqTableData;
 	
