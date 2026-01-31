@@ -379,9 +379,10 @@ public class InventryHandler {
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
 			@RequestHeader("Authorization") String jwt, @RequestParam String poNo, @RequestParam String supplierName,
 			@RequestParam String godownName, @RequestParam String productName, @RequestParam String month,
-			@RequestParam String outwardBatchNo) throws Exception {
+			@RequestParam String outwardBatchNo, @RequestParam String buyerName) throws Exception {
 		RegisterData data = new RegisterData();
 
+		data.setBuyerNameList(masterService.getBuyerNameByOfficeNameHandler(jwt, officeName));
 		data.setGodownNameList(grnService.getGodownNameList(jwt, officeName, ""));
 		data.getGodownNameList().add("Direct Material Center");
 		data.setSupplierNameList(masterService.getProductDataHandler(jwt).stream()
@@ -399,7 +400,7 @@ public class InventryHandler {
 			}
 			case "salesRegister": {
 				data.setSalesRegister(registerService.getSalesRegisterData(officeName, month, godownName, fromDate,
-						toDate, productName));
+						toDate, productName, buyerName));
 				return data;
 			}
 			case "stockTransferIssueRegister": {

@@ -19,7 +19,7 @@ public interface RegisterService {
 			LocalDate toDate, String productName) throws Exception;
 	
 	public List<RegisterTable> getSalesRegisterData(String officeName, String month, String godownName, LocalDate fromDate, 
-			LocalDate toDate, String productName) throws Exception;
+			LocalDate toDate, String productName, String buyerName) throws Exception;
 	
 	public List<RegisterTable> getStockTransferIssueData(String officeName, String month, String godownName, LocalDate fromDate, 
 			LocalDate toDate, String productName) throws Exception;

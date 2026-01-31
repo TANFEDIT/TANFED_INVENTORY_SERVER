@@ -82,7 +82,7 @@ public class RegisterServiceImpl implements RegisterService {
 
 	@Override
 	public List<RegisterTable> getSalesRegisterData(String officeName, String month, String godownName,
-			LocalDate fromDate, LocalDate toDate, String productName) throws Exception {
+			LocalDate fromDate, LocalDate toDate, String productName, String buyerName) throws Exception {
 		try {
 			return invoiceService.getInvoiceDataByOffficeName(officeName).stream().filter(item -> {
 				Boolean godownFilter;
@@ -90,6 +90,12 @@ public class RegisterServiceImpl implements RegisterService {
 					godownFilter = true;
 				} else {
 					godownFilter = item.getGodownName().equals(godownName);
+				}
+				Boolean buyerFilter;
+				if (buyerName.isEmpty()) {
+					buyerFilter = true;
+				} else {
+					buyerFilter = item.getNameOfInstitution().equals(buyerName);
 				}
 				Boolean productFilter;
 				if (productName.isEmpty()) {
@@ -105,7 +111,8 @@ public class RegisterServiceImpl implements RegisterService {
 					monthFilter = String.format("%s%s%04d", item.getDate().getMonth(), " ", item.getDate().getYear())
 							.equals(month);
 				}
-				return item.getVoucherStatus().equals("Approved") && godownFilter && productFilter && monthFilter;
+				return item.getVoucherStatus().equals("Approved") && buyerFilter && godownFilter && productFilter
+						&& monthFilter;
 			}).map(item -> new RegisterTable(item.getGodownName(), null, null, null, null, null, null, null,
 					item.getDcNo(), item.getDate(), item.getInvoiceNo(), item.getDate(), null, item.getIfmsId(),
 					item.getNameOfInstitution(), item.getDistrict(), null, null,
@@ -587,6 +594,7 @@ public class RegisterServiceImpl implements RegisterService {
 			if (poNo != null && !poNo.isEmpty()) {
 				PurchaseOrder purchaseOrder = poService.getPoByPoNo(poNo);
 				return poService.getPoByPoNo(poNo).getGrnData().stream()
+						.filter(i -> i.getOfficeName().equals(officeName))
 						.map(item -> mapPoAllotmentRegisterData(purchaseOrder, officeName, item))
 						.collect(Collectors.toList());
 			} else {
