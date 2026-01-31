@@ -21,12 +21,13 @@ public class RegisterData {
 	private Set<String> productNameList;
 	private Set<String> supplierNameList;
 	private Set<String> outwardBatchNoList;
-	
+	private List<String> buyerNameList;
+
 	private List<RegisterTable> receiptRegister;
 	private List<RegisterTable> salesRegister;
 	private List<RegisterTable> stockTransferIssueRegister;
 	private List<RegisterTable> stockTransferReceiptRegister;
-	
+
 	private List<StockRegisterTable> stockRegister;
 
 	private List<String> poNoList;
