@@ -1,9 +1,12 @@
-package com.tanfed.inventry.entity;
+package com.tanfed.inventry.dto;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import jakarta.persistence.*;
+import com.tanfed.inventry.model.JournalVoucher;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Lob;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,12 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table
-public class SupplierInvoiceDetails {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+public class SupplierInvoiceDto {
 	private Long id;
 
 	private String voucherStatus;
@@ -70,8 +68,8 @@ public class SupplierInvoiceDetails {
 	@Column(length = 1000000)
 	private byte[] filedata;
 
-	private String netJv;
+	private JournalVoucher netJv;
 
-	private String taxJv;
-
+	private JournalVoucher taxJv;
+	
 }

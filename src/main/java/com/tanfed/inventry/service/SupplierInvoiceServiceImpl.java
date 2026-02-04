@@ -204,13 +204,13 @@ public class SupplierInvoiceServiceImpl implements SupplierInvoiceService {
 					ResponseEntity<String> responseEntity = accountsService
 							.saveAccountsVouchersHandler("journalVoucher", voucher, jwt);
 					String responseString = responseEntity.getBody();
-					if(responseString == null) {
+					if (responseString == null) {
 						throw new Exception("No jv found");
 					}
 					String prefix = "JV Number : ";
 					int index = responseString.indexOf(prefix);
 					String jvNo = responseString.substring(index + prefix.length()).trim();
-					jvMap.put(item.getJvFor(), jvNo);
+					jvMap.put(item.getJvType(), jvNo);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

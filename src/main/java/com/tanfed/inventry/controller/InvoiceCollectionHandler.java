@@ -3,7 +3,6 @@ package com.tanfed.inventry.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tanfed.inventry.dto.FundTransferDto;
 import com.tanfed.inventry.model.BankInfo;
 import com.tanfed.inventry.model.ICViewAplApdData;
 import com.tanfed.inventry.model.IcmObject;
@@ -33,7 +32,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
 @RequestMapping("/api/ic")
@@ -118,7 +116,7 @@ public class InvoiceCollectionHandler {
 			data.setAccountNoList(bankInfo.stream().filter(item -> item.getBranchName().equals(branchName))
 					.map(BankInfo::getAccountNumber).collect(Collectors.toList()));
 			List<InvoiceCollectionRegisterTable> fundTransferRegister = registerService
-					.getFundTransferRegister(officeName, month, fromDate, branchName, toDate, accountNo);
+					.getFundTransferRegister(officeName, month, fromDate, branchName, toDate, accountNo, jwt);
 			data.setFundTransferRegister(fundTransferRegister);
 			return data;
 		}
@@ -149,13 +147,6 @@ public class InvoiceCollectionHandler {
 		return invoiceCollectionService.editInvoiceCollectionData(formType, obj, jwt);
 	}
 
-	@PostMapping("/savefundtransfer")
-	@PreAuthorize("hasAnyRole('ROLE_SUPERADMIN', 'ROLE_ESTADMIN', 'ROLE_ROUSER', 'ROLE_ROADMIN', 'ROLE_ACCADMIN')")
-	public ResponseEntity<String> saveFundTransferHandler(@RequestBody FundTransferDto obj,
-			@RequestHeader("Authorization") String jwt) throws Exception {
-		return invoiceCollectionService.saveFundTransfer(obj, jwt);
-	}
-
 	@GetMapping("/fetchcollectionabstract")
 	public InvoiceCollectionResponseData getCollectionAbstractDataHandler(@RequestParam String officeName,
 			String branchName, String accountNo, String monthOfFundTransfer, @RequestHeader("Authorization") String jwt)
@@ -169,4 +160,5 @@ public class InvoiceCollectionHandler {
 			@RequestBody IcmObject obj, @RequestHeader("Authorization") String jwt) throws Exception {
 		return invoiceCollectionService.saveAdjReceiptForIcmInvoices(obj, jwt, type);
 	}
+
 }

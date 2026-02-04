@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.tanfed.inventry.dto.CheckMemoGoodsDto;
 import com.tanfed.inventry.dto.GtnDTO;
+import com.tanfed.inventry.dto.SupplierInvoiceDto;
 import com.tanfed.inventry.dto.TcCheckMemoDto;
 import com.tanfed.inventry.entity.*;
 import com.tanfed.inventry.model.*;
@@ -583,7 +584,8 @@ public class FilterInventryDataService {
 						supplierInvoiceDetailsList.addAll(filteredLst);
 					}
 				}
-				data.setSupplierInvoice(supplierInvoiceDetailsList);
+				
+				data.setSupplierInvoice(mapToDto(supplierInvoiceDetailsList, jwt));
 				return data;
 			}
 			case "grnAttach": {
@@ -949,6 +951,33 @@ public class FilterInventryDataService {
 		}
 	}
 
+	private List<SupplierInvoiceDto> mapToDto(List<SupplierInvoiceDetails> si, String jwt) {
+		return si.stream().map(i -> {
+			JournalVoucher netJv = null, taxJv = null;
+			try {
+				if (i.getNetJv() != null) {
+					Vouchers vouchers;
+					vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher", i.getNetJv(),
+							jwt);
+					netJv = vouchers.getJournalVoucherData();
+				}
+				if (i.getTaxJv() != null) {
+					Vouchers vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher",
+							i.getNetJv(), jwt);
+					taxJv = vouchers.getJournalVoucherData();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return new SupplierInvoiceDto(i.getId(), i.getVoucherStatus(), i.getDesignation(), i.getApprovedDate(),
+					i.getInvoiceQtyAvlForGrnAttach(), i.getEmpId(), i.getDate(), i.getCreatedAt(), i.getInvoiceNumber(),
+					i.getInvoiceQty(), i.getInvoiceDate(), i.getTotalInvoiceValue(), i.getTotalBasicPrice(),
+					i.getTotalCgstValue(), i.getTotalSgstValue(), i.getMonthOfSupply(), i.getTermsMonth(),
+					i.getTermsNo(), i.getActivity(), i.getProductName(), i.getSupplierName(), i.getSupplierGst(),
+					i.getFilename(), i.getFiletype(), i.getFiledata(), netJv, taxJv);
+		}).collect(Collectors.toList());
+	}
+
 	private GtnDTO mapSalesReturnToDto(SalesReturn salesReturn, String jwt) {
 		try {
 			JournalVoucher jv;
@@ -1091,6 +1120,7 @@ public class FilterInventryDataService {
 					jwt);
 			jv = jvData.getJournalVoucherData();
 		}
+		MpaBillEntry mpaBillEntry = mpaBillEntryRepo.findByCheckMemoNo(item.getCheckMemoNo()).get();
 
 		return new MpaCheckMemoDto(item.getId(), item.getDate(), item.getCheckMemoNo(), item.getOfficeName(), null,
 				item.getTotalCalculatedValue(), item.getTotalSgstValue(), item.getTotalCgstValue(),
@@ -1099,7 +1129,7 @@ public class FilterInventryDataService {
 				item.getDifference(), item.getRemarks(), item.getJvNo() != null ? jv : null,
 				item.getPvNo() != null ? pv : null, item.getFinancialYear(), item.getFinancialMonth(),
 				item.getContractFirm(), item.getClaimBillNo(), item.getClaimBillDate(), item.getTotalBillValue(),
-				item.getDesignation(), item.getVoucherStatus());
+				mpaBillEntry.getEmpData(), item.getDesignation(), item.getVoucherStatus());
 	}
 
 	private List<PurchaseOrder> filterPo(List<PurchaseOrder> list) {

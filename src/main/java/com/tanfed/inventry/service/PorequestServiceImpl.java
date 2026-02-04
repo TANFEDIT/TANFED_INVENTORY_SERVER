@@ -109,6 +109,14 @@ public class PorequestServiceImpl implements PorequestService {
 						data.setStandardUnits(productMaster.getStandardUnits());
 						data.setSupplierGst(productMaster.getSupplierGst());
 						data.setSupplierName(productMaster.getSupplierName());
+						data.setPoPendingFromHO(
+								getPoRequestDataByOfficeName(officeName)
+										.stream().filter(
+												i -> i.getVoucherStatus().equals("Approved")
+														&& i.getTableData().stream()
+																.anyMatch(p -> p.getAlreadyIssuedQty() == 0
+																		&& p.getProductName().equals(productName)))
+										.count());
 						if (!purchaseOrderType.isEmpty() && purchaseOrderType.equals("Confirmative")) {
 							data.setPoNoList(poService.getUnfullfilledPoNo(productName, officeName, "poReq", date));
 							if (!poNo.isEmpty() && poNo != null) {
@@ -176,7 +184,6 @@ public class PorequestServiceImpl implements PorequestService {
 		try {
 			PoRequest poRequest = poRequestRepo.findByPoReqNo(obj.getPoReqNo()).orElse(null);
 			poRequest.getTableData().forEach(temp -> {
-
 
 				if (temp.getProductName().equals(productName)) {
 					temp.setAlreadyIssuedQty(RoundToDecimalPlace

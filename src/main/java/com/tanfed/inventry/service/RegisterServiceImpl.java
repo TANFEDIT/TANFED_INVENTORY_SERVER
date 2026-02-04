@@ -22,7 +22,6 @@ import com.tanfed.inventry.dto.FT_Charges_Dto;
 import com.tanfed.inventry.entity.*;
 import com.tanfed.inventry.model.*;
 import com.tanfed.inventry.repository.ClosingStockTableRepo;
-import com.tanfed.inventry.repository.FundTransferRepo;
 import com.tanfed.inventry.repository.OpeningStockRepo;
 import com.tanfed.inventry.response.StockRegisterTable;
 import com.tanfed.inventry.utils.RoundToDecimalPlace;
@@ -449,45 +448,45 @@ public class RegisterServiceImpl implements RegisterService {
 		}
 	}
 
-	@Autowired
-	private FundTransferRepo fundTransferRepo;
-
 	@Override
 	public List<InvoiceCollectionRegisterTable> getFundTransferRegister(String officeName, String month,
-			LocalDate fromDate, String branchName, LocalDate toDate, String accountNo) throws Exception {
+			LocalDate fromDate, String branchName, LocalDate toDate, String accountNo, String jwt) throws Exception {
 		try {
-			return fundTransferRepo.findByOfficeName(officeName).stream().filter(item -> {
-				Boolean branchFilter = true;
-				if (branchName.isEmpty()) {
-					branchFilter = true;
-				} else {
-					branchFilter = item.getBranchName().equals(branchName);
-				}
-				Boolean accNoFilter = true;
-				if (accountNo.isEmpty()) {
-					accNoFilter = true;
-				} else {
-					accNoFilter = item.getAccountNo().equals(Long.valueOf(accountNo));
-				}
-				Boolean monthFilter;
-				if (month.isEmpty()) {
-					monthFilter = !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate);
-				} else {
-					monthFilter = String.format("%s%s%04d", item.getDate().getMonth(), " ", item.getDate().getYear())
-							.equals(month);
-				}
-				return item.getVoucherStatus().equals("Approved") && branchFilter && monthFilter && accNoFilter;
-			}).map(item -> {
-				return mapFtRegisterData(item);
-			}).collect(Collectors.toList());
+			return accountsService
+					.getFilteredDataHandler("paymentVoucher", officeName, "Approved", null, fromDate, toDate, jwt)
+					.getPaymentVoucher().stream().filter(item -> {
+						Boolean branchFilter = true;
+						if (branchName.isEmpty()) {
+							branchFilter = true;
+						} else {
+							branchFilter = item.getBranchName().equals(branchName);
+						}
+						Boolean accNoFilter = true;
+						if (accountNo.isEmpty()) {
+							accNoFilter = true;
+						} else {
+							accNoFilter = item.getAccountNo().equals(Long.valueOf(accountNo));
+						}
+						Boolean monthFilter;
+						if (month.isEmpty()) {
+							monthFilter = !item.getDate().isBefore(fromDate) && !item.getDate().isAfter(toDate);
+						} else {
+							monthFilter = String
+									.format("%s%s%04d", item.getDate().getMonth(), " ", item.getDate().getYear())
+									.equals(month);
+						}
+						return item.getVoucherStatus().equals("Approved") && branchFilter && monthFilter && accNoFilter;
+					}).map(item -> {
+						return mapFtRegisterData(item);
+					}).collect(Collectors.toList());
 		} catch (Exception e) {
 			throw new Exception("Error while generating Fund Transfer Register data", e);
 		}
 	}
 
-	private InvoiceCollectionRegisterTable mapFtRegisterData(FundTransfer item) {
+	private InvoiceCollectionRegisterTable mapFtRegisterData(PaymentVoucher item) {
 		InvoiceCollectionRegisterTable data = new InvoiceCollectionRegisterTable();
-		FT_Charges_Dto obj = new FT_Charges_Dto(item.getCurrentTransfer(), item.getBankCharges());
+		FT_Charges_Dto obj = new FT_Charges_Dto(item.getAmount(), 0.0);
 		data.setDate(item.getDate());
 		data.setBranchName(item.getBranchName());
 

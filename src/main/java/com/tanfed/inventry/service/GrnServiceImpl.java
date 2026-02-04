@@ -193,7 +193,7 @@ public class GrnServiceImpl implements GrnService {
 								Boolean isDateMatch = !item.getDate().isBefore(date.minusDays(30));
 								return issuedQty > grnCreated && isDateMatch;
 							}).collect(Collectors.toList());
-					if(poData.isEmpty()) {
+					if (poData.isEmpty()) {
 						throw new Exception("No Po Available!");
 					}
 					data.setPoData(poData);
@@ -384,43 +384,95 @@ public class GrnServiceImpl implements GrnService {
 		}
 	}
 
+//	@Override
+//	public ResponseEntity<String> updateGrnAttachQty(GrnAttachDto obj) throws Exception {
+//		try {
+//
+//			Double BookngQty = obj.getCurrentBookingQty();
+//
+//			for (String temp : obj.getGrnNo()) {
+//				GRN grn = grnRepo.findByGrnNo(temp).get();
+//				if (grn.getGrnQtyAvlForGrnAttach() <= BookngQty) {
+//					if (grn.getGrnAttachQtyString() == null) {
+//						grn.setGrnAttachQtyString(grn.getGrnQtyAvlForGrnAttach().toString());
+//					} else {
+//						grn.setGrnAttachQtyString(grn.getGrnAttachQtyString() + ", " + grn.getGrnQtyAvlForGrnAttach());
+//					}
+//					grn.setGrnAttachQty(RoundToDecimalPlace
+//							.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + grn.getGrnQtyAvlForGrnAttach()));
+//					BookngQty -= grn.getGrnQtyAvlForGrnAttach();
+//					grn.setGrnQtyAvlForGrnAttach(0.0);
+//				} else {
+//					if (grn.getGrnAttachQtyString() == null) {
+//						grn.setGrnAttachQtyString(BookngQty.toString());
+//					} else {
+//						grn.setGrnAttachQtyString(grn.getGrnAttachQtyString() + ", " + BookngQty);
+//					}
+//					grn.setGrnAttachQty(RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + BookngQty));
+//					grn.setGrnQtyAvlForGrnAttach(grn.getGrnQtyAvlForGrnAttach() - BookngQty);
+//				}
+//				if (grn.getSupplierInvoiceNo() == null) {
+//					grn.setSupplierInvoiceNo(obj.getInvoiceNo());
+//				} else {
+//					grn.setSupplierInvoiceNo(grn.getSupplierInvoiceNo() + ", " + obj.getInvoiceNo());
+//				}
+//				grnRepo.save(grn);
+//				logger.info("RmngBkngQty : {}", obj.getCurrentBookingQty());
+//			}
+//			supplierInvoiceService.updateSupplierInvoiceQtyForGrnAttach(obj.getInvoiceNo(), BookngQty);
+//			return new ResponseEntity<String>("Updated Successfully!", HttpStatus.ACCEPTED);
+//
+//		} catch (Exception e) {
+//			throw new Exception(e);
+//		}
+//	}
+
 	@Override
 	public ResponseEntity<String> updateGrnAttachQty(GrnAttachDto obj) throws Exception {
+
 		try {
 
-			Double BookngQty = obj.getCurrentBookingQty();
+			Double bookingQty = obj.getCurrentBookingQty();
 
 			for (String temp : obj.getGrnNo()) {
-				GRN grn = grnRepo.findByGrnNo(temp).get();
-				if (grn.getGrnQtyAvlForGrnAttach() <= BookngQty) {
-					if (grn.getGrnAttachQtyString() == null) {
-						grn.setGrnAttachQtyString(grn.getGrnQtyAvlForGrnAttach().toString());
-					} else {
-						grn.setGrnAttachQtyString(grn.getGrnAttachQtyString() + ", " + grn.getGrnQtyAvlForGrnAttach());
-					}
-					grn.setGrnAttachQty(RoundToDecimalPlace
-							.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + grn.getGrnQtyAvlForGrnAttach()));
-					BookngQty -= grn.getGrnQtyAvlForGrnAttach();
-					grn.setGrnQtyAvlForGrnAttach(0.0);
+
+				if (bookingQty <= 0)
+					break;
+
+				GRN grn = grnRepo.findByGrnNo(temp).orElseThrow(() -> new RuntimeException("GRN not found : " + temp));
+
+				Double available = grn.getGrnQtyAvlForGrnAttach();
+				Double attachQty = Math.min(available, bookingQty);
+
+				// Attach qty string
+				if (grn.getGrnAttachQtyString() == null) {
+					grn.setGrnAttachQtyString(attachQty.toString());
 				} else {
-					if (grn.getGrnAttachQtyString() == null) {
-						grn.setGrnAttachQtyString(BookngQty.toString());
-					} else {
-						grn.setGrnAttachQtyString(grn.getGrnAttachQtyString() + ", " + BookngQty);
-					}
-					grn.setGrnAttachQty(RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + BookngQty));
-					grn.setGrnQtyAvlForGrnAttach(grn.getGrnQtyAvlForGrnAttach() - BookngQty);
+					grn.setGrnAttachQtyString(grn.getGrnAttachQtyString() + ", " + attachQty);
 				}
+
+				// Update quantities
+				grn.setGrnAttachQty(RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + attachQty));
+
+				grn.setGrnQtyAvlForGrnAttach(RoundToDecimalPlace.roundToTwoDecimalPlaces(available - attachQty));
+
+				bookingQty -= attachQty;
+
+				// Supplier invoice
 				if (grn.getSupplierInvoiceNo() == null) {
 					grn.setSupplierInvoiceNo(obj.getInvoiceNo());
 				} else {
 					grn.setSupplierInvoiceNo(grn.getSupplierInvoiceNo() + ", " + obj.getInvoiceNo());
 				}
+
 				grnRepo.save(grn);
-				logger.info("RmngBkngQty : {}", obj.getCurrentBookingQty());
+
+				logger.info("Remaining Booking Qty : {}", bookingQty);
 			}
-			supplierInvoiceService.updateSupplierInvoiceQtyForGrnAttach(obj.getInvoiceNo(), BookngQty);
-			return new ResponseEntity<String>("Updated Successfully!", HttpStatus.ACCEPTED);
+
+			supplierInvoiceService.updateSupplierInvoiceQtyForGrnAttach(obj.getInvoiceNo(), bookingQty);
+
+			return new ResponseEntity<>("Updated Successfully!", HttpStatus.ACCEPTED);
 
 		} catch (Exception e) {
 			throw new Exception(e);
@@ -688,22 +740,21 @@ public class GrnServiceImpl implements GrnService {
 		}
 	}
 
-
 	@Autowired
 	private OpeningStockRepo openingStockRepo;
-	
+
 	@Override
 	public void utilizeGrnQtyForGtn(GtnTableData tableData) throws Exception {
 		try {
-				if(tableData.getOutwardBatchNo().startsWith("GR")) {
-					GRN grnData = grnRepo.findByGrnNo(tableData.getOutwardBatchNo()).get();
-					grnData.setGrnQtyAvlForDc(grnData.getGrnQtyAvlForDc() - tableData.getQty());
-					grnRepo.save(grnData);
-				} else {
-					OpeningStock openingStock = openingStockRepo.findByObId(tableData.getOutwardBatchNo()).get();
-					openingStock.setQtyAvlForDc(openingStock.getQtyAvlForDc() - tableData.getQty());
-					openingStockRepo.save(openingStock);
-				}
+			if (tableData.getOutwardBatchNo().startsWith("GR")) {
+				GRN grnData = grnRepo.findByGrnNo(tableData.getOutwardBatchNo()).get();
+				grnData.setGrnQtyAvlForDc(grnData.getGrnQtyAvlForDc() - tableData.getQty());
+				grnRepo.save(grnData);
+			} else {
+				OpeningStock openingStock = openingStockRepo.findByObId(tableData.getOutwardBatchNo()).get();
+				openingStock.setQtyAvlForDc(openingStock.getQtyAvlForDc() - tableData.getQty());
+				openingStockRepo.save(openingStock);
+			}
 		} catch (Exception e) {
 			throw new Exception(e);
 		}

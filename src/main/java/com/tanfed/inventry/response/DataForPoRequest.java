@@ -22,4 +22,5 @@ public class DataForPoRequest {
 	private List<String> poNoList;
 	private Double poQty;
 	private Double alreadyIssuedQty;
+	private Long PoPendingFromHO;
 }

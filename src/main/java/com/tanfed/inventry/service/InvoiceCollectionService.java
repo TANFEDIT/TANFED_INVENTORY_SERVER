@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 
-import com.tanfed.inventry.dto.FundTransferDto;
 import com.tanfed.inventry.model.*;
 import com.tanfed.inventry.response.InvoiceCollectionResponseData;
 
@@ -20,7 +19,6 @@ public interface InvoiceCollectionService {
 			LocalDate addedToPresentDate, LocalDate dueDate, String icmNo, String collectionProcess, String accountNo,
 			String branchName, LocalDate date, String jwt, String transferType, String toBranchName) throws Exception;
 	
-	public ResponseEntity<String> saveFundTransfer(FundTransferDto obj, String jwt) throws Exception;
 	
 	public String updateAplStatusInvoiceCollection(VoucherApproval obj, String jwt) throws Exception;
 	

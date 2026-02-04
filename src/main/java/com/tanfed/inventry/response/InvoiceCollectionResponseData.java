@@ -39,7 +39,7 @@ public class InvoiceCollectionResponseData {
 	private Integer NoOfInvoicesPresented;
 
 	private Integer NoOfInvoicesCollected;
-	private Double noOfInvoicesTransferedToHO;
+	private Double transferedToHO;
 		
 	private Set<String> branchNameList;
 	private List<Long> accountNoList;

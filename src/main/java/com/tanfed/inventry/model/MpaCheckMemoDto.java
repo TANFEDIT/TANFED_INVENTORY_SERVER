@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.tanfed.inventry.entity.MpaBillEntry;
+import com.tanfed.inventry.entity.MpaBillEntryEmpTable;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -41,7 +42,7 @@ public class MpaCheckMemoDto {
 	private String claimBillNo;
 	private LocalDate claimBillDate;
 	private Double totalBillValue;
-	
+	private List<MpaBillEntryEmpTable> empData;
 	private List<String> designation;
 	private String voucherStatus;
 

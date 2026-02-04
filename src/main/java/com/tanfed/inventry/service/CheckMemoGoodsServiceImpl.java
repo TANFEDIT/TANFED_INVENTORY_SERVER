@@ -22,7 +22,6 @@ import com.tanfed.inventry.entity.CheckMemoGoods;
 import com.tanfed.inventry.entity.PurchaseBooking;
 import com.tanfed.inventry.entity.PurchaseOrder;
 import com.tanfed.inventry.model.GrnTableDataForPurchaseBooking;
-import com.tanfed.inventry.model.JournalVoucher;
 import com.tanfed.inventry.model.ProductMaster;
 import com.tanfed.inventry.model.SupplierAdvance;
 import com.tanfed.inventry.model.VoucherApproval;
@@ -117,19 +116,6 @@ public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
 					data.setTotalSupplierInvQty(
 							purchaseBooking.getGrnTableData().stream().mapToDouble(item -> item.getInvoiceQty()).sum());
 
-					purchaseBooking.getJvList().forEach(item -> {
-						try {
-							JournalVoucher journalVoucher = accountsService
-									.getAccountsVoucherByVoucherNoHandler("journalVoucher", item, jwt)
-									.getJournalVoucherData();
-							if (journalVoucher.getJvFor().equals("Net Purchase Value")) {
-								data.setPurchaseJvNo(journalVoucher.getVoucherNo());
-								data.setJvQty(journalVoucher.getDerivedQty());
-							}
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					});
 					if (supplierAdvanceNo != null && !supplierAdvanceNo.isEmpty()) {
 						SupplierAdvance supplierAdvance = saList.stream()
 								.filter(item -> item.getSupplierAdvanceNo().equals(supplierAdvanceNo))

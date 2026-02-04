@@ -124,18 +124,18 @@ public class PoServiceImpl implements PoService {
 	private void requestBasedPoData(DataForPo data, String productName, String officeName, String purchaseOrderType,
 			LocalDate date) throws Exception {
 		List<PoRequest> poReqNotFullfilledData = porequestService.getPoRequestData().stream().filter(item -> {
-			double[] sum = item.getTableData().stream().reduce(new double[2], (acc, temp) -> {
-				acc[0] += temp.getRequestQuantity();
-				acc[1] += temp.getAlreadyIssuedQty();
-				return acc;
-			}, (acc1, acc2) -> {
-				acc1[0] += acc2[0];
-				acc1[1] += acc2[1];
-				return acc1;
-			});
-			boolean isProductMatch = item.getTableData().stream()
-					.allMatch(temp -> productName.equals(temp.getProductName()));
-			return sum[0] > sum[1] && isProductMatch && "Approved".equals(item.getVoucherStatus());
+			double[] sum = item.getTableData().stream().filter(i -> i.getProductName().equals(productName))
+					.reduce(new double[2], (acc, temp) -> {
+						acc[0] += temp.getRequestQuantity();
+						acc[1] += temp.getAlreadyIssuedQty();
+						return acc;
+					}, (acc1, acc2) -> {
+						acc1[0] += acc2[0];
+						acc1[1] += acc2[1];
+						return acc1;
+					});
+			return sum[0] > sum[1] && !item.getDate().isBefore(date.minusDays(30))
+					&& "Approved".equals(item.getVoucherStatus());
 		}).collect(Collectors.toList());
 		data.setOfficeList(
 				poReqNotFullfilledData.stream().map(item -> item.getOfficeName()).collect(Collectors.toSet()));
@@ -193,8 +193,8 @@ public class PoServiceImpl implements PoService {
 		poRequest.getTableData().forEach(item -> {
 			if (item.getProductName().equals(productName)) {
 				if (item.getPoRequestFor().equals(poReqFor)) {
-					item.setAlreadyIssuedQty(RoundToDecimalPlace
-							.roundToTwoDecimalPlaces(item.getAlreadyIssuedQty() - qty));
+					item.setAlreadyIssuedQty(
+							RoundToDecimalPlace.roundToTwoDecimalPlaces(item.getAlreadyIssuedQty() - qty));
 				}
 			}
 		});

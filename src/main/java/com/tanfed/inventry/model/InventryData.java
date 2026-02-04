@@ -49,5 +49,4 @@ public class InventryData {
 	private ICP1Data invoiceCollectionAvailable;
 	private ICP1Data presentToCCB;
 	private ICP1Data collectionUpdate;
-	private FundTransfer fundTransfer;
 }

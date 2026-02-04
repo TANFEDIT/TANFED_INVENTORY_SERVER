@@ -43,7 +43,7 @@ public interface RegisterService {
 			String branchName, LocalDate toDate, String jwt) throws Exception;
 	
 	public List<InvoiceCollectionRegisterTable> getFundTransferRegister(String officeName, String month, LocalDate fromDate, 
-			String branchName, LocalDate toDate, String accountNo) throws Exception;
+			String branchName, LocalDate toDate, String accountNo, String jwt) throws Exception;
 	
 	
 	

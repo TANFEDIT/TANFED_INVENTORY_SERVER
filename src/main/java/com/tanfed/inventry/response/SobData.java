@@ -3,6 +3,7 @@ package com.tanfed.inventry.response;
 import java.util.List;
 
 import com.tanfed.inventry.dto.CheckMemoGoodsDto;
+import com.tanfed.inventry.dto.SupplierInvoiceDto;
 import com.tanfed.inventry.dto.TcCheckMemoDto;
 import com.tanfed.inventry.entity.*;
 import com.tanfed.inventry.model.MpaCheckMemoDto;
@@ -18,7 +19,7 @@ import lombok.NoArgsConstructor;
 public class SobData {
 
 	private SupplierInvoiceDetails supplierInvoiceDetails;
-	private List<SupplierInvoiceDetails> supplierInvoice;
+	private List<SupplierInvoiceDto> supplierInvoice;
 	
 	private PurchaseBooking purchaseBookingData;
 	private List<PurchaseBookingDto> purchaseBooking;

@@ -30,6 +30,13 @@ public interface AccountsService {
 	public List<SupplierAdvance> fetchOutstandingAdvancesByProductHandler(@RequestParam String productName,
 			@RequestHeader("Authorization") String jwt) throws Exception;
 
+	@GetMapping("/api/accounts/accountsfilterdata")
+	public Vouchers getFilteredDataHandler(@RequestParam String formType, @RequestParam String officeName,
+			@RequestParam(required = false) String voucherStatus, @RequestParam(required = false) String voucherNo,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+			@RequestHeader("Authorization") String jwt) throws Exception;
+
 	@GetMapping("/api/accounts/getvouchersbyvoucherno")
 	public Vouchers getAccountsVoucherByVoucherNoHandler(@RequestParam String formType, @RequestParam String voucherNo,
 			@RequestHeader("Authorization") String jwt) throws Exception;

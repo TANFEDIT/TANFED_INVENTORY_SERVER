@@ -1,8 +1,6 @@
 package com.tanfed.inventry.model;
 
-
 import java.util.List;
-
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,4 +15,5 @@ public class Vouchers {
 	private AdjustmentReceiptVoucher adjustmentReceiptVoucherData;
 	private PaymentVoucher paymentVoucherData;
 	private List<SundryDrOb> sundryDrOb;
+	private List<PaymentVoucher> paymentVoucher;
 }
