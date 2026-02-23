@@ -2,6 +2,7 @@ package com.tanfed.inventry.model;
 
 import java.util.List;
 
+import com.tanfed.inventry.dto.GrnDto;
 import com.tanfed.inventry.dto.GtnDTO;
 import com.tanfed.inventry.entity.*;
 
@@ -16,35 +17,35 @@ public class InventryData {
 
 	private DeliveryChellan dcData;
 	private List<DeliveryChellan> dc;
-	
+
 	private GRN grnData;
-	private List<GRN> grn;
-	
+	private List<GrnDto> grn;
+
 	private GTN gtnData;
 	private List<GTN> gtn;
 	private SalesReturn salesReturnData;
 	private List<GtnDTO> salesReturn;
 	private DespatchAdvice despatchAdviceData;
 	private List<DespatchAdvice> despatchAdvice;
-	
+
 	private Invoice invoiceData;
 	private List<Invoice> invoice;
-	
+
 	private OpeningStock openingStockData;
 	private List<OpeningStock> openingStock;
-	
+
 	private PoRequest poRequestData;
 	private List<PoRequest> poRequest;
-	
+
 	private PurchaseOrder purchaseOrderData;
 	private List<PurchaseOrder> purchaseOrder;
-	
+
 	private TermsPrice termsAndPriceData;
-	
+
 	private List<TermsPrice> termsAndPrice;
 	private List<TermsPrice> priceCircular;
 	private List<PurchaseOrder> purchaseOrderRO;
-	
+
 	private ICP1Data invoiceAckEntry;
 	private ICP1Data invoiceCollectionAvailable;
 	private ICP1Data presentToCCB;

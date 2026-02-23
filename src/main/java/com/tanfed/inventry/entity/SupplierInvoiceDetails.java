@@ -28,7 +28,7 @@ public class SupplierInvoiceDetails {
 	private Double invoiceQtyAvlForGrnAttach;
 
 	private List<String> empId;
-	
+
 	private LocalDate date;
 
 	private LocalDate createdAt = LocalDate.now();
@@ -37,6 +37,7 @@ public class SupplierInvoiceDetails {
 
 	private Double invoiceQty;
 
+	private String invoiceOfficeName;
 
 	private LocalDate invoiceDate;
 
@@ -51,9 +52,9 @@ public class SupplierInvoiceDetails {
 	private String monthOfSupply;
 
 	private String termsMonth;
-	
+
 	private String termsNo;
-	
+
 	private String activity;
 
 	private String productName;

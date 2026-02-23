@@ -12,15 +12,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DataForPoRequest {
 
+	private List<String> supplierNameList;
 	private Set<String> productNameList;
 	private List<String> districtList;
-	private String supplierName;
 	private String supplierGst;
 	private String standardUnits;
 	private String productCategory;
 	private String productGroup;
 	private List<String> poNoList;
 	private Double poQty;
-	private Double alreadyIssuedQty;
+	private Double consumedQty;
 	private Long PoPendingFromHO;
 }

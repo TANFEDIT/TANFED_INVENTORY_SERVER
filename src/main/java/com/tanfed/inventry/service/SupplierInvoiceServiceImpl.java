@@ -133,28 +133,29 @@ public class SupplierInvoiceServiceImpl implements SupplierInvoiceService {
 				if (poNo != null && !poNo.isEmpty()) {
 					PurchaseOrder purchaseOrder = poService.getPoByPoNo(poNo);
 					if (monthOfSupply != null && !monthOfSupply.isEmpty()) {
-						data.setInvoiceTableData(supplierInvoiceDetailsRepo.findByMonthOfSupply(monthOfSupply).stream()
-								.filter(item -> item.getProductName().equals(productName)
-										&& item.getInvoiceQtyAvlForGrnAttach() > 0
-										&& item.getTermsNo().equals(purchaseOrder.getTermsPrice().getTermsNo()))
-								.map(item -> new SupplierInvoiceInfoGrnAttach(item.getTermsNo(),
-										item.getInvoiceNumber(), item.getInvoiceDate(), item.getInvoiceQty(),
-										item.getInvoiceQtyAvlForGrnAttach(), item.getTotalInvoiceValue()))
-								.collect(Collectors.toList()));
 					}
 					data.setOfficeNameList(purchaseOrder.getTableData().stream().map(item -> item.getRegion())
 							.collect(Collectors.toSet()));
 					data.setPoDate(purchaseOrder.getDate());
 					if (officeName != null && !officeName.isEmpty()) {
-						data.setPoQty(purchaseOrder.getTableData().stream()
-								.filter(item -> item.getRegion().equals(officeName))
-								.mapToDouble(item -> item.getPoIssueQty()).sum());
-						data.setTotalGrnQty(purchaseOrder.getGrnData().stream()
-								.filter(item -> item.getOfficeName().equals(officeName))
-								.mapToDouble(item -> item.getMaterialReceivedQuantity()).sum());
-						data.setTotalBookedQty(purchaseOrder.getGrnData().stream()
-								.filter(item -> item.getOfficeName().equals(officeName))
-								.mapToDouble(item -> item.getGrnAttachQty()).sum());
+						data.setInvoiceTableData(supplierInvoiceDetailsRepo.findByMonthOfSupply(monthOfSupply).stream()
+								.filter(item -> item.getProductName().equals(productName)
+										&& item.getInvoiceQtyAvlForGrnAttach() > 0
+										&& item.getInvoiceOfficeName().equals(officeName)
+										&& item.getTermsNo().equals(purchaseOrder.getTermsPrice().getTermsNo()))
+								.map(item -> new SupplierInvoiceInfoGrnAttach(item.getTermsNo(),
+										item.getInvoiceNumber(), item.getInvoiceDate(), item.getInvoiceQty(),
+										item.getInvoiceQtyAvlForGrnAttach(), item.getTotalInvoiceValue()))
+								.collect(Collectors.toList()));
+						data.setPoQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(purchaseOrder.getTableData()
+								.stream().filter(item -> item.getRegion().equals(officeName))
+								.mapToDouble(item -> item.getPoIssueQty()).sum()));
+						data.setTotalGrnQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(purchaseOrder.getGrnData()
+								.stream().filter(item -> item.getOfficeName().equals(officeName))
+								.mapToDouble(item -> item.getMaterialReceivedQuantity()).sum()));
+						data.setTotalBookedQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(purchaseOrder.getGrnData()
+								.stream().filter(item -> item.getOfficeName().equals(officeName))
+								.mapToDouble(item -> item.getGrnAttachQty()).sum()));
 						data.setGrnTableData(purchaseOrder.getGrnData().stream()
 								.filter(item -> item.getOfficeName().equals(officeName))
 								.filter(item -> item.getGrnQtyAvlForGrnAttach() > 0)

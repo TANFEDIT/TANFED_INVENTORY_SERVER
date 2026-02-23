@@ -17,34 +17,34 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PoReqTableData {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column
-    private String poRequestFor;
+	@Column
+	private String poRequestFor;
 
-    @Column
-    private String productCategory;
+	@Column
+	private String productCategory;
 
-    @Column
-    private String productGroup;
+	@Column
+	private String productGroup;
 
-    @Column
-    private String productName;
+	@Column
+	private String productName;
 
-    @Column
-    private Double requestQuantity;
+	@Column
+	private Double requestQuantity;
 
-    @Column
-    private String standardUnits;
+	@Column
+	private String standardUnits;
 
-    @Column
-    private String supplierName;
+	@Column
+	private String supplierName;
 
-    @Column
-    private String supplierGst;
+	@Column
+	private String supplierGst;
 
-    @Column
-    private Double alreadyIssuedQty;
+	@Column
+	private Double alreadyIssuedQty;
 }

@@ -199,8 +199,10 @@ public class TcServiceIpml implements TcService {
 						data.setGodownBuyerName(gtn.getDestination());
 						data.setQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(
 								gtn.getGtnTableData().stream().mapToDouble(item -> item.getQty()).sum()));
-						data.setTransportCharges(gtn.getTransportChargesValue());
-						data.setTransportChargesPerQty(gtn.getTransportChargesPerQty());
+						data.setTransportCharges(
+								RoundToDecimalPlace.roundToThreeDecimalPlaces(gtn.getTransportChargesValue()));
+						data.setTransportChargesPerQty(
+								RoundToDecimalPlace.roundToThreeDecimalPlaces(gtn.getTransportChargesPerQty()));
 						data.setTableData(gtn
 								.getGtnTableData().stream().map(item -> new ProductClassificationTableBillEntry(null,
 										gtn.getProductName(), item.getMrp(), item.getQty(), null, null))
@@ -210,12 +212,13 @@ public class TcServiceIpml implements TcService {
 								.stream().mapToDouble(item -> item.getReceivedQty()).sum()));
 					} else {
 						DeliveryChellan deliveryChellan = dcService.getDcDataByDcNo(idNo);
-						data.setTransportCharges(deliveryChellan.getTransportChargesValue());
+						data.setTransportCharges(RoundToDecimalPlace
+								.roundToThreeDecimalPlaces(deliveryChellan.getTransportChargesValue()));
 						data.setIfmsId(deliveryChellan.getIfmsId());
 						data.setGodownBuyerName(deliveryChellan.getNameOfInstitution());
 						data.setQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(deliveryChellan.getTotalQty()));
-						data.setTransportChargesPerQty(
-								deliveryChellan.getTransportChargesValue() / deliveryChellan.getTotalQty());
+						data.setTransportChargesPerQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+								deliveryChellan.getTransportChargesValue() / deliveryChellan.getTotalQty()));
 						data.setTableData(deliveryChellan
 								.getDcTableData().stream().map(item -> new ProductClassificationTableBillEntry(null,
 										item.getProductName(), item.getMrp(), item.getQty(), null, null))
@@ -268,10 +271,14 @@ public class TcServiceIpml implements TcService {
 						data.setGodownBuyerName(gtn.getDestination());
 						data.setQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(
 								gtn.getGtnTableData().stream().mapToDouble(item -> item.getQty()).sum()));
-						data.setTransportCharges(gtn.getTransportChargesValue());
-						data.setLoadingCharges(gtn.getLoadingChargesValue());
-						data.setLoadingChargesPerQty(gtn.getLoadingChargesPerQty());
-						data.setTransportChargesPerQty(gtn.getTransportChargesPerQty());
+						data.setTransportCharges(
+								RoundToDecimalPlace.roundToThreeDecimalPlaces(gtn.getTransportChargesValue()));
+						data.setLoadingCharges(
+								RoundToDecimalPlace.roundToThreeDecimalPlaces(gtn.getLoadingChargesValue()));
+						data.setLoadingChargesPerQty(
+								RoundToDecimalPlace.roundToThreeDecimalPlaces(gtn.getLoadingChargesPerQty()));
+						data.setTransportChargesPerQty(
+								RoundToDecimalPlace.roundToThreeDecimalPlaces(gtn.getTransportChargesPerQty()));
 						data.setTableData(gtn
 								.getGtnTableData().stream().map(item -> new ProductClassificationTableBillEntry(null,
 										gtn.getProductName(), item.getMrp(), item.getQty(), null, null))
@@ -281,15 +288,17 @@ public class TcServiceIpml implements TcService {
 								.stream().mapToDouble(item -> item.getReceivedQty()).sum()));
 					} else {
 						DeliveryChellan deliveryChellan = dcService.getDcDataByDcNo(idNo);
-						data.setTransportCharges(deliveryChellan.getTransportChargesValue());
-						data.setLoadingCharges(deliveryChellan.getLoadingChargesValue());
+						data.setTransportCharges(RoundToDecimalPlace
+								.roundToThreeDecimalPlaces(deliveryChellan.getTransportChargesValue()));
+						data.setLoadingCharges(RoundToDecimalPlace
+								.roundToThreeDecimalPlaces(deliveryChellan.getLoadingChargesValue()));
 						data.setIfmsId(deliveryChellan.getIfmsId());
 						data.setGodownBuyerName(deliveryChellan.getNameOfInstitution());
 						data.setQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(deliveryChellan.getTotalQty()));
-						data.setTransportChargesPerQty(
-								deliveryChellan.getTransportChargesValue() / deliveryChellan.getTotalQty());
-						data.setLoadingChargesPerQty(
-								deliveryChellan.getLoadingChargesValue() / deliveryChellan.getTotalQty());
+						data.setTransportChargesPerQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+								deliveryChellan.getTransportChargesValue() / deliveryChellan.getTotalQty()));
+						data.setLoadingChargesPerQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+								deliveryChellan.getLoadingChargesValue() / deliveryChellan.getTotalQty()));
 						data.setTableData(deliveryChellan
 								.getDcTableData().stream().map(item -> new ProductClassificationTableBillEntry(null,
 										item.getProductName(), item.getMrp(), item.getQty(), null, null))
@@ -376,7 +385,7 @@ public class TcServiceIpml implements TcService {
 			throw new Exception(e);
 		}
 	}
-	
+
 	@Autowired
 	private TcBillEntryRepo tcBillEntryRepo;
 
@@ -514,7 +523,8 @@ public class TcServiceIpml implements TcService {
 					data.setGstData(contractorInfo.getGstData());
 					data.setClaimBillDate(tcBillEntry.getClaimBillDate());
 					data.setClaimBillNo(tcBillEntry.getClaimBillNo());
-					data.setTotalBillValue(tcBillEntry.getTotalBillValue());
+					data.setTotalBillValue(
+							RoundToDecimalPlace.roundToThreeDecimalPlaces(tcBillEntry.getTotalBillValue()));
 					data.setChargesData(mapChargesData(tcBillEntry));
 					data.setRecoveryData(mapRecoveryData(tcBillEntry));
 				}

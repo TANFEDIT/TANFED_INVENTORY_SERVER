@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import com.tanfed.inventry.entity.OutwardBatch;
 
 import jakarta.transaction.Transactional;
+
 @Repository
 public interface OutwardBatchRepo extends JpaRepository<OutwardBatch, Long> {
 

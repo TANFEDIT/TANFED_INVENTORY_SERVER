@@ -12,22 +12,22 @@ import lombok.NoArgsConstructor;
 public class FundTransferMonthAndBranchAbstractTableData {
 
 	private LocalDate date;
-	
+
 	private Double openingBalance;
-	 
+
 	private Double collection;
 
 	private Double ibrAmount;
-	
+
 	private Double total;
-	
+
 	private Double currentTransfer;
-	
+
 	private Double ibtAmount;
-	
+
 	private Double bankCharges;
-	
+
 	private Double others;
-	
+
 	private Double closingBalance;
 }

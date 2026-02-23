@@ -10,15 +10,16 @@ import com.tanfed.inventry.response.DataForSupplierInvoice;
 
 public interface SupplierInvoiceService {
 
-	public ResponseEntity<String> saveSupplierInvoice(String obj, MultipartFile[] files, String jwt, String jvs) throws Exception;
-	
-	public DataForSupplierInvoice getDataForSupplierInvoice(String activity, String jwt, String supplierName, String monthOfSupply,
-			String productName, String poMonth, String poNo, String officeName, String termsMonth,
+	public ResponseEntity<String> saveSupplierInvoice(String obj, MultipartFile[] files, String jwt, String jvs)
+			throws Exception;
+
+	public DataForSupplierInvoice getDataForSupplierInvoice(String activity, String jwt, String supplierName,
+			String monthOfSupply, String productName, String poMonth, String poNo, String officeName, String termsMonth,
 			String termsNo, String invoiceNumber, String invoiceNo) throws Exception;
-	
+
 	public ResponseEntity<String> updateSupplierInvoiceQtyForGrnAttach(String invoiceNo, Double qty) throws Exception;
-	
+
 	public SupplierInvoiceDetails getSupplierInvoiceByInvoiceNumber(String invoiceNumber) throws Exception;
-	
+
 	public List<SupplierInvoiceDetails> getSupplierInvoiceDetails() throws Exception;
 }

@@ -12,16 +12,16 @@ import lombok.NoArgsConstructor;
 public class PurchaseTermsPricingTPM {
 
 	private Double mrp;
-	
+
 	private Double margin;
-	
+
 	private Double basicPrice;
-	
+
 	private Double gstRate;
-	
+
 	private Double gstValue;
-	
+
 	private Double gstOnMargin;
-	
+
 	private Double netPrice;
 }

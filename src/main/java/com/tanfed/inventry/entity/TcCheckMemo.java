@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TcCheckMemo {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -27,7 +27,7 @@ public class TcCheckMemo {
 	private String officeName;
 	private List<String> designation;
 	private String voucherStatus;
-	
+
 	private String checkMemoNo;
 	private String financialYear;
 	private String financialMonth;
@@ -55,7 +55,7 @@ public class TcCheckMemo {
 	private List<String> jvNo;
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<TcCheckMemoChargesTable> chargesData;
-	
+
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<StockRecoveryTable> recoveryData;
 }

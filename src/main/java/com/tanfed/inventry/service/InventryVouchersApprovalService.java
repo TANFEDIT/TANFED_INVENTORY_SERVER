@@ -184,6 +184,7 @@ public class InventryVouchersApprovalService {
 				grn.getEmpId().add(empId);
 				grn.setUnloadingBillEntry(false);
 				grn.setBillNo("");
+
 				if (obj.getVoucherStatus().equals("Approved")) {
 					grn.setApprovedDate(LocalDate.now());
 					grnService.updateClosingBalance(grn);
@@ -356,6 +357,7 @@ public class InventryVouchersApprovalService {
 				wagonData.setWagonStatus(obj.getVoucherStatus());
 				grn.getEmpId().add(empId);
 				grn.setWagonBillEntry(false);
+				gtnService.updateJVStatusInAcc(grn.getJvNo(), obj.getVoucherStatus(), jwt);
 				if (obj.getVoucherStatus().equals("Approved")) {
 					wagonData.setWagonApprovedDate(LocalDate.now());
 				}
@@ -430,6 +432,8 @@ public class InventryVouchersApprovalService {
 				purchaseBookingService.updateAccJv(purchaseBooking, jwt);
 				if (obj.getVoucherStatus().equals("Approved")) {
 					purchaseBooking.setApprovedDate(LocalDate.now());
+				} else if (obj.getVoucherStatus().equals("Rejected")) {
+					grnService.revertPurchaseBookingStatus(purchaseBooking.getGrnTableData());
 				}
 				if (oldDesignation == null) {
 					purchaseBooking.setDesignation(Arrays.asList(designation));
@@ -450,6 +454,8 @@ public class InventryVouchersApprovalService {
 				checkMemoGoodsService.updatePvInAcc(checkMemoGoods, jwt);
 				if (obj.getVoucherStatus().equals("Approved")) {
 					checkMemoGoods.setApprovedDate(LocalDate.now());
+				} else if (obj.getVoucherStatus().equals("Rejected")) {
+					checkMemoGoodsService.revertPB(checkMemoGoods.getCheckMemoNo());
 				}
 				if (oldDesignation == null) {
 					checkMemoGoods.setDesignation(Arrays.asList(designation));
@@ -481,23 +487,34 @@ public class InventryVouchersApprovalService {
 				return designation;
 			}
 			case "grnAttach": {
-				PurchaseOrder purchaseOrder = purchaseOrderRepo.findById(Long.valueOf(obj.getId())).orElse(null);
+				GRN grn = grnRepo.findById(Long.valueOf(obj.getId())).orElse(null);
 
-				designation = userService.getNewDesignation(empId);
-				oldDesignation = purchaseOrder.getSobDesignation();
+				if (obj.getVoucherStatus().equals("Rejected")) {
+					if (grn.getSupplierInvoiceNo().contains(", ")) {
+						String[] spInvNo = grn.getSupplierInvoiceNo().split(", ");
+						String[] invQty = grn.getGrnAttachQtyString().split(", ");
+						for (int i = 0; i < spInvNo.length; i++) {
+							SupplierInvoiceDetails invoiceDetails = supplierInvoiceDetailsRepo
+									.findByInvoiceNumber(spInvNo[i]);
+							invoiceDetails.setInvoiceQtyAvlForGrnAttach(
+									invoiceDetails.getInvoiceQtyAvlForGrnAttach() + Double.valueOf(invQty[i]));
+							supplierInvoiceDetailsRepo.save(invoiceDetails);
+						}
+					} else {
+						SupplierInvoiceDetails invoiceDetails = supplierInvoiceDetailsRepo
+								.findByInvoiceNumber(grn.getSupplierInvoiceNo());
+						invoiceDetails.setInvoiceQtyAvlForGrnAttach(invoiceDetails.getInvoiceQtyAvlForGrnAttach()
+								+ Double.valueOf(grn.getGrnAttachQtyString()));
+						supplierInvoiceDetailsRepo.save(invoiceDetails);
+					}
+					grn.setGrnAttachQty(0.0);
+					grn.setGrnAttachQtyString(null);
+					grn.setGrnQtyAvlForGrnAttach(grn.getMaterialReceivedQuantity());
+					grn.setSupplierInvoiceNo(null);
 
-				purchaseOrder.setSobVoucherStatus(obj.getVoucherStatus());
-				purchaseOrder.getEmpId().add(empId);
-
-				if (obj.getVoucherStatus().equals("Approved")) {
-					purchaseOrder.setSobApprovedDate(LocalDate.now());
 				}
-				if (oldDesignation == null) {
-					purchaseOrder.setSobDesignation(Arrays.asList(designation));
-				} else {
-					purchaseOrder.getSobDesignation().add(designation);
-				}
-				purchaseOrderRepo.save(purchaseOrder);
+
+				grnRepo.save(grn);
 				return designation;
 			}
 			case "tcBillEntry": {

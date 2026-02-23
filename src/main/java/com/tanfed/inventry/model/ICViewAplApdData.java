@@ -6,6 +6,7 @@ import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,5 +19,5 @@ public class ICViewAplApdData {
 	private String door;
 	private String street;
 	private String district;
-	private Long pincode;	
+	private Long pincode;
 }

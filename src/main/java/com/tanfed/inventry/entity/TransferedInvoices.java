@@ -18,12 +18,12 @@ import lombok.NoArgsConstructor;
 @Table
 
 public class TransferedInvoices {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private String invoiceNo;
-	
+
 	private LocalDate date;
 }

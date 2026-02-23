@@ -17,9 +17,9 @@ public class PurchaseDayBookQty {
 	private Double buffer;
 	private Double total;
 	private List<PurchaseDayBookQtyGrnData> grnData;
-	
+
 	private Double directBalance;
 	private Double bufferBalance;
-	
+
 	private String status;
 }

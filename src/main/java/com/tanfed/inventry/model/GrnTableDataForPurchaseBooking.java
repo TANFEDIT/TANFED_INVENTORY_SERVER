@@ -13,6 +13,7 @@ import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,7 +23,7 @@ public class GrnTableDataForPurchaseBooking {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private String godownName;
 	private String godownType;
 	private String grnNo;
@@ -33,7 +34,7 @@ public class GrnTableDataForPurchaseBooking {
 	private LocalDate invoiceDate;
 	private String suppliedTo;
 	private String region;
-	
+
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<NonCCInvoiceTableData> nonCcInvoiceData;
 }

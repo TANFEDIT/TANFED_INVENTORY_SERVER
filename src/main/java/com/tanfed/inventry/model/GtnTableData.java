@@ -1,6 +1,5 @@
 package com.tanfed.inventry.model;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tanfed.inventry.entity.GTN;
 
@@ -25,7 +24,7 @@ public class GtnTableData {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private String outwardBatchNo;
 	private Double mrp;
 	private Double qty;
@@ -38,7 +37,7 @@ public class GtnTableData {
 	private String collectionMode;
 	private String termsNo;
 	private String voucherId;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "gtn")
 	@JsonIgnore

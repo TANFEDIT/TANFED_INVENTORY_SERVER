@@ -18,29 +18,19 @@ import lombok.NoArgsConstructor;
 public class DataForTcCheckMemo {
 
 	private List<String> checkMemoNoList;
-	
+
 	private String financialYear;
 	private String financialMonth;
 	private String contractFirm;
 	private String gstNo;
 	private String claimBillNo;
-	private LocalDate claimBillDate;	
+	private LocalDate claimBillDate;
 	private Double totalBillValue;
 	private String gstReturnType;
 	private List<ContractorGstData> gstData;
 	private List<TcCheckMemoChargesTable> chargesData;
 
-//	private Double totalCgstValue;
-//	private Double totalSgstValue;
-//	private Double totalPaymentValue;
-	
 	private List<StockRecoveryTable> recoveryData;
 	private List<TcCheckMemo> tcCheckMemoData;
-	
-	
-	
-	
-	
-	
-	
+
 }

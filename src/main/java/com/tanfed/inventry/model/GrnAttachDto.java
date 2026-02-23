@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GrnAttachDto {
 
-	private String invoiceNo;
+	private List<String> invoiceNo;
 	private List<String> grnNo;
-	private Double currentBookingQty;
 }

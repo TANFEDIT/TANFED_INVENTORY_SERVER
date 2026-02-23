@@ -10,17 +10,22 @@ import com.tanfed.inventry.response.DataForPo;
 
 public interface PoService {
 
-	public ResponseEntity<String> savePurchaseOrder(PurchaseOrder obj, String jwt)  throws Exception;
+	public ResponseEntity<String> savePurchaseOrder(PurchaseOrder obj, String jwt) throws Exception;
 
 	public ResponseEntity<String> editPurchaseOrder(PurchaseOrder obj, String jwt) throws Exception;
-	
-	public DataForPo getDataForPurchaseOrder(String activity, String productName, String jwt, String termsMonth, String termsNo, 
-			String poBased, String officeName, String purchaseOrderType, LocalDate date) throws Exception;
-	
+
+	public DataForPo getDataForPurchaseOrder(String activity, String supplierName, String productName, String jwt,
+			String termsMonth, String termsNo, String poBased, String officeName, String purchaseOrderType,
+			LocalDate date) throws Exception;
+
 	public List<PurchaseOrder> getPoData() throws Exception;
 
-	public List<String> getUnfullfilledPoNo(String productName, String officeName, String poNoFor, LocalDate date) throws Exception;
-	
+	public List<String> getUnfullfilledPoNo(String productName, String officeName, String poNoFor, LocalDate date)
+			throws Exception;
+
 	public PurchaseOrder getPoByPoNo(String poNo) throws Exception;
-		
+
+	public List<String> getPoNoForConfirmativePOReq(String productName, String officeName, String poNoFor,
+			LocalDate date) throws Exception;
+
 }

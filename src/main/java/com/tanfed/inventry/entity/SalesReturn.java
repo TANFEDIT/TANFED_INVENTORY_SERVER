@@ -29,39 +29,39 @@ public class SalesReturn {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private LocalDate createdAt = LocalDate.now();
-	
+
 	private String officeName;
-	
+
 	private String voucherStatus;
-	
+
 	private List<String> designation;
-	
+
 	private List<String> empId;
-	
+
 	private LocalDate approvedDate;
-	
+
 	private LocalDate date;
-	
+
 	private String gtnNo;
-	
+
 	private String activity;
-	
+
 	private String month;
 
 	private String suppliedGodown;
-	
+
 	private String godownName;
-	
+
 	private String jvNo;
-	
+
 	private String invoiceNo;
-	
+
 	@ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "invoice_id")
+	@JoinColumn(name = "invoice_id")
 	private Invoice invoice;
-	
+
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "salesReturn")
 	private List<GtnInvoiceData> invoiceTableData;
 	private Boolean billEntry;

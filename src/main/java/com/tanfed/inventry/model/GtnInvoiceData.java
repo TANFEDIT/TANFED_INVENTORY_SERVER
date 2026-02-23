@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table
 public class GtnInvoiceData {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;

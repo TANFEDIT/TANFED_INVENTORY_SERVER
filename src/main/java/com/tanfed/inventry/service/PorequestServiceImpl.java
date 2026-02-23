@@ -93,42 +93,45 @@ public class PorequestServiceImpl implements PorequestService {
 
 	@Override
 	public DataForPoRequest getDataForPoRequest(String officeName, String activity, String jwt, String productName,
-			String purchaseOrderType, String poNo, LocalDate date) throws Exception {
+			String supplierName, String purchaseOrderType, String poNo, LocalDate date) throws Exception {
 		try {
 			DataForPoRequest data = new DataForPoRequest();
 			if (!officeName.isEmpty() && officeName != null) {
 				OfficeInfo officeInfo = masterService.getOfficeInfoByOfficeNameHandler(jwt, officeName);
 				data.setDistrictList(officeInfo.getDistrictList());
 				if (!activity.isEmpty() && activity != null) {
-					data.setProductNameList(termsPriceService.fetchApprovedProductName(activity));
-					if (!productName.isEmpty() && productName != null) {
-						ProductMaster productMaster = masterService.getProductDataByProductNameHandler(jwt,
-								productName);
-						data.setProductCategory(productMaster.getProductCategory());
-						data.setProductGroup(productMaster.getProductGroup());
-						data.setStandardUnits(productMaster.getStandardUnits());
-						data.setSupplierGst(productMaster.getSupplierGst());
-						data.setSupplierName(productMaster.getSupplierName());
-						data.setPoPendingFromHO(
-								getPoRequestDataByOfficeName(officeName)
-										.stream().filter(
-												i -> i.getVoucherStatus().equals("Approved")
-														&& i.getTableData().stream()
-																.anyMatch(p -> p.getAlreadyIssuedQty() == 0
-																		&& p.getProductName().equals(productName)))
-										.count());
-						if (!purchaseOrderType.isEmpty() && purchaseOrderType.equals("Confirmative")) {
-							data.setPoNoList(poService.getUnfullfilledPoNo(productName, officeName, "poReq", date));
-							if (!poNo.isEmpty() && poNo != null) {
-								PurchaseOrder purchaseOrder = poService.getPoByPoNo(poNo);
-								data.setPoQty(purchaseOrder.getTableData().stream()
-										.filter(item -> item.getRegion().equals(officeName))
-										.mapToDouble(item -> item.getPoIssueQty()).sum());
+					data.setSupplierNameList(masterService.getSupplierNameHadnler(jwt, activity));
+					if (!supplierName.isEmpty() && supplierName != null) {
+						data.setProductNameList(termsPriceService.fetchApprovedProductName(activity, supplierName));
+						if (!productName.isEmpty() && productName != null) {
+							ProductMaster productMaster = masterService.getProductDataByProductNameHandler(jwt,
+									productName);
+							data.setProductCategory(productMaster.getProductCategory());
+							data.setProductGroup(productMaster.getProductGroup());
+							data.setStandardUnits(productMaster.getStandardUnits());
+							data.setSupplierGst(productMaster.getSupplierGst());
+							data.setPoPendingFromHO(getPoRequestDataByOfficeName(officeName)
+									.stream().filter(
+											i -> i.getVoucherStatus().equals("Approved")
+													&& i.getTableData().stream()
+															.anyMatch(p -> p.getAlreadyIssuedQty() == 0
+																	&& p.getProductName().equals(productName)))
+									.count());
+							if (!purchaseOrderType.isEmpty() && purchaseOrderType.equals("Confirmative")) {
+								data.setPoNoList(
+										poService.getPoNoForConfirmativePOReq(productName, officeName, "poReq", date));
+								if (!poNo.isEmpty() && poNo != null) {
+									PurchaseOrder purchaseOrder = poService.getPoByPoNo(poNo);
+									data.setPoQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(purchaseOrder
+											.getTableData().stream().filter(item -> item.getRegion().equals(officeName))
+											.mapToDouble(item -> item.getPoIssueQty()).sum()));
 
-								data.setAlreadyIssuedQty(purchaseOrder.getGrnData().stream()
-										.filter(itemData -> itemData.getOfficeName().equals(officeName))
-										.mapToDouble(temp -> temp.getMaterialReceivedQuantity()).sum());
+									data.setConsumedQty(RoundToDecimalPlace
+											.roundToThreeDecimalPlaces(purchaseOrder.getGrnData().stream()
+													.filter(itemData -> itemData.getOfficeName().equals(officeName))
+													.mapToDouble(temp -> temp.getMaterialReceivedQuantity()).sum()));
 
+								}
 							}
 						}
 					}

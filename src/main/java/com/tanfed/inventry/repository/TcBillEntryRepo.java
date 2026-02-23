@@ -9,20 +9,20 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.tanfed.inventry.entity.TcBillEntry;
+
 @Repository
 public interface TcBillEntryRepo extends JpaRepository<TcBillEntry, Long> {
 
 	public Optional<TcBillEntry> findByCheckMemoNo(String checkMemoNo);
-	
+
 	public List<TcBillEntry> findByOfficeName(String officeName);
 
 	public TcBillEntry findByClaimBillNo(String claimBillNo);
-	
+
 	@Query("SELECT e FROM TcBillEntry e WHERE (e.voucherStatus = 'Pending' OR e.voucherStatus = 'Verified') AND e.officeName =:officeName")
 	public List<TcBillEntry> findPendingDataByOfficeName(@Param("officeName") String officeName);
-	
+
 	@Query("SELECT e FROM TcBillEntry e WHERE e.voucherStatus = 'Approved' AND e.officeName =:officeName")
 	public List<TcBillEntry> findApprovedDataByOfficeName(@Param("officeName") String officeName);
-	
 
 }

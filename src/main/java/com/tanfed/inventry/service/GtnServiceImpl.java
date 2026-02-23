@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -30,10 +31,12 @@ import com.tanfed.inventry.model.BuyerFirmInfo;
 import com.tanfed.inventry.model.ContractorChargesData;
 import com.tanfed.inventry.model.ContractorInfo;
 import com.tanfed.inventry.model.GodownInfo;
+import com.tanfed.inventry.model.GodownInsuranceData;
 import com.tanfed.inventry.model.GrnQtyUpdateForDc;
 import com.tanfed.inventry.model.GtnInvoiceData;
 import com.tanfed.inventry.model.GtnTableData;
 import com.tanfed.inventry.model.JournalVoucher;
+import com.tanfed.inventry.model.LicenseData;
 import com.tanfed.inventry.model.ProductMaster;
 import com.tanfed.inventry.model.TableDataForDc;
 import com.tanfed.inventry.model.VoucherApproval;
@@ -248,7 +251,7 @@ public class GtnServiceImpl implements GtnService {
 			switch (gtnFor) {
 			case "Issue":
 				handleIssueGTN(data, officeName, productName, activity, transactionFor, jwt, godownName, toRegion, date,
-						destination, transportCharges, loadingCharges, unloadingCharges, rrNo, daNo);
+						destination, rrNo, daNo);
 				break;
 			case "Receipt":
 				handleReceiptGTN(data, officeName, transactionFor, issuedGtnNo, month, suppliedGodown, invoiceNo, jwt,
@@ -274,22 +277,19 @@ public class GtnServiceImpl implements GtnService {
 	}
 
 	private Set<String> fetchProduct(String officeName) throws Exception {
-		Set<String> productNames;
-		productNames = grnService.getGrnDataByOffficeName(officeName).stream()
+		Set<String> productNames = new HashSet<String>();
+		productNames.addAll(grnService.getGrnDataByOffficeName(officeName).stream()
 				.filter(item -> "Approved".equals(item.getVoucherStatus()) && item.getGrnQtyAvlForDc() > 0)
-				.map(item -> item.getProductName()).collect(Collectors.toSet());
-		if (productNames.isEmpty()) {
-			productNames = openingStockService.getOpeningStockByOfficeName(officeName).stream()
-					.filter(item -> item.getQtyAvlForDc() > 0).map(item -> item.getProductName())
-					.collect(Collectors.toSet());
-		}
+				.map(item -> item.getProductName()).collect(Collectors.toSet()));
+		productNames.addAll(openingStockService.getOpeningStockByOfficeName(officeName).stream()
+				.filter(item -> item.getQtyAvlForDc() > 0).map(item -> item.getProductName())
+				.collect(Collectors.toSet()));
 		return productNames;
 	}
 
 	private void handleIssueGTN(DataForGtn data, String officeName, String productName, String activity,
 			String transactionFor, String jwt, String godownName, String toRegion, LocalDate date, String destination,
-			String transportCharges, String loadingCharges, String unloadingCharges, String rrNo, String daNo)
-			throws Exception {
+			String rrNo, String daNo) throws Exception {
 
 		data.setProductNameList(fetchProduct(officeName));
 
@@ -327,19 +327,24 @@ public class GtnServiceImpl implements GtnService {
 			data.getTableData().addAll(dcService.getObData(officeName, productName, godownName));
 		}
 
-		handleIntraRegionTransfers(data, transactionFor, godownName, date, jwt, officeName, destination);
+		handleIntraRegionTransfers(data, transactionFor, godownName, date, jwt, officeName, destination, activity);
 
 		data.setOfficeList(
 				userService.getOfficeList().stream().map(item -> item.getOfficeName()).collect(Collectors.toList()));
 
+		if (hasText(godownName)) {
+			GodownInfo godownInfo = masterService.getGodownInfoByGodownNameHandler(godownName, jwt);
+			data.setFromIfmsId(godownInfo.getIfmsId());
+
+		}
+
 		if (hasText(toRegion)) {
 			handleInterRegionTransfers(data, officeName, toRegion, transactionFor, destination, godownName, jwt, daNo,
-					productName);
+					productName, activity, date);
 		}
 
 		if ((hasText(godownName) && hasText(destination))) {
-			validateChargesNeed(data, transactionFor, jwt, officeName, date, godownName, destination, transportCharges,
-					loadingCharges);
+			validateChargesNeed(data, transactionFor, jwt, officeName, date, godownName, destination);
 		}
 	}
 
@@ -380,7 +385,8 @@ public class GtnServiceImpl implements GtnService {
 					calculateCharges(data, jwt, officeName, godownName, invoice.getNameOfInstitution(),
 							contractorChargesData);
 					data.setTransporterName(contractorInfo.getContractFirm());
-					data.setUnloadingChargesPerQty(contractorChargesData.getUnloadingCharges());
+					data.setUnloadingChargesPerQty(
+							RoundToDecimalPlace.roundToThreeDecimalPlaces(contractorChargesData.getUnloadingCharges()));
 				}
 			}
 			List<String> gtnNoList = new ArrayList<>();
@@ -401,7 +407,8 @@ public class GtnServiceImpl implements GtnService {
 				ContractorChargesData contractorChargesData = contractor.getChargesData().stream()
 						.filter(i -> (!date.isBefore(i.getRateFrom()) || !date.isAfter(i.getRateFrom())))
 						.collect(Collectors.toList()).get(0);
-				data.setUnloadingChargesPerQty(contractorChargesData.getUnloadingCharges());
+				data.setUnloadingChargesPerQty(
+						RoundToDecimalPlace.roundToThreeDecimalPlaces(contractorChargesData.getUnloadingCharges()));
 			}
 		}
 	}
@@ -417,27 +424,25 @@ public class GtnServiceImpl implements GtnService {
 	}
 
 	private void handleIntraRegionTransfers(DataForGtn data, String transactionFor, String godownName, LocalDate date,
-			String jwt, String officeName, String destination) throws Exception {
+			String jwt, String officeName, String destination, String activity) throws Exception {
 		if (transactionFor.equals("RH to Buffer (Intra)") || transactionFor.equals("Buffer To Buffer (Intra)")
 				|| transactionFor.equals("Wholesale To Retail (Intra)")) {
 			if (hasText(godownName)) {
 				data.setDesignationList(grnService.getGodownNameList(jwt, officeName, "").stream()
 						.filter(item -> !item.equals(godownName)).collect(Collectors.toSet()));
 
-				GodownInfo godownInfo = masterService.getGodownInfoByGodownNameHandler(godownName, jwt);
-				validateGodownInsurance(godownInfo, date);
-				data.setFromIfmsId(godownInfo.getIfmsId());
-
 				if (hasText(destination)) {
 					GodownInfo toGodown = masterService.getGodownInfoByGodownNameHandler(destination, jwt);
 					data.setToIfmsId(toGodown.getIfmsId());
+					validateGodownInsurance(toGodown, date, activity, transactionFor);
 				}
 			}
 		}
 	}
 
 	private void handleInterRegionTransfers(DataForGtn data, String officeName, String toRegion, String transactionFor,
-			String destination, String godownName, String jwt, String daNo, String productName) throws Exception {
+			String destination, String godownName, String jwt, String daNo, String productName, String activity,
+			LocalDate date) throws Exception {
 		String originalOffice = officeName;
 		officeName = toRegion;
 
@@ -446,9 +451,8 @@ public class GtnServiceImpl implements GtnService {
 
 			if (hasText(destination)) {
 				GodownInfo toGodown = masterService.getGodownInfoByGodownNameHandler(destination, jwt);
-				GodownInfo fromGodown = masterService.getGodownInfoByGodownNameHandler(godownName, jwt);
 				data.setToIfmsId(toGodown.getIfmsId());
-				data.setFromIfmsId(fromGodown.getIfmsId());
+				validateGodownInsurance(toGodown, date, activity, transactionFor);
 			}
 
 		} else if (transactionFor.contains("Other Region Direct")) {
@@ -470,18 +474,36 @@ public class GtnServiceImpl implements GtnService {
 					data.setDaProduct(despatchAdvice.getTableData().get(0).getProductName());
 					data.setDaQty(despatchAdvice.getTableData().get(0).getQty().toString());
 				}
-				GodownInfo fromGodown = masterService.getGodownInfoByGodownNameHandler(godownName, jwt);
-				data.setFromIfmsId(fromGodown.getIfmsId());
 			}
 		}
 
 		officeName = originalOffice;
 	}
 
-	private void validateGodownInsurance(GodownInfo godownInfo, LocalDate date) throws Exception {
-		if (date.isBefore(godownInfo.getInsuranceFrom()) || date.isAfter(godownInfo.getInsuranceTo())
-				|| date.isBefore(godownInfo.getValidityFrom()) || date.isAfter(godownInfo.getValidityTo())) {
-			throw new Exception("Update Godown License and Insurance Data!");
+	private void validateGodownInsurance(GodownInfo godownInfo, LocalDate date, String activity, String transactionFor)
+			throws Exception {
+		if (!godownInfo.getInsurance().isEmpty()) {
+			GodownInsuranceData godownInsuranceData = godownInfo.getInsurance().stream()
+					.reduce((first, second) -> second).get();
+			if (date.isBefore(godownInsuranceData.getInsuranceFrom())
+					|| date.isAfter(godownInsuranceData.getInsuranceTo())) {
+				throw new Exception("Update Godown Insurance Data!");
+			}
+		} else {
+			throw new Exception("Update Godown Insurance Data!");
+		}
+		if (!godownInfo.getLicense().isEmpty()) {
+			List<String> allowedTypes = transactionFor.contains("Retail")
+					? Arrays.asList("Retail Sales", "Mixture Production")
+					: Collections.singletonList("Whole Sale");
+			LicenseData licenseData = godownInfo.getLicense().stream()
+					.filter(i -> i.getLicenseFor().equals(activity) && allowedTypes.contains(i.getLicenseType()))
+					.reduce((first, second) -> second).get();
+			if (date.isBefore(licenseData.getValidFrom()) || date.isAfter(licenseData.getValidTo())) {
+				throw new Exception("Update Godown License Data!");
+			}
+		} else {
+			throw new Exception("Update Godown License Data!");
 		}
 	}
 
@@ -504,8 +526,7 @@ public class GtnServiceImpl implements GtnService {
 	}
 
 	private void validateChargesNeed(DataForGtn data, String transactionFor, String jwt, String officeName,
-			LocalDate date, String godownName, String destination, String transportCharges, String loadingCharges)
-			throws Exception {
+			LocalDate date, String godownName, String destination) throws Exception {
 
 		ContractorInfo contractorInfo = getContractor(jwt, officeName, godownName);
 
@@ -518,7 +539,8 @@ public class GtnServiceImpl implements GtnService {
 		data.setTransporterName(contractorInfo.getContractFirm());
 		if (transactionFor.startsWith("RH") || transactionFor.startsWith("Buffer") && hasText(destination)) {
 			calculateCharges(data, jwt, officeName, godownName, destination, contractorChargesData);
-			data.setLoadingChargesPerQty(contractorChargesData.getLoadingCharges());
+			data.setLoadingChargesPerQty(
+					RoundToDecimalPlace.roundToThreeDecimalPlaces(contractorChargesData.getLoadingCharges()));
 		}
 	}
 
@@ -545,9 +567,10 @@ public class GtnServiceImpl implements GtnService {
 			Double transportChargesHill = SlabRateCalculator.calculateSlabRate(isHillKmPresent[0], rates);
 			Double hillCharges = transportChargesHill
 					+ (transportChargesHill * (contractorChargesData.getHillRate() / 100));
-			data.setTransportChargesPerQty(transportChargesPlain + hillCharges);
+			data.setTransportChargesPerQty(
+					RoundToDecimalPlace.roundToThreeDecimalPlaces(transportChargesPlain + hillCharges));
 		} else {
-			data.setTransportChargesPerQty(transportChargesPlain);
+			data.setTransportChargesPerQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(transportChargesPlain));
 
 		}
 	}

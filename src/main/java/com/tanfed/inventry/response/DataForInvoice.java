@@ -27,7 +27,7 @@ public class DataForInvoice {
 	private Double totalInvoiceValue = 0.0;
 	private Double totalMarginValue = 0.0;
 	private Double totalGstOnMargin = 0.0;
-	
+
 	private String ifmsId;
 	private String nameOfInstitution;
 	private String licenseNo;

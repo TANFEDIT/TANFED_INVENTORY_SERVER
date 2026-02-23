@@ -29,7 +29,7 @@ public class DataForGtn {
 	private String standardUnits;
 	private String daProduct;
 	private String daQty;
-	
+
 	private List<String> daNoList;
 	private List<String> officeList;
 	private Set<String> designationList;

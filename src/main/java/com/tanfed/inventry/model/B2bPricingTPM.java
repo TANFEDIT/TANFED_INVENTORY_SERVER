@@ -11,25 +11,25 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Embeddable
 public class B2bPricingTPM {
-	
+
 	@Column
 	private Double b2bBasicPrice;
-	
+
 	@Column
 	private Double b2bCgst;
-	
+
 	@Column
 	private Double b2bSgst;
-	
+
 	@Column
 	private Double b2bMrp;
-	
+
 	@Column
 	private Double b2bNetTotal;
-	
+
 	@Column
 	private Double marginToPaccs;
-	
+
 	@Column
 	private Double paccsMarginGst;
 }

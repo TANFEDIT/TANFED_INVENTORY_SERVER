@@ -11,13 +11,14 @@ import org.springframework.stereotype.Repository;
 import com.tanfed.inventry.entity.TcBillEntryTempTable;
 
 import jakarta.transaction.Transactional;
+
 @Repository
 public interface TcBillEntryTempTableRepo extends JpaRepository<TcBillEntryTempTable, Long> {
 
 	public List<TcBillEntryTempTable> findByClaimBillNo(String claimBillNo);
-	
+
 	public List<TcBillEntryTempTable> findByIdNo(String idNo);
-	
+
 	@Modifying
 	@Transactional
 	@Query("DELETE FROM TcBillEntryTempTable i WHERE i.claimBillNo = :claimBillNo")

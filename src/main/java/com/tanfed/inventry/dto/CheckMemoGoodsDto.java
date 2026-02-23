@@ -38,13 +38,12 @@ public class CheckMemoGoodsDto {
 	private LocalDate poDate;
 	private Double totalPoQty;
 	private String termsNo;
-	
-	
+
 	private Double advOutstanding;
 	private Double gstRate;
-	
+
 	private GstRateData gstData;
-	
+
 	private Double totalGrnQty;
 	private Double totalSupplierInvQty;
 	private Double jvQty;
@@ -56,26 +55,26 @@ public class CheckMemoGoodsDto {
 	private Double calulatedBasicPrice;
 	private Double calculatedTcsTdsValue;
 	private Double calculatedTotal;
-	
+
 	private String creditNoteAdjOptions;
 	private Double creditNoteAdjAmount;
 	private Double creditNoteAdjCnNo;
 	private LocalDate creditNoteCnDate;
-	
+
 	private List<TermsDataForPurchaseBooking> termsData;
-	
+
 	private List<TermsDataForPurchaseBooking> termsDataGeneral;
-	
+
 	private List<TermsDataForPurchaseBooking> termsDataDirect;
-	
+
 	private List<TermsDataForPurchaseBooking> termsDataBuffer;
-	
+
 	private Double totalPaymentValue;
 	private Double netPaymentValue;
 	private Double rate;
 	private Double percentageValue;
 	private Double netPaymentAfterAdjustment;
-	
+
 	private Double difference;
 	private String remarks;
 	private List<JournalVoucher> jvData;

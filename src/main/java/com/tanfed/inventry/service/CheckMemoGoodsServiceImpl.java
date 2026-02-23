@@ -28,6 +28,7 @@ import com.tanfed.inventry.model.VoucherApproval;
 import com.tanfed.inventry.model.Vouchers;
 import com.tanfed.inventry.repository.CheckMemoGoodsRepo;
 import com.tanfed.inventry.repository.PurchaseBookingRepo;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 
 @Service
 public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
@@ -84,15 +85,6 @@ public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
 					data.setGstData(productMaster.getGstData());
 					logger.info("{}", productMaster.getSupplierName());
 
-//					List<BeneficiaryMaster> beneficiaryMasterByName = masterService.getBeneficiaryMasterByName(jwt,
-//							productMaster.getSupplierName(), "Head Office");
-//					if(beneficiaryMasterByName.isEmpty()) {
-//						throw new Exception("No Beneficiary Found!");
-//					}
-//					BeneficiaryMaster beneficiaryMaster = beneficiaryMasterByName
-//							.get(beneficiaryMasterByName.size() - 1);
-//					data.setSupplierAccountNo(beneficiaryMaster.getAccountNo().toString());
-
 					PurchaseOrder purchaseOrder = poService.getPoByPoNo(purchaseBooking.getPoNo());
 					data.setPoDate(purchaseOrder.getDate());
 
@@ -103,7 +95,8 @@ public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
 									&& item.getAvlAmountForCheckMemo() > 0)
 							.collect(Collectors.toList());
 
-					data.setAdvOutstanding(saList.stream().mapToDouble(item -> item.getAvlAmountForCheckMemo()).sum());
+					data.setAdvOutstanding(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+							saList.stream().mapToDouble(item -> item.getAvlAmountForCheckMemo()).sum()));
 					data.setSupplierAdvanceNoList(
 							saList.stream().map(item -> item.getSupplierAdvanceNo()).collect(Collectors.toList()));
 
@@ -112,18 +105,23 @@ public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
 									GrnTableDataForPurchaseBooking::getMaterialReceivedQuantity,
 									(existing, replacement) -> existing));
 
-					data.setTotalGrnQty(map.entrySet().stream().mapToDouble(item -> item.getValue()).sum());
-					data.setTotalSupplierInvQty(
-							purchaseBooking.getGrnTableData().stream().mapToDouble(item -> item.getInvoiceQty()).sum());
+					data.setTotalGrnQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+							map.entrySet().stream().mapToDouble(item -> item.getValue()).sum()));
+					data.setTotalSupplierInvQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(purchaseBooking
+							.getGrnTableData().stream().mapToDouble(item -> item.getInvoiceQty()).sum()));
 
 					if (supplierAdvanceNo != null && !supplierAdvanceNo.isEmpty()) {
 						SupplierAdvance supplierAdvance = saList.stream()
 								.filter(item -> item.getSupplierAdvanceNo().equals(supplierAdvanceNo))
 								.collect(Collectors.toList()).get(0);
-						data.setAdvanceQty(supplierAdvance.getAvlQtyForCheckMemo());
-						data.setAdvanceOutstanding(supplierAdvance.getAvlAmountForCheckMemo());
-						data.setAdvanceBasicValue(supplierAdvance.getMultipliedBasicPrice());
-						data.setAdvanceTdsTcsValue(supplierAdvance.getTotalMultipliedTdsAndTcsValue());
+						data.setAdvanceQty(
+								RoundToDecimalPlace.roundToThreeDecimalPlaces(supplierAdvance.getAvlQtyForCheckMemo()));
+						data.setAdvanceOutstanding(RoundToDecimalPlace
+								.roundToThreeDecimalPlaces(supplierAdvance.getAvlAmountForCheckMemo()));
+						data.setAdvanceBasicValue(RoundToDecimalPlace
+								.roundToThreeDecimalPlaces(supplierAdvance.getMultipliedBasicPrice()));
+						data.setAdvanceTdsTcsValue(RoundToDecimalPlace
+								.roundToThreeDecimalPlaces(supplierAdvance.getTotalMultipliedTdsAndTcsValue()));
 					}
 				}
 			}
@@ -201,7 +199,7 @@ public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
 						ResponseEntity<String> responseEntity = accountsService
 								.saveAccountsVouchersHandler("journalVoucher", voucher, jwt);
 						String responseString = responseEntity.getBody();
-						if(responseString == null) {
+						if (responseString == null) {
 							throw new Exception("No data found");
 						}
 						String prefix = "JV Number : ";
@@ -213,9 +211,9 @@ public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
 				});
 				cmg.setJvNoList(jvNoList);
 			}
-			if(obj.getAdvanceAdjOptions().equals("Yes")) {
+			if (obj.getAdvanceAdjOptions().equals("Yes")) {
 				accountsService.updateAvlQtyAndAmountHandler(obj.getSupplierAdvanceNo(), obj.getCurrentAdvanceQty(),
-						obj.getCalculatedTotal(), jwt);				
+						obj.getCalculatedTotal(), jwt);
 			}
 			updatePB(obj.getCheckMemoNo());
 			cmg.setVoucherStatus("Pending");
@@ -230,6 +228,13 @@ public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
 	private void updatePB(String cmNo) throws Exception {
 		PurchaseBooking purchaseBooking = purchaseBookingService.getPurchaseBookedDataByCmNo(cmNo);
 		purchaseBooking.setIsCheckMemoCreated(true);
+		purchaseBookingRepo.save(purchaseBooking);
+	}
+
+	@Override
+	public void revertPB(String cmNo) throws Exception {
+		PurchaseBooking purchaseBooking = purchaseBookingService.getPurchaseBookedDataByCmNo(cmNo);
+		purchaseBooking.setIsCheckMemoCreated(false);
 		purchaseBookingRepo.save(purchaseBooking);
 	}
 

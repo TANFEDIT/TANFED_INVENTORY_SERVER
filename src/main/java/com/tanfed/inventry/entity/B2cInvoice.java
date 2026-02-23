@@ -1,4 +1,7 @@
-package com.tanfed.inventry.model;
+package com.tanfed.inventry.entity;
+
+import java.time.LocalDate;
+import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,23 +13,29 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Entity
 @Data
+@Table
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table
-public class QtyRebate {
+public class B2cInvoice {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column
-	private Double fromQty;
+	private String voucherStatus = "Pending";
 
 	@Column
-	private Double toQty;
+	private List<String> empId;
 
 	@Column
-	private Double amount;
+	private List<String> designation;
+
+	private String officeName;
+
+	private LocalDate createdAt = LocalDate.now();
+
+	private LocalDate approvedDate;
+
 }

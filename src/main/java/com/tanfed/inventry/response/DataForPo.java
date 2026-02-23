@@ -15,10 +15,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DataForPo {
 
+	private List<String> supplierNameList;
 	private Set<String> productNameList;
 	private Set<String> termsMonthList;
 	private List<String> termsNoList;
-	private String supplierName;
 	private String supplierGst;
 	private String standardUnits;
 	private String productCategory;
@@ -28,5 +28,5 @@ public class DataForPo {
 	private Integer noOfRegionRequested;
 	private Set<String> officeList;
 	private List<PoReqDataForPo> poReqTableData;
-	
+
 }

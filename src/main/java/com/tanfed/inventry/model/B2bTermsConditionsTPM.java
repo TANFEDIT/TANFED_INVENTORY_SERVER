@@ -11,15 +11,14 @@ import lombok.NoArgsConstructor;
 @Embeddable
 public class B2bTermsConditionsTPM {
 
-	
 	private String b2bModeofSupply;
-	
+
 	private String b2bCollectionMode;
-	
+
 	private Double incentivePaccs;
-	
+
 	private Double salesmanIncentive;
-	
+
 	private Double secretoryIncentive;
-	
+
 }

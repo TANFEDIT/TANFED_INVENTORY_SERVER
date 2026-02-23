@@ -22,21 +22,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TcBillEntryChargesTable {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private String claimFor;
 	private String idNo;
 	private Double ackQty;
 	private Double disallowedQty;
-	
+
 	private Double calcTransportCharges;
 	private Double calcLoadingCharges;
 	private Double calcUnloadingCharges;
 	private Double calcWagonClearanceCharges;
-	
+
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<ProductClassificationTableBillEntry> tableData;
 }

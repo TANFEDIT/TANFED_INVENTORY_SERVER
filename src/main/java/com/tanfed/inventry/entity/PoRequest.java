@@ -17,38 +17,35 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PoRequest {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    private String poReqNo;
-    
-    private String voucherStatus = "Pending";
-    
-    @Column
-    private List<String> empId;
-    
-    @Column
-    private List<String> designation;
-	
+	private String poReqNo;
+
+	private String voucherStatus = "Pending";
+
+	@Column
+	private List<String> empId;
+
+	@Column
+	private List<String> designation;
+
 	private LocalDate createdAt = LocalDate.now();
-    
+
 	private LocalDate approvedDate;
 
-    private String activity;
+	private String activity;
 
-    private LocalDate date;
+	private LocalDate date;
 
-    private String officeName;
+	private String officeName;
 
-    private String purchaseOrderType;
-    
-    private String poNo;
-    
-    
-    
+	private String purchaseOrderType;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private List<PoReqTableData> tableData;
+	private String poNo;
+
+	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+	private List<PoReqTableData> tableData;
 
 }

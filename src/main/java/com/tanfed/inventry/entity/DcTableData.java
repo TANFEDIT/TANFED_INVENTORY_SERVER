@@ -15,11 +15,11 @@ public class DcTableData {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private String termsNo;
-	
+
 	private String outwardBatchNo;
-	
+
 	private String productCategory;
 
 	private String supplierName;
@@ -35,14 +35,14 @@ public class DcTableData {
 	private String hsnCode;
 
 	private Double gstRate;
-	
+
 	private Double mrp;
-	
+
 	private Double disallowedQty;
-	
+
 	private String productGroup;
-	
+
 	private String collectionMode;
-	
+
 	private String voucherId;
 }

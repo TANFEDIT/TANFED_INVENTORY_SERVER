@@ -3,6 +3,7 @@ package com.tanfed.inventry.dto;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.tanfed.inventry.entity.TermsPrice;
 import com.tanfed.inventry.model.JournalVoucher;
 
 import jakarta.persistence.Column;
@@ -26,7 +27,7 @@ public class SupplierInvoiceDto {
 	private Double invoiceQtyAvlForGrnAttach;
 
 	private List<String> empId;
-	
+
 	private LocalDate date;
 
 	private LocalDate createdAt = LocalDate.now();
@@ -34,7 +35,6 @@ public class SupplierInvoiceDto {
 	private String invoiceNumber;
 
 	private Double invoiceQty;
-
 
 	private LocalDate invoiceDate;
 
@@ -49,9 +49,9 @@ public class SupplierInvoiceDto {
 	private String monthOfSupply;
 
 	private String termsMonth;
-	
+
 	private String termsNo;
-	
+
 	private String activity;
 
 	private String productName;
@@ -68,8 +68,7 @@ public class SupplierInvoiceDto {
 	@Column(length = 1000000)
 	private byte[] filedata;
 
-	private JournalVoucher netJv;
+	private List<JournalVoucher> jvData;
+	private TermsPrice termsPrice;
 
-	private JournalVoucher taxJv;
-	
 }

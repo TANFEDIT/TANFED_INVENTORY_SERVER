@@ -15,20 +15,20 @@ public class PoTableData {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private String region;
-	
+
 	private String poReqNo;
-	
+
 	private Double requestQuantity;
-	
+
 	private Double poIssueQty;
-	
+
 	private String issuedFor;
 
-    private Double alreadyIssuedQty = 0.0;
-	
+	private Double alreadyIssuedQty = 0.0;
+
 	private String oldPoNo;
-	
+
 	private String poRequestFor;
 }

@@ -70,7 +70,10 @@ public class InvoiceServiceImpl implements InvoiceService {
 				obj.setFirmType(buyerFirmInfo.getFirmType());
 				if (obj.getGodownName() != "Direct Material Center") {
 					GodownInfo godownInfo = masterService.getGodownInfoByGodownNameHandler(obj.getGodownName(), jwt);
-					obj.setLicenseNoGodown(godownInfo.getLicenseNo());
+					List<String> license = godownInfo.getLicense().stream().filter(
+							i -> i.getLicenseFor().equals(obj.getActivity()) && i.getLicenseType().equals("Whole Sale"))
+							.map(i -> i.getLicenseNumber()).collect(Collectors.toList());
+					obj.setLicenseNoGodown(license.isEmpty() ? "No license" : license.get(0));
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -191,6 +194,18 @@ public class InvoiceServiceImpl implements InvoiceService {
 											item.getGstRate(), basicPrice, cgst, sgst,
 											RoundToDecimalPlace.roundToTwoDecimalPlaces(total), mrp, margin,
 											gstOnMargin, batchOrCertificateNo));
+									PmodeAndValue paccsIncentive = new PmodeAndValue();
+									paccsIncentive.setInvAdj_Cash(0.0);
+									paccsIncentive.setOnline(openingStock.getIncentivePaccs());
+									PmodeAndValue salesmanIncentive = new PmodeAndValue();
+									salesmanIncentive.setInvAdj_Cash(0.0);
+									salesmanIncentive.setOnline(openingStock.getSalesmanIncentive());
+									PmodeAndValue secretaryIncentive = new PmodeAndValue();
+									secretaryIncentive.setInvAdj_Cash(0.0);
+									secretaryIncentive.setOnline(openingStock.getSecretoryIncentive());
+									tcData.add(new InvoiceTermsAndConditions(null, paccsIncentive, salesmanIncentive,
+											secretaryIncentive, item.getProductName(), item.getQty()));
+
 								} else {
 									TermsPrice termsPrice = termsPriceService.fetchTermsByTermsNo(item.getTermsNo());
 
@@ -199,9 +214,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 									B2bTermsConditionsTPM b2bTermsConditionsTPM = termsPrice.getB2bTermsAndConditions();
 									B2cPricingTPM b2cPricingTPM = termsPrice.getB2cPrice();
 
-									InvoiceTermsAndConditions tc = new InvoiceTermsAndConditions();
-									tc.setSelectedProductName(item.getProductName());
-									tc.setQty(item.getQty());
 									PmodeAndValue paccsIncentive = new PmodeAndValue();
 									if (purchaseTermsAndCondition.getIncentiveToFirm().equals("By Invoice Adj")) {
 										paccsIncentive.setInvAdj_Cash(
@@ -213,7 +225,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 												.setOnline(b2bTermsConditionsTPM.getIncentivePaccs() * item.getQty());
 									}
 
-									tc.setIncentivePaccs(paccsIncentive);
 									PmodeAndValue salesmanIncentive = new PmodeAndValue();
 									PmodeAndValue secretaryIncentive = new PmodeAndValue();
 									if ("B2B".equals(deliveryChellan.getSupplyTo())) {
@@ -232,8 +243,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 											secretaryIncentive.setOnline(
 													b2bTermsConditionsTPM.getSecretoryIncentive() * item.getQty());
 										}
-										tc.setSalesmanIncentive(salesmanIncentive);
-										tc.setSecretoryIncentive(secretaryIncentive);
 									} else if ("B2C".equals(deliveryChellan.getSupplyTo())) {
 										if (purchaseTermsAndCondition.getIncentiveToB2c().equals("By Invoice Adj")) {
 											b2cDiscount.add(b2cPricingTPM.getB2cDiscount() * item.getQty());
@@ -278,7 +287,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 						if (data.getTcData().isEmpty()) {
 							data.setTcData(null);
 						}
-						data.setB2cDiscount(b2cDiscount.stream().mapToDouble(item -> item).sum());
+						data.setB2cDiscount(RoundToDecimalPlace
+								.roundToTwoDecimalPlaces(b2cDiscount.stream().mapToDouble(item -> item).sum()));
 					}
 				}
 			}
@@ -310,8 +320,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 		data.setDistrict(dc.getDistrict());
 		data.setSupplyMode(dc.getSupplyMode());
 		data.setSupplyTo(dc.getSupplyTo());
-		data.setTotalQty(dc.getTotalQty());
-		data.setTotalNoOfBags(dc.getTotalBags());
+		data.setTotalQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(dc.getTotalQty()));
+		data.setTotalNoOfBags(RoundToDecimalPlace.roundToThreeDecimalPlaces(dc.getTotalBags()));
 		data.setDespatchAdviceNo(dc.getDespatchAdviceNo());
 
 	}
@@ -446,7 +456,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 				Vouchers vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("adjustmentReceiptVoucher",
 						obj.getAdjReceiptNo().get(0), jwt);
 				VoucherApproval temp = new VoucherApproval("Rejected",
-						String.valueOf(vouchers.getAdjustmentReceiptVoucherData().getId()), "adjustmentReceiptVoucher", null);
+						String.valueOf(vouchers.getAdjustmentReceiptVoucherData().getId()), "adjustmentReceiptVoucher",
+						null);
 				accountsService.voucherApprovalHandler(temp, jwt);
 			}
 			if (adjv != null) {

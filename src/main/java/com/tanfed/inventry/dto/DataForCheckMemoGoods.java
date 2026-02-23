@@ -31,14 +31,13 @@ public class DataForCheckMemoGoods {
 	private GstRateData gstData;
 	private Double advOutstanding;
 
-
 	private List<String> supplierAdvanceNoList;
-	
+
 	private Double advanceQty;
 	private Double advanceOutstanding;
 	private Double advanceBasicValue;
 	private Double advanceTdsTcsValue;
 	private String supplierAccountNo;
-	
+
 	private List<CheckMemoGoods> checkMemoGoods;
 }

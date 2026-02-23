@@ -15,12 +15,12 @@ import lombok.NoArgsConstructor;
 public class DataForMpaBillEntry {
 
 	private Set<String> firmList;
-	
+
 	private String appointedThrough;
-	
+
 	private String appointedLr;
-	
+
 	private String lrDate;
-	
+
 	private List<MpaEmployeeData> empData;
 }

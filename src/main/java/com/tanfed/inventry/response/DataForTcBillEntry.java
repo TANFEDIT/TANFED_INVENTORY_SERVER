@@ -23,7 +23,7 @@ public class DataForTcBillEntry {
 	private List<ContractorTenderData> tenderData;
 	private List<String> idNoList;
 	private Set<String> clNoList;
-	
+
 	private Long id;
 	private Double ackQty;
 	private String supplierName;
@@ -33,7 +33,7 @@ public class DataForTcBillEntry {
 	private Double calcUnloadingCharges;
 	private Double calcWagonClearanceCharges;
 	private LocalDate date;
-	
+
 	private Double calcTransportCharges;
 	private Double transportCharges;
 	private Double transportChargesPerQty;
@@ -43,7 +43,7 @@ public class DataForTcBillEntry {
 	private String ifmsId;
 	private String godownBuyerName;
 	private Double qty;
-	
+
 	private List<ProductClassificationTableBillEntry> tableData;
 	private List<TcBillEntryTempTable> chargesData;
 }

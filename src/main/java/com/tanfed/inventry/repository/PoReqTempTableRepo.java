@@ -11,15 +11,16 @@ import org.springframework.stereotype.Repository;
 import com.tanfed.inventry.entity.PoReqTempTable;
 
 import jakarta.transaction.Transactional;
+
 @Repository
 public interface PoReqTempTableRepo extends JpaRepository<PoReqTempTable, Long> {
 
 	public List<PoReqTempTable> findByOfficeName(String officeName);
-	
+
 	@Modifying
 	@Transactional
 	@Query("DELETE FROM PoReqTempTable i WHERE i.productName = :productName AND i.poReqNo = :poReqNo")
 	public void deleteItemsByProductNameAndPoReqNo(@Param("productName") String productName,
-	                                        @Param("poReqNo") String poReqNo);
+			@Param("poReqNo") String poReqNo);
 
 }

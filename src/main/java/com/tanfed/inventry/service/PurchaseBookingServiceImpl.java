@@ -1,7 +1,5 @@
 package com.tanfed.inventry.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +34,7 @@ import com.tanfed.inventry.model.Vouchers;
 import com.tanfed.inventry.repository.PurchaseBookingRepo;
 import com.tanfed.inventry.response.DataForPurchaseBooking;
 import com.tanfed.inventry.utils.CodeGenerator;
+import com.tanfed.inventry.utils.RoundToDecimalPlace;
 
 @Service
 public class PurchaseBookingServiceImpl implements PurchaseBookingService {
@@ -72,6 +71,7 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 			PurchaseBooking pb = new PurchaseBooking();
 
 			String empId = JwtTokenValidator.getEmailFromJwtToken(jwt);
+			logger.info(empId);
 			String code = codeGenerator.generateCheckMemoNo(obj.getPoNo());
 			pb.setCheckMemoNo(code);
 			pb.setVoucherStatus("Pending");
@@ -103,6 +103,8 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 			pb.setTermsDataDirect(obj.getTermsDataDirect());
 			pb.setTermsDataBuffer(obj.getTermsDataBuffer());
 			pb.setDate(obj.getDate());
+			pb.setNetPriceAfterDeduction(obj.getNetPriceAfterDeduction());
+			pb.setOthers(obj.getOthers());
 			Vouchers voucher = new Vouchers();
 			List<String> jvNoList = new ArrayList<String>();
 			obj.getJvData().forEach(item -> {
@@ -210,13 +212,15 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 									data.setPoNoList(poNoList);
 
 									if (!poNo.isEmpty() && poNo != null) {
-										data.setBookedQty(purchaseBookingRepo.findByPoNo(poNo).stream()
-												.mapToDouble(sum -> sum.getTotalQty()).sum());
+										data.setBookedQty(RoundToDecimalPlace
+												.roundToThreeDecimalPlaces(purchaseBookingRepo.findByPoNo(poNo).stream()
+														.mapToDouble(sum -> sum.getTotalQty()).sum()));
 
 										PurchaseOrder purchaseOrder = poService.getPoByPoNo(poNo);
 										data.setPoDate(purchaseOrder.getDate());
-										data.setTotalPoQty(purchaseOrder.getTableData().stream()
-												.mapToDouble(item -> item.getPoIssueQty()).sum());
+										data.setTotalPoQty(RoundToDecimalPlace
+												.roundToThreeDecimalPlaces(purchaseOrder.getTableData().stream()
+														.mapToDouble(item -> item.getPoIssueQty()).sum()));
 
 										data.setTermsNo(purchaseOrder.getTermsPrice().getTermsNo());
 										TermsPrice priceMaster = termsPriceService
@@ -233,27 +237,28 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 														return Stream.empty();
 													}
 												}).collect(Collectors.toList());
-										logger.info("{}", grnData);
-//										if(grnData.isEmpty()) {
-//											throw new Exception("Please Attach Grn with Supplier Invoice!");
-//										}
 										data.setGrnTableData(grnData);
 
 										if (priceMaster.getB2bTermsAndConditions().getB2bCollectionMode()
 												.equals("Through CC")) {
-											data.setDirectQty(purchaseOrder.getGrnData().stream()
-													.filter(item -> item.getGrnQtyAvlForGrnAttach() == 0.0
-															&& item.getIsPurchaseBooked().equals(false)
-															&& item.getGodownType().equals("Direct"))
-													.mapToDouble(item -> item.getMaterialReceivedQuantity()).sum());
+											data.setDirectQty(RoundToDecimalPlace
+													.roundToThreeDecimalPlaces(purchaseOrder.getGrnData().stream()
+															.filter(item -> item.getGrnQtyAvlForGrnAttach() == 0.0
+																	&& item.getIsPurchaseBooked().equals(false)
+																	&& item.getGodownType().equals("Direct"))
+															.mapToDouble(item -> item.getMaterialReceivedQuantity())
+															.sum()));
 
-											data.setBufferQty(purchaseOrder.getGrnData().stream()
-													.filter(item -> item.getGrnQtyAvlForGrnAttach() == 0.0
-															&& item.getIsPurchaseBooked().equals(false)
-															&& !item.getGodownType().equals("Direct"))
-													.mapToDouble(item -> item.getMaterialReceivedQuantity()).sum());
+											data.setBufferQty(RoundToDecimalPlace
+													.roundToThreeDecimalPlaces(purchaseOrder.getGrnData().stream()
+															.filter(item -> item.getGrnQtyAvlForGrnAttach() == 0.0
+																	&& item.getIsPurchaseBooked().equals(false)
+																	&& !item.getGodownType().equals("Direct"))
+															.mapToDouble(item -> item.getMaterialReceivedQuantity())
+															.sum()));
 
-											data.setTotalQty(data.getDirectQty() + data.getBufferQty());
+											data.setTotalQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+													data.getDirectQty() + data.getBufferQty()));
 
 											data.setTermsData(prepareTermsData(priceMaster, data.getTotalQty(),
 													data.getDirectQty(), data.getBufferQty()));
@@ -261,7 +266,7 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 											data.setTermsDataGeneral(priceMaster.getPurchaseDataGeneral().stream()
 													.map(item -> new TermsDataForPurchaseBooking(null, item.getTerm(),
 															item.getValue(), data.getTotalQty(),
-															roundToTwoDecimalPlaces(
+															RoundToDecimalPlace.roundToTwoDecimalPlaces(
 																	item.getValue() * data.getTotalQty()),
 															null))
 													.collect(Collectors.toList()));
@@ -269,7 +274,7 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 											data.setTermsDataDirect(priceMaster.getPurchaseDataDirect().stream()
 													.map(item -> new TermsDataForPurchaseBooking(null, item.getTerm(),
 															item.getValue(), data.getDirectQty(),
-															roundToTwoDecimalPlaces(
+															RoundToDecimalPlace.roundToTwoDecimalPlaces(
 																	item.getValue() * data.getDirectQty()),
 															null))
 													.collect(Collectors.toList()));
@@ -277,34 +282,35 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 											data.setTermsDataBuffer(priceMaster.getPurchaseDataBuffer().stream()
 													.map(item -> new TermsDataForPurchaseBooking(null, item.getTerm(),
 															item.getValue(), data.getBufferQty(),
-															roundToTwoDecimalPlaces(
+															RoundToDecimalPlace.roundToTwoDecimalPlaces(
 																	item.getValue() * data.getBufferQty()),
 															null))
 													.collect(Collectors.toList()));
 
-											data.setInputTax(roundToTwoDecimalPlaces(
-													priceMaster.getPurchaseTermsPricing().getGstValue()
-															* data.getTotalQty()));
+//											data.setInputTax(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+//													priceMaster.getPurchaseTermsPricing().getGstValue()
+//															* data.getTotalQty()));
 
-											data.setMargin(roundToTwoDecimalPlaces(
+											data.setMargin(RoundToDecimalPlace.roundToThreeDecimalPlaces(
 													priceMaster.getPurchaseTermsPricing().getMargin()
 															* data.getTotalQty()
 															+ priceMaster.getPurchaseTermsPricing().getGstOnMargin()
 																	* data.getTotalQty()));
 
-											data.setNet(roundToTwoDecimalPlaces(
-													priceMaster.getPurchaseTermsPricing().getBasicPrice()
-															* data.getTotalQty() + data.getInputTax()));
+//											data.setNet(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+//													priceMaster.getPurchaseTermsPricing().getBasicPrice()
+//															* data.getTotalQty() + data.getInputTax()));
 
-											data.setDeduction(roundToTwoDecimalPlaces(
-													((priceMaster.getPurchaseTermsPricing().getMargin()
-															* data.getTotalQty())
-															+ (priceMaster.getPurchaseTermsPricing().getGstOnMargin()
-																	* data.getTotalQty()))
-															/ 2));
+//											data.setDeduction(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+//													((priceMaster.getPurchaseTermsPricing().getMargin()
+//															* data.getTotalQty())
+//															+ (priceMaster.getPurchaseTermsPricing().getGstOnMargin()
+//																	* data.getTotalQty()))
+//															/ 2));
 
-											data.setTradeIncome(roundToTwoDecimalPlaces(fetchTradeIncome(priceMaster,
-													data.getTotalQty(), data.getDirectQty(), data.getBufferQty())));
+//											data.setTradeIncome(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+//													fetchTradeIncome(priceMaster, data.getTotalQty(),
+//															data.getDirectQty(), data.getBufferQty())));
 										} else {
 
 											Map<String, Double> grnNoToInvoiceQtySum = data.getGrnTableData().stream()
@@ -317,33 +323,35 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 																	: 0.0,
 															(existing, replacement) -> existing));
 
-											data.setTotalQty(grnNoToInvoiceQtySum.entrySet().stream()
-													.mapToDouble(item -> item.getValue()).sum());
+											data.setTotalQty(RoundToDecimalPlace
+													.roundToThreeDecimalPlaces(grnNoToInvoiceQtySum.entrySet().stream()
+															.mapToDouble(item -> item.getValue()).sum()));
 
-											data.setDirectQty(data.getTotalQty());
+											data.setDirectQty(
+													RoundToDecimalPlace.roundToThreeDecimalPlaces(data.getTotalQty()));
 
 											data.setTermsData(
 													prepareTermsData(priceMaster, data.getTotalQty(), null, null));
 
-											data.setInputTax(roundToTwoDecimalPlaces(
-													priceMaster.getPurchaseTermsPricing().getGstValue()
-															* data.getTotalQty()));
+//											data.setInputTax(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+//													(priceMaster.getPurchaseTermsPricing().getGstValue()
+//															* data.getTotalQty())));
 
-											data.setMargin(roundToTwoDecimalPlaces(
-													priceMaster.getPurchaseTermsPricing().getMargin()
+											data.setMargin(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+													(priceMaster.getPurchaseTermsPricing().getMargin()
 															* data.getTotalQty()
 															+ priceMaster.getPurchaseTermsPricing().getGstOnMargin()
-																	* data.getTotalQty()));
-
-											data.setNet(roundToTwoDecimalPlaces(
-													priceMaster.getPurchaseTermsPricing().getBasicPrice()
-															* data.getTotalQty() + data.getInputTax()));
-
-											data.setDeduction(roundToTwoDecimalPlaces(
-													((priceMaster.getPurchaseTermsPricing().getMargin()
-															* data.getTotalQty()) / 2)
-															+ (priceMaster.getPurchaseTermsPricing().getGstOnMargin()
 																	* data.getTotalQty())));
+
+//											data.setNet(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+//													(priceMaster.getPurchaseTermsPricing().getBasicPrice()
+//															* data.getTotalQty() + data.getInputTax())));
+
+//											data.setDeduction(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+//													(((priceMaster.getPurchaseTermsPricing().getMargin()
+//															* data.getTotalQty()) / 2)
+//															+ (priceMaster.getPurchaseTermsPricing().getGstOnMargin()
+//																	* data.getTotalQty()))));
 										}
 									}
 								}
@@ -358,42 +366,42 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 		}
 	}
 
-	private Double fetchTradeIncome(TermsPrice terms, Double totalQty, Double directQty, Double bufferQty)
-			throws Exception {
-		try {
-			double generalIncome = terms.getPurchaseDataGeneral().stream()
-					.mapToDouble(item -> item.getValue() * totalQty).sum();
-
-			double directIncome = terms.getPurchaseDataDirect().stream()
-					.mapToDouble(item -> item.getValue() * directQty).sum();
-
-			double bufferIncome = terms.getPurchaseDataBuffer().stream()
-					.mapToDouble(item -> item.getValue() * bufferQty).sum();
-
-			return generalIncome + directIncome + bufferIncome;
-		} catch (Exception e) {
-			throw new Exception(e);
-		}
-	}
+//	private Double fetchTradeIncome(TermsPrice terms, Double totalQty, Double directQty, Double bufferQty)
+//			throws Exception {
+//		try {
+//			double generalIncome = terms.getPurchaseDataGeneral().stream()
+//					.mapToDouble(item -> item.getValue() * totalQty).sum();
+//
+//			double directIncome = terms.getPurchaseDataDirect().stream()
+//					.mapToDouble(item -> item.getValue() * directQty).sum();
+//
+//			double bufferIncome = terms.getPurchaseDataBuffer().stream()
+//					.mapToDouble(item -> item.getValue() * bufferQty).sum();
+//
+//			return generalIncome + directIncome + bufferIncome;
+//		} catch (Exception e) {
+//			throw new Exception(e);
+//		}
+//	}
 
 	private List<TermsDataForPurchaseBooking> prepareTermsData(TermsPrice terms, Double totalQty, Double directQty,
 			Double bufferQty) {
 		List<TermsDataForPurchaseBooking> data = new ArrayList<TermsDataForPurchaseBooking>();
 		PurchaseTermsPricingTPM purchaseTermsPricing = terms.getPurchaseTermsPricing();
 		data.add(new TermsDataForPurchaseBooking(null, "Basic Price", purchaseTermsPricing.getBasicPrice(), totalQty,
-				roundToTwoDecimalPlaces(purchaseTermsPricing.getBasicPrice() * totalQty), null));
+				RoundToDecimalPlace.roundToTwoDecimalPlaces(purchaseTermsPricing.getBasicPrice() * totalQty), null));
 
 		data.add(new TermsDataForPurchaseBooking(null, "GST", purchaseTermsPricing.getGstValue(), totalQty,
-				roundToTwoDecimalPlaces(purchaseTermsPricing.getGstValue() * totalQty), null));
+				RoundToDecimalPlace.roundToTwoDecimalPlaces(purchaseTermsPricing.getGstValue() * totalQty), null));
 
 		data.add(new TermsDataForPurchaseBooking(null, "Margin", purchaseTermsPricing.getMargin(), totalQty,
-				roundToTwoDecimalPlaces(purchaseTermsPricing.getMargin() * totalQty), null));
+				RoundToDecimalPlace.roundToTwoDecimalPlaces(purchaseTermsPricing.getMargin() * totalQty), null));
 
 		data.add(new TermsDataForPurchaseBooking(null, "GST on Margin", purchaseTermsPricing.getGstOnMargin(), totalQty,
-				roundToTwoDecimalPlaces(purchaseTermsPricing.getGstOnMargin() * totalQty), null));
+				RoundToDecimalPlace.roundToTwoDecimalPlaces(purchaseTermsPricing.getGstOnMargin() * totalQty), null));
 
 		data.add(new TermsDataForPurchaseBooking(null, "Net Price", purchaseTermsPricing.getNetPrice(), totalQty,
-				roundToTwoDecimalPlaces(purchaseTermsPricing.getNetPrice() * totalQty), null));
+				RoundToDecimalPlace.roundToTwoDecimalPlaces(purchaseTermsPricing.getNetPrice() * totalQty), null));
 
 		return data;
 	}
@@ -452,10 +460,6 @@ public class PurchaseBookingServiceImpl implements PurchaseBookingService {
 		} catch (Exception e) {
 			throw new Exception(e);
 		}
-	}
-
-	private static double roundToTwoDecimalPlaces(double value) {
-		return new BigDecimal(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
 	}
 
 	@Override

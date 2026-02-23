@@ -25,25 +25,25 @@ public class MpaEmployeeData {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private LocalDate createdAt = LocalDate.now();
-	
+
 	private List<String> empId;
-	
+
 	@ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "mpa_id", nullable = false)
+	@JoinColumn(name = "mpa_id", nullable = false)
 	private ManPowerAgency mpaData;
-		
+
 	private String empName;
-	
+
 	private String aadharNo;
 
 	private String eduQualification;
-	
+
 	private String engagedAs;
 
 	private String serviceChargePercentage;
-	
+
 	private String serviceChargeFlat;
 
 	private String rateDefinedAs;

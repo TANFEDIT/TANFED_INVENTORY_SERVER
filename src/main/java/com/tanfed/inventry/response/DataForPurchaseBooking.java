@@ -17,15 +17,15 @@ import lombok.NoArgsConstructor;
 public class DataForPurchaseBooking {
 
 	private Set<String> productCategoryList;
-	
+
 	private List<String> productNameList;
-	
+
 	private Set<String> supplierNameList;
-	
+
 	private Set<String> poMonthList;
-	
+
 	private List<String> poNoList;
-	
+
 	private String supplierGst;
 	private String productGroup;
 	private String packing;
@@ -35,21 +35,17 @@ public class DataForPurchaseBooking {
 	private Double totalPoQty;
 	private Double bookedQty;
 	private Double avlQty;
-	
+
 	private List<GrnTableDataForPurchaseBooking> grnTableData;
-	
+
 	private Double totalQty;
 	private Double directQty;
 	private Double bufferQty;
-	
+
 	private List<TermsDataForPurchaseBooking> termsData;
 	private List<TermsDataForPurchaseBooking> termsDataGeneral;
 	private List<TermsDataForPurchaseBooking> termsDataDirect;
 	private List<TermsDataForPurchaseBooking> termsDataBuffer;
-	
-	private Double inputTax;
+
 	private Double margin;
-	private Double deduction;
-	private Double net;
-	private Double tradeIncome;
 }

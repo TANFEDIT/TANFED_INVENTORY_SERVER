@@ -25,42 +25,34 @@ public class ManPowerAgency {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
-	private LocalDate createdAt = LocalDate.now();
-	
-	private List<String> empId;
-	
-	private String officeName;
-	
-	
-	
-	private String appointedThrough;
-	
-	private String manPowerFor;
-	
-	private String manPowerUsedTo;
-	
-	
-	
-	private String contractFirm;
-	
-	private String appointedLr;
-	
-	private String lrDate;
-	
 
-	
+	private LocalDate createdAt = LocalDate.now();
+
+	private List<String> empId;
+
+	private String officeName;
+
+	private String appointedThrough;
+
+	private String manPowerFor;
+
+	private String manPowerUsedTo;
+
+	private String contractFirm;
+
+	private String appointedLr;
+
+	private String lrDate;
+
 	private String gstNo;
-	
+
 	private String gstReturnType;
-	
+
 	private String gstCategory;
-	
+
 	private String gstRate;
-	
+
 	@Embedded
 	private GstRateData gstData;
-
-	
 
 }

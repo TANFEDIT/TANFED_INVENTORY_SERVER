@@ -12,19 +12,19 @@ import com.tanfed.inventry.response.DataForTPM;
 public interface TermsPriceService {
 
 	public ResponseEntity<String> saveTermsPriceMaster(TermsPrice obj, String jwt) throws Exception;
-	
+
 	public ResponseEntity<String> editTermsPriceMaster(TermsPrice obj, String jwt) throws Exception;
 
 	public DataForTPM dataForTPM(String activity, String jwt, String supplierName, String productName) throws Exception;
-	
+
 	public List<TermsPrice> getTermsPriceMasterData() throws Exception;
-	
-	public Set<String> fetchApprovedProductName(String activity) throws Exception;
-	
+
+	public Set<String> fetchApprovedProductName(String activity, String supplierName) throws Exception;
+
 	public Set<String> fetchApprovedTermsMonth(String activity, String productName) throws Exception;
-	
-	public List<String> fetchTermsByMonth(String termsMonth, String activity, String productName, LocalDate date, String type) throws Exception;
-	
+
+	public List<String> fetchTermsByMonth(String termsMonth, String activity, String productName, LocalDate date,
+			String type) throws Exception;
+
 	public TermsPrice fetchTermsByTermsNo(String termsNo) throws Exception;
 }
- 

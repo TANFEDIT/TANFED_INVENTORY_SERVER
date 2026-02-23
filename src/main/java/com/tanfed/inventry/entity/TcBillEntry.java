@@ -31,25 +31,25 @@ public class TcBillEntry {
 	private String officeName;
 	private List<String> designation;
 	private String voucherStatus;
-	
+
 	private String checkMemoNo;
 	private String financialYear;
 	private String financialMonth;
 	private String godownName;
 	private String contractFirm;
 	private String claimBillNo;
-	private LocalDate claimBillDate;	
+	private LocalDate claimBillDate;
 	private Double totalQty;
 	private Double totalBillValue;
-	private LocalDate date; 
-	
+	private LocalDate date;
+
 	private Double totalTransportCharges;
 	private Double totalLoadingCharges;
 	private Double totalUnloadingCharges;
 	private Double totalWagonClearanceCharges;
-	
+
 	private Boolean isTcCheckMemoDone;
-	
+
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<TcBillEntryChargesTable> chargesData;
 }

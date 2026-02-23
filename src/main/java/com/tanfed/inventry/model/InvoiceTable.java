@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InvoiceTable {
-	
+
 	private String grnNo;
 	private String productCategory;
 	private String supplierName;

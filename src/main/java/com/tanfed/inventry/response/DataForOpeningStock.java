@@ -3,6 +3,8 @@ package com.tanfed.inventry.response;
 import java.util.List;
 import java.util.Set;
 
+import com.tanfed.inventry.model.GstRateData;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,4 +25,7 @@ public class DataForOpeningStock {
 	private String batchNo;
 	private String certification;
 	private String packing;
+	private String gstCategory;
+	private Double gstRate;
+	private GstRateData gstData;
 }

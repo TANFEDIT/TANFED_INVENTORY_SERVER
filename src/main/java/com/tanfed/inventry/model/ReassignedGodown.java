@@ -12,13 +12,10 @@ import lombok.NoArgsConstructor;
 public class ReassignedGodown {
 
 	private Long id;
-	
-	 
+
 	private List<String> additionalGodown;
-	
-	 
+
 	private String rateDefinedAs;
-	
-	 
+
 	private String contractorName;
 }

@@ -10,26 +10,27 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table
 public class InvoiceTermsAndConditions {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	@OneToOne(cascade = CascadeType.ALL)
 	private PmodeAndValue incentivePaccs;
-	
+
 	@OneToOne(cascade = CascadeType.ALL)
 	private PmodeAndValue salesmanIncentive;
-	
+
 	@OneToOne(cascade = CascadeType.ALL)
 	private PmodeAndValue secretoryIncentive;
-	
+
 	private String selectedProductName;
-	private Double qty; 
+	private Double qty;
 }

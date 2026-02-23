@@ -3,7 +3,6 @@ package com.tanfed.inventry.entity;
 import java.time.LocalDate;
 import java.util.List;
 
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -26,7 +25,7 @@ public class MpaBillEntry {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private List<String> designation;
 	private List<String> empId;
 	private String voucherStatus;
@@ -34,7 +33,7 @@ public class MpaBillEntry {
 	private LocalDate approvedDate;
 	private String checkMemoNo;
 	private String officeName;
-	
+
 	private String financialYear;
 	private String financialMonth;
 	private String contractFirm;
@@ -42,9 +41,9 @@ public class MpaBillEntry {
 	private LocalDate claimBillDate;
 	private LocalDate date;
 	private Double totalBillValue;
-	
+
 	private Boolean isMpaCheckMemoDone;
-	
+
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<MpaBillEntryEmpTable> empData;
 }

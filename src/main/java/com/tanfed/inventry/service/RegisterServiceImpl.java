@@ -453,7 +453,7 @@ public class RegisterServiceImpl implements RegisterService {
 			LocalDate fromDate, String branchName, LocalDate toDate, String accountNo, String jwt) throws Exception {
 		try {
 			return accountsService
-					.getFilteredDataHandler("paymentVoucher", officeName, "Approved", null, fromDate, toDate, jwt)
+					.getFilteredDataHandler("paymentVoucher", officeName, "Approved", "", fromDate, toDate, jwt)
 					.getPaymentVoucher().stream().filter(item -> {
 						Boolean branchFilter = true;
 						if (branchName.isEmpty()) {
@@ -475,7 +475,8 @@ public class RegisterServiceImpl implements RegisterService {
 									.format("%s%s%04d", item.getDate().getMonth(), " ", item.getDate().getYear())
 									.equals(month);
 						}
-						return item.getVoucherStatus().equals("Approved") && branchFilter && monthFilter && accNoFilter;
+						return item.getVoucherFor().equals("FundTransfer") && item.getVoucherStatus().equals("Approved")
+								&& branchFilter && monthFilter && accNoFilter;
 					}).map(item -> {
 						return mapFtRegisterData(item);
 					}).collect(Collectors.toList());

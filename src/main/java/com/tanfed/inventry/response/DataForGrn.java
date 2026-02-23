@@ -44,6 +44,5 @@ public class DataForGrn {
 	private Boolean alert;
 	private List<PurchaseOrder> poData;
 	private List<GRN> wagonGrnList;
-	
-	
+
 }

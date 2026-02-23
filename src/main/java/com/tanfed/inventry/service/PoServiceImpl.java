@@ -87,31 +87,34 @@ public class PoServiceImpl implements PoService {
 	}
 
 	@Override
-	public DataForPo getDataForPurchaseOrder(String activity, String productName, String jwt, String termsMonth,
-			String termsNo, String poBased, String officeName, String purchaseOrderType, LocalDate date)
-			throws Exception {
+	public DataForPo getDataForPurchaseOrder(String activity, String supplierName, String productName, String jwt,
+			String termsMonth, String termsNo, String poBased, String officeName, String purchaseOrderType,
+			LocalDate date) throws Exception {
 		try {
 			DataForPo data = new DataForPo();
 			if (!activity.isEmpty() && activity != null) {
-				data.setProductNameList(termsPriceService.fetchApprovedProductName(activity));
-				if (!productName.isEmpty() && productName != null) {
-					ProductMaster productMaster = masterService.getProductDataByProductNameHandler(jwt, productName);
-					data.setProductCategory(productMaster.getProductCategory());
-					data.setProductGroup(productMaster.getProductGroup());
-					data.setStandardUnits(productMaster.getStandardUnits());
-					data.setSupplierGst(productMaster.getSupplierGst());
-					data.setSupplierName(productMaster.getSupplierName());
-					data.setPacking(productMaster.getPacking());
-					data.setTermsMonthList(termsPriceService.fetchApprovedTermsMonth(activity, productName));
-					if (date != null) {
-						setTermsData(data, termsMonth, termsNo, activity, productName, date);
-						if (!poBased.isEmpty() && poBased.equals("Request")) {
-							requestBasedPoData(data, productName, officeName, purchaseOrderType, date);
+				data.setSupplierNameList(masterService.getSupplierNameHadnler(jwt, activity));
+				if (!supplierName.isEmpty() && supplierName != null) {
+					data.setProductNameList(termsPriceService.fetchApprovedProductName(activity, supplierName));
+					if (!productName.isEmpty() && productName != null) {
+						ProductMaster productMaster = masterService.getProductDataByProductNameHandler(jwt,
+								productName);
+						data.setProductCategory(productMaster.getProductCategory());
+						data.setProductGroup(productMaster.getProductGroup());
+						data.setStandardUnits(productMaster.getStandardUnits());
+						data.setSupplierGst(productMaster.getSupplierGst());
+						data.setPacking(productMaster.getPacking());
+						data.setTermsMonthList(termsPriceService.fetchApprovedTermsMonth(activity, productName));
+						if (date != null) {
+							setTermsData(data, termsMonth, termsNo, activity, productName, date);
+							if (!poBased.isEmpty() && poBased.equals("Request")) {
+								requestBasedPoData(data, productName, officeName, purchaseOrderType, date);
+							}
 						}
-					}
-					if (!poBased.isEmpty() && poBased.equals("HoBased")) {
-						data.setOfficeList(userService.getOfficeList().stream().map(item -> item.getOfficeName())
-								.collect(Collectors.toSet()));
+						if (!poBased.isEmpty() && poBased.equals("HoBased")) {
+							data.setOfficeList(userService.getOfficeList().stream().map(item -> item.getOfficeName())
+									.collect(Collectors.toSet()));
+						}
 					}
 				}
 			}
@@ -238,29 +241,36 @@ public class PoServiceImpl implements PoService {
 										.mapToDouble(data -> data.getMaterialReceivedQuantity()).sum();
 
 						boolean isDateMatch = false;
-						boolean isRegularPo = true;
-						boolean isConfirmativePoPresent = true;
+						boolean isConfirmativePo = true;
 
 						if ("grn".equals(poNoFor)) {
 							logger.info("{}", date);
 							isDateMatch = !item.getDate().isBefore(date.minusDays(30));
 						} else if ("poReq".equals(poNoFor)) {
-							isRegularPo = !"Regular".equals(item.getPurchaseOrderType());
+							isConfirmativePo = "Regular".equals(item.getPurchaseOrderType());
 							isDateMatch = item.getDate().isBefore(date.minusDays(30));
 
-							if ("Confirmative".equals(item.getPurchaseOrderType())) {
-								boolean hasOldPo = item.getTableData().stream()
-										.anyMatch(data -> data.getOldPoNo().equals(item.getPoNo()));
-								isConfirmativePoPresent = !hasOldPo;
-							}
 						}
 
-						return isDateMatch && issuedQty > grnCreated && isRegularPo && isConfirmativePoPresent;
+						return isDateMatch && issuedQty > grnCreated && isConfirmativePo;
 					}).map(PurchaseOrder::getPoNo).collect(Collectors.toList());
 
 		} catch (Exception e) {
 			throw new Exception("Error while fetching unfulfilled PO numbers", e);
 		}
+	}
+
+	@Override
+	public List<String> getPoNoForConfirmativePOReq(String productName, String officeName, String poNoFor,
+			LocalDate date) throws Exception {
+		List<String> unfullfilledPoNo = getUnfullfilledPoNo(productName, officeName, "poReq", date);
+		List<String> toremoveList = getPoData().stream()
+				.filter(i -> i.getProductName().equals(productName) && i.getPurchaseOrderType().equals("Confirmative")
+						&& i.getTableData().stream().anyMatch(
+								k -> k.getRegion().equals(officeName) && unfullfilledPoNo.contains(k.getOldPoNo())))
+				.map(i -> i.getPoNo()).collect(Collectors.toList());
+		unfullfilledPoNo.removeAll(toremoveList);
+		return unfullfilledPoNo;
 	}
 
 	@Override

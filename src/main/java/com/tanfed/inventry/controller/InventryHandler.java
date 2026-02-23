@@ -118,20 +118,20 @@ public class InventryHandler {
 
 	@GetMapping("/fetchdataforporequest")
 	public DataForPoRequest getDataForPoRequestHandler(@RequestParam String officeName, String activity,
-			String productName, String purchaseOrderType, String poNo,
+			String productName, String purchaseOrderType, String poNo, String supplierName,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
 			@RequestHeader("Authorization") String jwt) throws Exception {
-		return porequestService.getDataForPoRequest(officeName, activity, jwt, productName, purchaseOrderType, poNo,
-				date);
+		return porequestService.getDataForPoRequest(officeName, activity, jwt, productName, supplierName,
+				purchaseOrderType, poNo, date);
 	}
 
 	@GetMapping("/fetchdataforpo")
-	public DataForPo getDataForPurchaseOrder(@RequestParam String activity, String productName, String termsMonth,
-			String termsNo, String poBased, String officeName, String purchaseOrderType,
+	public DataForPo getDataForPurchaseOrder(@RequestParam String activity, String supplierName, String productName,
+			String termsMonth, String termsNo, String poBased, String officeName, String purchaseOrderType,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
 			@RequestHeader("Authorization") String jwt) throws Exception {
-		return poService.getDataForPurchaseOrder(activity, productName, jwt, termsMonth, termsNo, poBased, officeName,
-				purchaseOrderType, date);
+		return poService.getDataForPurchaseOrder(activity, supplierName, productName, jwt, termsMonth, termsNo, poBased,
+				officeName, purchaseOrderType, date);
 	}
 
 	@GetMapping("/fetchdataforgrn")

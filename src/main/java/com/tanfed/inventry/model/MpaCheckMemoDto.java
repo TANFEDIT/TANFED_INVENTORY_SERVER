@@ -9,6 +9,7 @@ import com.tanfed.inventry.entity.MpaBillEntryEmpTable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,7 +18,7 @@ public class MpaCheckMemoDto {
 	private LocalDate date;
 	private String checkMemoNo;
 	private String officeName;
-	
+
 	private MpaBillEntry mpaBillEntry;
 	private Double totalCalculatedValue;
 	private Double totalSgstValue;
@@ -29,7 +30,7 @@ public class MpaCheckMemoDto {
 	private String tcsOrTds;
 	private Double rate;
 	private Double calculatedTcsTdsValue;
-	
+
 	private Double netPaymentAfterAdjustment;
 	private Double difference;
 	private String remarks;

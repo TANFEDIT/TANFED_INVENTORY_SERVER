@@ -7,7 +7,10 @@ import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,6 +30,7 @@ import com.tanfed.inventry.repository.GrnRepo;
 import com.tanfed.inventry.repository.OpeningStockRepo;
 import com.tanfed.inventry.repository.OutwardBatchRepo;
 import com.tanfed.inventry.repository.PurchaseOrderRepo;
+import com.tanfed.inventry.repository.SupplierInvoiceDetailsRepo;
 import com.tanfed.inventry.response.DataForGrn;
 import com.tanfed.inventry.response.DataForGrnUpdate;
 import com.tanfed.inventry.utils.CodeGenerator;
@@ -63,9 +67,6 @@ public class GrnServiceImpl implements GrnService {
 	private OpeningStockService openingStockService;
 
 	@Autowired
-	private SupplierInvoiceService supplierInvoiceService;
-
-	@Autowired
 	ObjectMapper mapper;
 
 	private static Logger logger = LoggerFactory.getLogger(GrnServiceImpl.class);
@@ -79,7 +80,6 @@ public class GrnServiceImpl implements GrnService {
 			obj.setEmpId(Arrays.asList(empId));
 			obj.setGrnQtyAvlForDc(obj.getMaterialReceivedQuantity());
 			obj.setGrnQtyAvlForGrnAttach(obj.getMaterialReceivedQuantity());
-			obj.setJvApproved(false);
 			obj.setIsPurchaseBooked(false);
 			PurchaseOrder purchaseOrder = poService.getPoByPoNo(obj.getPoNo());
 
@@ -179,8 +179,9 @@ public class GrnServiceImpl implements GrnService {
 									.collect(Collectors.toList()));
 				}
 				if (!activity.isEmpty() && activity != null) {
-					List<PurchaseOrder> poData = poService.getPoData().stream()
-							.filter(item -> item.getVoucherStatus().equals("Approved")).filter(item -> {
+					List<PurchaseOrder> poData = poService.getPoData().stream().filter(
+							item -> item.getVoucherStatus().equals("Approved") && item.getActivity().equals(activity))
+							.filter(item -> {
 								double issuedQty = item.getTableData().stream()
 										.filter(temp -> temp.getRegion().equals(officeName))
 										.mapToDouble(PoTableData::getPoIssueQty).sum();
@@ -198,30 +199,50 @@ public class GrnServiceImpl implements GrnService {
 					}
 					data.setPoData(poData);
 
-					List<String> productList = poData.stream().map(item -> item.getProductName())
-							.collect(Collectors.toList());
-					Set<String> productList2 = termsPriceService.fetchApprovedProductName(activity);
-
-					Set<String> productListFinal = productList.stream().filter(productList2::contains)
-							.collect(Collectors.toSet());
-
-					data.setProductNameList(productListFinal);
+					data.setProductNameList(
+							poData.stream().map(item -> item.getProductName()).collect(Collectors.toSet()));
 					if (godownType != null && !godownType.isEmpty()) {
 						data.setGodownNameList(getGodownNameList(jwt, officeName, godownType));
 					}
 					if (!godownName.isEmpty() && godownName != null && !godownName.equals("Direct Material Center")) {
 						GodownInfo godownInfo = masterService.getGodownInfoByGodownNameHandler(godownName, jwt);
-						if (!godownName.isEmpty() && godownName != null
-								&& !godownName.equals("Direct Material Center")) {
-							data.setIfmsId(godownInfo.getIfmsId());
-							data.setFilteredGodownNameList(data.getGodownNameList().stream()
-									.filter(item -> !item.equals(godownName)).collect(Collectors.toList()));
+						data.setIfmsId(godownInfo.getIfmsId());
+
+						if (!godownInfo.getGodownType().equals("Railways Godown")) {
+							List<GodownInsuranceData> insuranceList = godownInfo.getInsurance();
+
+							if (insuranceList == null || insuranceList.isEmpty()) {
+								throw new Exception("Update Godown Insurance Data!");
+							}
+
+							GodownInsuranceData godownInsuranceData = insuranceList.get(insuranceList.size() - 1);
+
+							if (date.isBefore(godownInsuranceData.getInsuranceFrom())
+									|| date.isAfter(godownInsuranceData.getInsuranceTo())) {
+								throw new Exception("Update Godown Insurance Data!");
+							}
+
+							List<LicenseData> licenseList = godownInfo.getLicense();
+
+							if (licenseList == null || licenseList.isEmpty()) {
+								throw new Exception("Update Godown License Data!");
+							}
+
+							Optional<LicenseData> optionalLicense = licenseList.stream().filter(
+									i -> activity.equals(i.getLicenseFor()) && "Whole Sale".equals(i.getLicenseType()))
+									.reduce((first, second) -> second);
+
+							if (optionalLicense.isEmpty()) {
+								throw new Exception("Update Godown License Data!");
+							}
+
+							LicenseData licenseData = optionalLicense.get();
+
+							if (date.isBefore(licenseData.getValidFrom()) || date.isAfter(licenseData.getValidTo())) {
+								throw new Exception("Update Godown License Data!");
+							}
 						}
-						if ((date.isBefore(godownInfo.getInsuranceFrom()) || date.isAfter(godownInfo.getInsuranceTo()))
-								|| (date.isBefore(godownInfo.getValidityFrom())
-										|| date.isAfter(godownInfo.getValidityTo()))) {
-							throw new Exception("Update Godown Data!");
-						}
+
 					}
 					if (!productName.isEmpty() && productName != null) {
 						ProductMaster productMaster = masterService.getProductDataByProductNameHandler(jwt,
@@ -255,34 +276,41 @@ public class GrnServiceImpl implements GrnService {
 									data.setAlert(false);
 								}
 							});
-							data.setTotalPoQty(purchaseOrder.getTableData().stream()
-									.filter(item -> item.getRegion().equals(officeName))
-									.mapToDouble(temp -> temp.getPoIssueQty()).sum());
+							data.setTotalPoQty(RoundToDecimalPlace.roundToThreeDecimalPlaces(purchaseOrder
+									.getTableData().stream().filter(item -> item.getRegion().equals(officeName))
+									.mapToDouble(temp -> temp.getPoIssueQty()).sum()));
 
-							data.setTotalBufferQty(purchaseOrder.getTableData().stream().filter(
-									item -> item.getRegion().equals(officeName) && item.getIssuedFor().equals("Buffer"))
-									.mapToDouble(temp -> temp.getPoIssueQty()).sum());
+							data.setTotalBufferQty(
+									RoundToDecimalPlace.roundToThreeDecimalPlaces(purchaseOrder.getTableData().stream()
+											.filter(item -> item.getRegion().equals(officeName)
+													&& item.getIssuedFor().equals("Buffer"))
+											.mapToDouble(temp -> temp.getPoIssueQty()).sum()));
 
-							data.setTotalDirectQty(purchaseOrder.getTableData().stream().filter(
-									item -> item.getRegion().equals(officeName) && item.getIssuedFor().equals("Direct"))
-									.mapToDouble(temp -> temp.getPoIssueQty()).sum());
+							data.setTotalDirectQty(
+									RoundToDecimalPlace.roundToThreeDecimalPlaces(purchaseOrder.getTableData().stream()
+											.filter(item -> item.getRegion().equals(officeName)
+													&& item.getIssuedFor().equals("Direct"))
+											.mapToDouble(temp -> temp.getPoIssueQty()).sum()));
 
-							data.setTotalGrnCreated(purchaseOrder.getGrnData().stream()
-									.filter(item -> item.getOfficeName().equals(officeName)
-											&& item.getVoucherStatus().equals("Approved"))
-									.mapToDouble(item -> item.getMaterialReceivedQuantity()).sum());
+							data.setTotalGrnCreated(
+									RoundToDecimalPlace.roundToThreeDecimalPlaces(purchaseOrder.getGrnData().stream()
+											.filter(item -> item.getOfficeName().equals(officeName)
+													&& item.getVoucherStatus().equals("Approved"))
+											.mapToDouble(item -> item.getMaterialReceivedQuantity()).sum()));
 
-							data.setTotalBufferCreated(purchaseOrder.getGrnData().stream()
-									.filter(item -> item.getOfficeName().equals(officeName)
-											&& !item.getGodownType().equals("Direct")
-											&& item.getVoucherStatus().equals("Approved"))
-									.mapToDouble(item -> item.getMaterialReceivedQuantity()).sum());
+							data.setTotalBufferCreated(
+									RoundToDecimalPlace.roundToThreeDecimalPlaces(purchaseOrder.getGrnData().stream()
+											.filter(item -> item.getOfficeName().equals(officeName)
+													&& !item.getGodownType().equals("Direct")
+													&& item.getVoucherStatus().equals("Approved"))
+											.mapToDouble(item -> item.getMaterialReceivedQuantity()).sum()));
 
-							data.setTotalDirectCreated(purchaseOrder.getGrnData().stream()
-									.filter(item -> item.getOfficeName().equals(officeName)
-											&& item.getGodownType().equals("Direct")
-											&& item.getVoucherStatus().equals("Approved"))
-									.mapToDouble(item -> item.getMaterialReceivedQuantity()).sum());
+							data.setTotalDirectCreated(
+									RoundToDecimalPlace.roundToThreeDecimalPlaces(purchaseOrder.getGrnData().stream()
+											.filter(item -> item.getOfficeName().equals(officeName)
+													&& item.getGodownType().equals("Direct")
+													&& item.getVoucherStatus().equals("Approved"))
+											.mapToDouble(item -> item.getMaterialReceivedQuantity()).sum()));
 
 							TermsPrice termsPrice = termsPriceService
 									.fetchTermsByTermsNo(purchaseOrder.getTermsPrice().getTermsNo());
@@ -384,100 +412,182 @@ public class GrnServiceImpl implements GrnService {
 		}
 	}
 
-//	@Override
-//	public ResponseEntity<String> updateGrnAttachQty(GrnAttachDto obj) throws Exception {
-//		try {
-//
-//			Double BookngQty = obj.getCurrentBookingQty();
-//
-//			for (String temp : obj.getGrnNo()) {
-//				GRN grn = grnRepo.findByGrnNo(temp).get();
-//				if (grn.getGrnQtyAvlForGrnAttach() <= BookngQty) {
-//					if (grn.getGrnAttachQtyString() == null) {
-//						grn.setGrnAttachQtyString(grn.getGrnQtyAvlForGrnAttach().toString());
-//					} else {
-//						grn.setGrnAttachQtyString(grn.getGrnAttachQtyString() + ", " + grn.getGrnQtyAvlForGrnAttach());
-//					}
-//					grn.setGrnAttachQty(RoundToDecimalPlace
-//							.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + grn.getGrnQtyAvlForGrnAttach()));
-//					BookngQty -= grn.getGrnQtyAvlForGrnAttach();
-//					grn.setGrnQtyAvlForGrnAttach(0.0);
-//				} else {
-//					if (grn.getGrnAttachQtyString() == null) {
-//						grn.setGrnAttachQtyString(BookngQty.toString());
-//					} else {
-//						grn.setGrnAttachQtyString(grn.getGrnAttachQtyString() + ", " + BookngQty);
-//					}
-//					grn.setGrnAttachQty(RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + BookngQty));
-//					grn.setGrnQtyAvlForGrnAttach(grn.getGrnQtyAvlForGrnAttach() - BookngQty);
-//				}
-//				if (grn.getSupplierInvoiceNo() == null) {
-//					grn.setSupplierInvoiceNo(obj.getInvoiceNo());
-//				} else {
-//					grn.setSupplierInvoiceNo(grn.getSupplierInvoiceNo() + ", " + obj.getInvoiceNo());
-//				}
-//				grnRepo.save(grn);
-//				logger.info("RmngBkngQty : {}", obj.getCurrentBookingQty());
-//			}
-//			supplierInvoiceService.updateSupplierInvoiceQtyForGrnAttach(obj.getInvoiceNo(), BookngQty);
-//			return new ResponseEntity<String>("Updated Successfully!", HttpStatus.ACCEPTED);
-//
-//		} catch (Exception e) {
-//			throw new Exception(e);
-//		}
-//	}
+	@Autowired
+	private SupplierInvoiceDetailsRepo supplierInvoiceDetailsRepo;
 
 	@Override
 	public ResponseEntity<String> updateGrnAttachQty(GrnAttachDto obj) throws Exception {
-
 		try {
-
-			Double bookingQty = obj.getCurrentBookingQty();
-
-			for (String temp : obj.getGrnNo()) {
-
-				if (bookingQty <= 0)
-					break;
-
-				GRN grn = grnRepo.findByGrnNo(temp).orElseThrow(() -> new RuntimeException("GRN not found : " + temp));
-
-				Double available = grn.getGrnQtyAvlForGrnAttach();
-				Double attachQty = Math.min(available, bookingQty);
-
-				// Attach qty string
-				if (grn.getGrnAttachQtyString() == null) {
-					grn.setGrnAttachQtyString(attachQty.toString());
-				} else {
-					grn.setGrnAttachQtyString(grn.getGrnAttachQtyString() + ", " + attachQty);
+			obj.getGrnNo().forEach(i -> {
+				try {
+					attachGrn(i, obj.getInvoiceNo());
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-
-				// Update quantities
-				grn.setGrnAttachQty(RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + attachQty));
-
-				grn.setGrnQtyAvlForGrnAttach(RoundToDecimalPlace.roundToTwoDecimalPlaces(available - attachQty));
-
-				bookingQty -= attachQty;
-
-				// Supplier invoice
-				if (grn.getSupplierInvoiceNo() == null) {
-					grn.setSupplierInvoiceNo(obj.getInvoiceNo());
-				} else {
-					grn.setSupplierInvoiceNo(grn.getSupplierInvoiceNo() + ", " + obj.getInvoiceNo());
-				}
-
-				grnRepo.save(grn);
-
-				logger.info("Remaining Booking Qty : {}", bookingQty);
-			}
-
-			supplierInvoiceService.updateSupplierInvoiceQtyForGrnAttach(obj.getInvoiceNo(), bookingQty);
-
-			return new ResponseEntity<>("Updated Successfully!", HttpStatus.ACCEPTED);
+			});
+			return new ResponseEntity<String>("Updated Successfully!", HttpStatus.ACCEPTED);
 
 		} catch (Exception e) {
 			throw new Exception(e);
 		}
 	}
+
+	private void attachGrn(String grnNo, List<String> invoiceNoList) throws Exception {
+
+		GRN grn = grnRepo.findByGrnNo(grnNo).orElseThrow(() -> new Exception("GRN not found: " + grnNo));
+
+		for (String invNo : invoiceNoList) {
+
+			if (Double.compare(grn.getGrnQtyAvlForGrnAttach(), 0.0) == 0) {
+				break;
+			}
+
+			SupplierInvoiceDetails invoice = fetchSupplierInvoice(invNo);
+
+			Double invoiceQty = invoice.getInvoiceQtyAvlForGrnAttach();
+			if (Double.compare(invoiceQty, 0.0) == 0) {
+				continue;
+			}
+
+			double attachQty = Math.min(grn.getGrnQtyAvlForGrnAttach(), invoiceQty);
+
+			grn.setGrnAttachQty(RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + attachQty));
+			grn.setGrnQtyAvlForGrnAttach(grn.getGrnQtyAvlForGrnAttach() - attachQty);
+
+			appendString(grn::getGrnAttachQtyString, grn::setGrnAttachQtyString, attachQty);
+			appendString(grn::getSupplierInvoiceNo, grn::setSupplierInvoiceNo, invNo);
+
+			invoice.setInvoiceQtyAvlForGrnAttach(invoiceQty - attachQty);
+
+			grnRepo.save(grn);
+			supplierInvoiceDetailsRepo.save(invoice);
+		}
+	}
+
+	private void appendString(Supplier<String> getter, Consumer<String> setter, Object value) {
+		if (getter.get() == null) {
+			setter.accept(value.toString());
+		} else {
+			setter.accept(getter.get() + ", " + value);
+		}
+	}
+
+//	private void attachGrn(String grnNo, List<String> invoiceNoList) throws Exception {
+//		try {
+//			int index = 0;
+//			SupplierInvoiceDetails supplierInvoiceDetails;
+//			Double BookngQty;
+//			String invoiceNo;
+//			do {
+//				supplierInvoiceDetails = fetchSupplierInvoice(invoiceNoList.get(index++));
+//				BookngQty = supplierInvoiceDetails.getInvoiceQtyAvlForGrnAttach();
+//				invoiceNo = supplierInvoiceDetails.getInvoiceNumber();
+//
+//			} while (supplierInvoiceDetails.getInvoiceQtyAvlForGrnAttach() == 0.0);
+//			GRN grn = grnRepo.findByGrnNo(grnNo).get();
+//			if (grn.getGrnQtyAvlForGrnAttach() <= BookngQty) {
+//				if (grn.getGrnAttachQtyString() == null) {
+//					grn.setGrnAttachQtyString(grn.getGrnQtyAvlForGrnAttach().toString());
+//				} else {
+//					grn.setGrnAttachQtyString(grn.getGrnAttachQtyString() + ", " + grn.getGrnQtyAvlForGrnAttach());
+//				}
+//				grn.setGrnAttachQty(RoundToDecimalPlace
+//						.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + grn.getGrnQtyAvlForGrnAttach()));
+//				BookngQty -= grn.getGrnQtyAvlForGrnAttach();
+//				grn.setGrnQtyAvlForGrnAttach(0.0);
+//				if (grn.getSupplierInvoiceNo() == null) {
+//					grn.setSupplierInvoiceNo(invoiceNo);
+//				} else {
+//					grn.setSupplierInvoiceNo(grn.getSupplierInvoiceNo() + ", " + invoiceNo);
+//				}
+//				grnRepo.save(grn);
+//				supplierInvoiceDetails.setInvoiceQtyAvlForGrnAttach(BookngQty);
+//				supplierInvoiceDetailsRepo.save(supplierInvoiceDetails);
+//			} else {
+//				if (grn.getGrnAttachQtyString() == null) {
+//					grn.setGrnAttachQtyString(BookngQty.toString());
+//				} else {
+//					grn.setGrnAttachQtyString(grn.getGrnAttachQtyString() + ", " + BookngQty);
+//				}
+//				grn.setGrnAttachQty(RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + BookngQty));
+//				grn.setGrnQtyAvlForGrnAttach(grn.getGrnQtyAvlForGrnAttach() - BookngQty);
+//				if (grn.getSupplierInvoiceNo() == null) {
+//					grn.setSupplierInvoiceNo(invoiceNo);
+//				} else {
+//					grn.setSupplierInvoiceNo(grn.getSupplierInvoiceNo() + ", " + invoiceNo);
+//				}
+//				grnRepo.save(grn);
+//				BookngQty = 0.0;
+//				supplierInvoiceDetails.setInvoiceQtyAvlForGrnAttach(BookngQty);
+//				supplierInvoiceDetailsRepo.save(supplierInvoiceDetails);
+//				attachGrn(grnNo, invoiceNoList);
+//			}
+//
+//		} catch (Exception e) {
+//			throw new Exception(e);
+//		}
+//
+//	}
+
+	private SupplierInvoiceDetails fetchSupplierInvoice(String invoiceNo) throws Exception {
+		try {
+			return supplierInvoiceDetailsRepo.findByInvoiceNumber(invoiceNo);
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
+
+//	@Override
+//	public ResponseEntity<String> updateGrnAttachQty(GrnAttachDto obj) throws Exception {
+//
+//		try {
+//
+//			Double bookingQty = obj.getCurrentBookingQty();
+//
+//			for (String temp : obj.getGrnNo()) {
+//
+//				if (bookingQty <= 0)
+//					break;
+//
+//				GRN grn = grnRepo.findByGrnNo(temp).orElseThrow(() -> new RuntimeException("GRN not found : " + temp));
+//
+//				Double available = grn.getGrnQtyAvlForGrnAttach();
+//				Double attachQty = Math.min(available, bookingQty);
+//
+//				// Attach qty string
+//				if (grn.getGrnAttachQtyString() == null) {
+//					grn.setGrnAttachQtyString(attachQty.toString());
+//				} else {
+//					grn.setGrnAttachQtyString(grn.getGrnAttachQtyString() + ", " + attachQty);
+//				}
+//
+//				// Update quantities
+//				grn.setGrnAttachQty(RoundToDecimalPlace.roundToTwoDecimalPlaces(grn.getGrnAttachQty() + attachQty));
+//
+//				grn.setGrnQtyAvlForGrnAttach(RoundToDecimalPlace.roundToTwoDecimalPlaces(available - attachQty));
+//
+//				bookingQty -= attachQty;
+//
+//				// Supplier invoice
+//				if (grn.getSupplierInvoiceNo() == null) {
+//					grn.setSupplierInvoiceNo(obj.getInvoiceNo());
+//				} else {
+//					grn.setSupplierInvoiceNo(grn.getSupplierInvoiceNo() + ", " + obj.getInvoiceNo());
+//				}
+//
+//				grnRepo.save(grn);
+//
+//				logger.info("Remaining Booking Qty : {}", bookingQty);
+//			}
+//
+//			supplierInvoiceService.updateSupplierInvoiceQtyForGrnAttach(obj.getInvoiceNo(), bookingQty);
+//
+//			return new ResponseEntity<>("Updated Successfully!", HttpStatus.ACCEPTED);
+//
+//		} catch (Exception e) {
+//			throw new Exception(e);
+//		}
+//	}
 
 	@Override
 	public GRN getGrnDataByGrnNo(String grnNo) throws Exception {
@@ -666,6 +776,20 @@ public class GrnServiceImpl implements GrnService {
 	}
 
 	@Override
+	public void revertPurchaseBookingStatus(List<GrnTableDataForPurchaseBooking> grn) throws Exception {
+		try {
+			grn.forEach(item -> {
+				GRN grnData = grnRepo.findByGrnNo(item.getGrnNo()).get();
+				grnData.setIsPurchaseBooked(false);
+				grnRepo.save(grnData);
+			});
+
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
+
+	@Override
 	public void saveGrn(GRN grn) throws Exception {
 		try {
 			grnRepo.save(grn);
@@ -708,19 +832,9 @@ public class GrnServiceImpl implements GrnService {
 		}
 	}
 
-	@Autowired
-	private AccountsService accountsService;
-
 	@Override
 	public void revertGrnJv(GRN grn, String jwt, String grnNo) throws Exception {
 		try {
-			if (grn != null) {
-				Vouchers vouchers = accountsService.getAccountsVoucherByVoucherNoHandler("journalVoucher",
-						grn.getJvNo(), jwt);
-				VoucherApproval data = new VoucherApproval("Rejected",
-						String.valueOf(vouchers.getJournalVoucherData().getId()), "journalVoucher", null);
-				accountsService.voucherApprovalHandler(data, jwt);
-			}
 			if (grnNo != null) {
 				GRN grnData = grnRepo.findByGrnNo(grnNo).get();
 				grnData.setJvNo(null);

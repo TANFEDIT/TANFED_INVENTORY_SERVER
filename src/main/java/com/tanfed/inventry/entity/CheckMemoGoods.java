@@ -29,17 +29,17 @@ public class CheckMemoGoods {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private List<String> designation;
 	private List<String> empId;
 	private String voucherStatus;
 	private LocalDate createdAt = LocalDate.now();
 	private LocalDate approvedDate;
-	
+
 	private String activity;
 	private String checkMemoNo;
 	private LocalDate cmDate;
-	
+
 	private String productCategory;
 	private String productGroup;
 	private String productName;
@@ -56,14 +56,13 @@ public class CheckMemoGoods {
 	private LocalDate poDate;
 	private Double totalPoQty;
 	private String termsNo;
-	
-	
+
 	private Double advOutstanding;
 	private Double gstRate;
-	
+
 	@Embedded
 	private GstRateData gstData;
-	
+
 	private Double totalGrnQty;
 	private Double totalSupplierInvQty;
 	private Double jvQty;
@@ -75,36 +74,34 @@ public class CheckMemoGoods {
 	private Double calulatedBasicPrice;
 	private Double calculatedTcsTdsValue;
 	private Double calculatedTotal;
-	
+
 	private String creditNoteAdjOptions;
 	private Double creditNoteAdjAmount;
 	private Double creditNoteAdjCnNo;
 	private LocalDate creditNoteCnDate;
-	
+
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<TermsDataForPurchaseBooking> termsData;
-	
+
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<TermsDataForPurchaseBooking> termsDataGeneral;
-	
+
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<TermsDataForPurchaseBooking> termsDataDirect;
-	
+
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<TermsDataForPurchaseBooking> termsDataBuffer;
-	
+
 	private Double totalPaymentValue;
 	private Double netPaymentValue;
 	private Double rate;
 	private Double percentageValue;
 	private Double netPaymentAfterAdjustment;
-	
+
 	private Double difference;
 	private String remarks;
 
 	private String pvNo;
 	private List<String> jvNoList;
-	
-	
-	
+
 }

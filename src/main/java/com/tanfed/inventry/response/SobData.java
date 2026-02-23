@@ -20,20 +20,20 @@ public class SobData {
 
 	private SupplierInvoiceDetails supplierInvoiceDetails;
 	private List<SupplierInvoiceDto> supplierInvoice;
-	
+
 	private PurchaseBooking purchaseBookingData;
 	private List<PurchaseBookingDto> purchaseBooking;
-	
+
 	private CheckMemoGoods checkMemoGoodsData;
 	private List<CheckMemoGoodsDto> checkMemoGoods;
-	
+
 	private PurchaseOrder purchaseOrderData;
 	private List<PurchaseOrder> purchaseOrder;
 	private List<PurchaseOrder> grnAttach;
-	
+
 	private List<MpaBillEntry> mpaBillEntry;
 	private List<MpaCheckMemoDto> mpaCheckMemo;
-	
+
 	private List<TcBillEntry> tcBillEntry;
 	private List<TcCheckMemoDto> tcCheckMemo;
 }

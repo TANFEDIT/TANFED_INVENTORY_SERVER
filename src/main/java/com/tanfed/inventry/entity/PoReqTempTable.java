@@ -18,25 +18,25 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PoReqTempTable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    private String poReqNo;
-    
-    private String productName;
-    
-    private String poRequestFor;
-    
-    private Double requestQuantity;
-    
-    private Double alreadyIssuedQty;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    private Double issueQty;
-    
-    private LocalDateTime createdAt;
-    
-    private String officeName;
-    
-    private String poReqType;
+	private String poReqNo;
+
+	private String productName;
+
+	private String poRequestFor;
+
+	private Double requestQuantity;
+
+	private Double alreadyIssuedQty;
+
+	private Double issueQty;
+
+	private LocalDateTime createdAt;
+
+	private String officeName;
+
+	private String poReqType;
 }

@@ -28,7 +28,6 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 	@Autowired
 	private InvoiceRepo invoiceRepo;
 
-
 	@Autowired
 	private MasterService masterService;
 
@@ -589,7 +588,7 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 				data.setInvoice(invoiceLst);
 				return data;
 			}
-			
+
 			case "icm": {
 				data.setIcmNoList(invoiceRepo.findByOfficeName(officeName).stream().filter(
 						item -> item.getDateOfPresent() != null && item.getVoucherStatusICP3().equals("Approved"))
@@ -732,8 +731,6 @@ public class InvoiceCollectionServiceImpl implements InvoiceCollectionService {
 					return mapSdrObDateToIC(item, formType, jwt);
 				}).collect(Collectors.toList());
 	}
-
-
 
 	private ICP1Data mapInvoiceDateToIC(Invoice temp, String formType, String jwt) {
 		ICP1Data data = new ICP1Data();

@@ -99,6 +99,9 @@ public class OpeningStockServiceImpl implements OpeningStockService {
 					data.setSupplierGst(productMaster.getSupplierGst());
 					data.setSupplierName(productMaster.getSupplierName());
 					data.setPacking(productMaster.getPacking());
+					data.setGstCategory(productMaster.getGstCategory());
+					data.setGstRate(productMaster.getGstRate());
+					data.setGstData(productMaster.getGstData());
 					data.setSupplyModeList(masterService.getTerms_Price_ConfigListHandler(jwt).stream()
 							.filter(item -> item.getActivity().equals(activity)).map(Terms_Price_Config::getSupplyMode)
 							.filter(Objects::nonNull).collect(Collectors.toList()));
@@ -115,8 +118,7 @@ public class OpeningStockServiceImpl implements OpeningStockService {
 	public ResponseEntity<String> updateGrnQtyForDc(GrnQtyUpdateForDc obj, String despatchAdviceNo) throws Exception {
 		try {
 			OpeningStock ob = openingStockRepo.findByObId(obj.getOutwardBatchNo()).orElse(null);
-			ob.setQtyAvlForDc(RoundToDecimalPlace
-					.roundToTwoDecimalPlaces(ob.getQtyAvlForDc() - obj.getQty()));
+			ob.setQtyAvlForDc(RoundToDecimalPlace.roundToTwoDecimalPlaces(ob.getQtyAvlForDc() - obj.getQty()));
 			openingStockRepo.save(ob);
 			try {
 				if (obj.getDcNo() != null) {
@@ -143,8 +145,7 @@ public class OpeningStockServiceImpl implements OpeningStockService {
 	public void revertGrnQtyForDc(GrnQtyUpdateForDc temp) throws Exception {
 		try {
 			OpeningStock ob = openingStockRepo.findByObId(temp.getOutwardBatchNo()).orElse(null);
-			ob.setQtyAvlForDc(RoundToDecimalPlace
-					.roundToTwoDecimalPlaces(ob.getQtyAvlForDc() + temp.getQty()));
+			ob.setQtyAvlForDc(RoundToDecimalPlace.roundToTwoDecimalPlaces(ob.getQtyAvlForDc() + temp.getQty()));
 			openingStockRepo.save(ob);
 		} catch (Exception e) {
 			throw new Exception(e);

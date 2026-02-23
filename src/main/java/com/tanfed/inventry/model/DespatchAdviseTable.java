@@ -13,5 +13,5 @@ public class DespatchAdviseTable {
 	private String dcNo;
 	private String invoiceNo;
 	private Double qty;
-	
+
 }

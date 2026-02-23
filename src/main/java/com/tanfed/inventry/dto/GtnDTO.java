@@ -15,40 +15,40 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GtnDTO {
-	
+
 	private Long id;
-	
+
 	private LocalDate createdAt = LocalDate.now();
-	
+
 	private String officeName;
-	
+
 	private String voucherStatus;
-	
+
 	private List<String> designation;
-	
+
 	private List<String> empId;
-	
+
 	private LocalDate approvedDate;
-	
+
 	private LocalDate date;
-	
+
 	private String gtnNo;
-	
+
 	private String activity;
-	
+
 	private String month;
 
 	private String suppliedGodown;
-	
+
 	private String godownName;
-	
+
 	private JournalVoucher jv;
-	
+
 	private String invoiceNo;
-	
+
 	private Invoice invoice;
-	
+
 	private List<GtnInvoiceData> invoiceTableData;
-	
+
 	private Boolean billEntry;
 }

@@ -11,18 +11,13 @@ import lombok.NoArgsConstructor;
 @Embeddable
 public class IncentiveDataInvoice {
 
-	 
 	private String incentivePaccsPm;
-	
-	 
+
 	private String secretoryAndSalesmanPm;
-	
-	 
+
 	private Double incentivePaccsTotal;
-	
-	 
+
 	private Double secretoryIncentiveTotal;
-	
-	 
+
 	private Double salesmanIncentiveTotal;
 }

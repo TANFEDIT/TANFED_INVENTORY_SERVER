@@ -19,10 +19,10 @@ public class DataForMpaMasters {
 	private Set<String> gstCategoryList;
 	private List<Double> gstRateList;
 	private GstRateData gstData;
-	
+
 	private List<MpaEmployeeData> empDefaultData;
 	private Set<String> contractFirmList;
-	
+
 	private ManPowerAgency mpaData;
 	private List<MpaEmployeeData> empData;
 }

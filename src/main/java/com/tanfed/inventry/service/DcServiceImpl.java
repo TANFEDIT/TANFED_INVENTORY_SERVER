@@ -199,11 +199,14 @@ public class DcServiceImpl implements DcService {
 											.calculateSlabRate(isHillKmPresent[0], rates);
 									Double hillCharges = transportChargesHill
 											+ (transportChargesHill * (contractorChargesData.getHillRate() / 100));
-									data.setTransportChargesPerQty(transportChargesPlain + hillCharges);
+									data.setTransportChargesPerQty(RoundToDecimalPlace
+											.roundToThreeDecimalPlaces(transportChargesPlain + hillCharges));
 								} else {
-									data.setTransportChargesPerQty(transportChargesPlain);
+									data.setTransportChargesPerQty(
+											RoundToDecimalPlace.roundToThreeDecimalPlaces(transportChargesPlain));
 								}
-								data.setLoadingChargesPerQty(contractorChargesData.getLoadingCharges());
+								data.setLoadingChargesPerQty(RoundToDecimalPlace
+										.roundToThreeDecimalPlaces(contractorChargesData.getLoadingCharges()));
 							}
 
 							if (!productName.isEmpty() && productName != null) {

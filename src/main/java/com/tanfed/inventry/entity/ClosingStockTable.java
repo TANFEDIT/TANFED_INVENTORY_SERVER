@@ -17,11 +17,11 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table
 public class ClosingStockTable {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private String officeName;
 	private LocalDate date;
 	private String productName;

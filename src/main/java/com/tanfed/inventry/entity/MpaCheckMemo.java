@@ -22,7 +22,7 @@ public class MpaCheckMemo {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private List<String> designation;
 	private List<String> empId;
 	private String voucherStatus;
@@ -31,14 +31,14 @@ public class MpaCheckMemo {
 	private LocalDate date;
 	private String checkMemoNo;
 	private String officeName;
-	
+
 	private String financialYear;
 	private String financialMonth;
 	private String contractFirm;
 	private String claimBillNo;
 	private LocalDate claimBillDate;
 	private Double totalBillValue;
-	
+
 	private Double totalCalculatedValue;
 	private Double totalSgstValue;
 	private Double totalCgstValue;
@@ -49,19 +49,11 @@ public class MpaCheckMemo {
 	private String tcsOrTds;
 	private Double rate;
 	private Double calculatedTcsTdsValue;
-	
+
 	private String jvNo;
 	private String pvNo;
 	private Double netPaymentAfterAdjustment;
 	private Double difference;
 	private String remarks;
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
 }

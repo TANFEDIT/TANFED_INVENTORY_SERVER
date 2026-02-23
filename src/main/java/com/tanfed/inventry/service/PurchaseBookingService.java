@@ -10,11 +10,11 @@ import com.tanfed.inventry.response.DataForPurchaseBooking;
 
 public interface PurchaseBookingService {
 
-	public DataForPurchaseBooking getDataForPurchaseBooking(String jwt, String activity, String productCategory, String supplierName,
-			String productName, String poType, String poMonth, String poNo) throws Exception;
-	
+	public DataForPurchaseBooking getDataForPurchaseBooking(String jwt, String activity, String productCategory,
+			String supplierName, String productName, String poType, String poMonth, String poNo) throws Exception;
+
 	public ResponseEntity<String> savePurchaseBooking(PurchaseBookingDto obj, String jwt) throws Exception;
-	
+
 	public PurchaseBooking getPurchaseBookedDataByCmNo(String checkMemoNo) throws Exception;
 
 	public List<PurchaseBooking> findPurchaseBookedDataByActivity(String activity) throws Exception;

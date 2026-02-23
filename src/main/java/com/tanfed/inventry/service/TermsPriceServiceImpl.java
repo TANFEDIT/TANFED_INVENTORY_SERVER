@@ -147,11 +147,12 @@ public class TermsPriceServiceImpl implements TermsPriceService {
 	}
 
 	@Override
-	public Set<String> fetchApprovedProductName(String activity) throws Exception {
+	public Set<String> fetchApprovedProductName(String activity, String supplierName) throws Exception {
 		try {
 			return getTermsPriceMasterData().stream()
 					.filter(item -> "Approved".equals(item.getVoucherStatus())
-							&& item.getMasterData().getActivity().equals(activity))
+							&& item.getMasterData().getActivity().equals(activity)
+							&& item.getMasterData().getSupplierName().equals(supplierName))
 					.map(item -> item.getMasterData().getProductName()).collect(Collectors.toSet());
 
 		} catch (Exception e) {

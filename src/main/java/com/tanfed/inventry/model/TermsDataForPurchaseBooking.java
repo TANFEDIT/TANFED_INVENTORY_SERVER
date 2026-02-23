@@ -17,11 +17,11 @@ public class TermsDataForPurchaseBooking {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private String headName;
 	private Double value;
 	private Double qty;
 	private Double calcValue;
 	private String action;
-	
+
 }

@@ -14,19 +14,19 @@ public class RegisterTable {
 
 	private String godownName;
 	private String toGodownName;
-	
+
 	private String grnNo;
 	private LocalDate grnDate;
-	
+
 	private String gtnNo;
 	private LocalDate gtnDate;
-	
+
 	private String dcWdnRoNo;
 	private LocalDate supplierDocDate;
-	
+
 	private String dcNo;
 	private LocalDate dcDate;
-	
+
 	private String invoiceNo;
 	private LocalDate invoiceDate;
 
@@ -34,15 +34,15 @@ public class RegisterTable {
 	private String ifmsId;
 	private String buyerName;
 	private String district;
-	
+
 	private String supplierName;
 	private String productName;
 	private List<ProductDataSalesRegister> productNameList;
 	private String packing;
-	
+
 	private String suppliedBags;
 	private Double suppliedQty;
-	
+
 	private String receivedBags;
 	private Double receivedQty;
 	private Double basicPrice;

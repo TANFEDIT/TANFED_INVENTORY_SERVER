@@ -3,7 +3,6 @@ package com.tanfed.inventry.model;
 import java.time.LocalDate;
 import java.util.List;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,7 +24,6 @@ public class SundryDrOb {
 	private Double qty;
 	private Double amount;
 
-	
 	private String officeName;
 	private List<String> empId;
 	private String voucherStatus;

@@ -21,7 +21,7 @@ public class DespatchAdviceRegisterTable {
 	private String godownName;
 	private Map<String, Double> productAndQty;
 	private List<String> dcNoList;
-	
+
 	private LocalDate clearedOn;
 	private LocalDate despatchAdviceDate;
 }

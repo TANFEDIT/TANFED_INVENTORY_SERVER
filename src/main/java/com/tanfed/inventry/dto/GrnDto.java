@@ -1,17 +1,11 @@
-package com.tanfed.inventry.entity;
+package com.tanfed.inventry.dto;
 
 import java.time.LocalDate;
 import java.util.List;
 
+import com.tanfed.inventry.model.JournalVoucher;
 import com.tanfed.inventry.model.WagonDataGrn;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,27 +13,20 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table
-public class GRN {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+public class GrnDto {
 	private Long id;
 
 	private String grnNo;
 
-	private String voucherStatus = "Pending";
+	private String voucherStatus;
 
-	@Column
 	private List<String> empId;
 
-	@Column
 	private List<String> designation;
 
 	private String officeName;
 
-	private LocalDate createdAt = LocalDate.now();
+	private LocalDate createdAt;
 
 	private LocalDate approvedDate;
 
@@ -130,7 +117,7 @@ public class GRN {
 
 	private Double grnQtyAvlForGrnAttach;
 
-	private Double grnAttachQty = 0.0;
+	private Double grnAttachQty;
 
 	private String grnAttachQtyString;
 
@@ -138,15 +125,13 @@ public class GRN {
 
 	private Double grnQtyAvlForDc;
 
-	@Embedded
 	private WagonDataGrn wagonData;
 
-	private String jvNo;
+	private JournalVoucher jv;
 
 	private Boolean isPurchaseBooked;
 
 	private Boolean unloadingBillEntry;
 
 	private Boolean wagonBillEntry;
-
 }

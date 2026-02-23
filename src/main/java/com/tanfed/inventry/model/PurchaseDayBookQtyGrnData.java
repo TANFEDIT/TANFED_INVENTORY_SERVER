@@ -14,7 +14,7 @@ public class PurchaseDayBookQtyGrnData {
 
 	private String grnNo;
 	private LocalDate grnDate;
-	
+
 	private Double direct;
 	private Double buffer;
 

@@ -41,8 +41,6 @@ public class DataForSupplierInvoice {
 	private Double totalGrnQty;
 	private Double totalBookedQty;
 	private Double gstRate;
-	private Double invoiceQty;
-	private Double invoiceAvlQty;
 	private LocalDate invoiceDate;
 	private LocalDate poDate;
 	private List<GrnDataForSupplierInvoice> grnTableData;

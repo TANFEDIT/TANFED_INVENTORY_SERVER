@@ -31,4 +31,5 @@ public class ProductMaster {
 	private String gstCategory;
 	private Double gstRate;
 	private GstRateData gstData;
+	private String caseContains;
 }

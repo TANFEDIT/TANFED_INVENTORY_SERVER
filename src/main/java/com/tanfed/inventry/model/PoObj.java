@@ -21,9 +21,5 @@ public class PoObj {
 	private String productGroup;
 	private Double directQty;
 	private Double bufferQty;
-	
-	
-	
-	
-	
+
 }

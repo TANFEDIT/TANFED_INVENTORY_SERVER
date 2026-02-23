@@ -189,12 +189,12 @@ public class MpaServiceImpl implements MpaService {
 					data.setMpaBillEntry(mpaBillEntry);
 					ManPowerAgency manPowerAgency = manPowerAgencyRepo
 							.findByContractFirm(mpaBillEntry.getContractFirm());
-					data.setTotalCalculatedValue(
-							mpaBillEntry.getEmpData().stream().mapToDouble(item -> item.getGrossAmount()).sum());
-					data.setTotalCgstValue(
-							(manPowerAgency.getGstData().getCgstRate() * data.getTotalCalculatedValue()) / 100);
-					data.setTotalSgstValue(
-							(manPowerAgency.getGstData().getSgstRate() * data.getTotalCalculatedValue()) / 100);
+					data.setTotalCalculatedValue(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+							mpaBillEntry.getEmpData().stream().mapToDouble(item -> item.getGrossAmount()).sum()));
+					data.setTotalCgstValue(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+							(manPowerAgency.getGstData().getCgstRate() * data.getTotalCalculatedValue()) / 100));
+					data.setTotalSgstValue(RoundToDecimalPlace.roundToThreeDecimalPlaces(
+							(manPowerAgency.getGstData().getSgstRate() * data.getTotalCalculatedValue()) / 100));
 					data.setTotalPaymentValue(RoundToDecimalPlace.roundToThreeDecimalPlaces(
 							data.getTotalCalculatedValue() + data.getTotalCgstValue() + data.getTotalSgstValue()));
 				}

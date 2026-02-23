@@ -141,13 +141,14 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 							BuyerFirmInfo buyerFirmInfo = masterService.getBuyerFirmByFirmNameHandler(jwt,
 									nameOfInstitution);
 							data.setIfmsId(buyerFirmInfo.getIfmsIdNo());
-							data.setBuyerGstNo(buyerFirmInfo.getBuyerGstNo());
+							data.setBuyerGstNo(
+									buyerFirmInfo.getBuyerGstNo() == null ? "" : buyerFirmInfo.getBuyerGstNo());
 							data.setVillage(buyerFirmInfo.getVillage());
 							data.setBlock(buyerFirmInfo.getBlock());
 							data.setTaluk(buyerFirmInfo.getTaluk());
 							data.setDistrict(buyerFirmInfo.getDistrict());
 							data.setSupplyTo(buyerFirmInfo.getSupplyTo());
-							data.setLicenseNo(buyerFirmInfo.getLicenceNo());
+							data.setLicenseNo(buyerFirmInfo.getLicenceNo() == null ? "" : buyerFirmInfo.getLicenceNo());
 							if (!godownName.equals("Direct Material Center")) {
 								List<DistanceMapping> distanceData = masterService.getDistanceData(jwt, officeName,
 										godownName);
