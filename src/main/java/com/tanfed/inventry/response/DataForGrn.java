@@ -26,6 +26,7 @@ public class DataForGrn {
 	private String productGroup;
 	private String packing;
 	private String batchNo;
+	private String caseContains;
 	private String certification;
 	private String ifmsId;
 	private String door;

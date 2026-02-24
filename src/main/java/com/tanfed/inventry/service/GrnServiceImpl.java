@@ -225,15 +225,15 @@ public class GrnServiceImpl implements GrnService {
 							List<LicenseData> licenseList = godownInfo.getLicense();
 
 							if (licenseList == null || licenseList.isEmpty()) {
-								throw new Exception("Update Godown License Data!");
+								throw new Exception("No License Data! for " + godownName);
 							}
 
 							Optional<LicenseData> optionalLicense = licenseList.stream().filter(
-									i -> activity.equals(i.getLicenseFor()) && "Whole Sale".equals(i.getLicenseType()))
+									i -> activity.equals(i.getLicenseFor()) && "Whole Sales".equals(i.getLicenseType()))
 									.reduce((first, second) -> second);
 
 							if (optionalLicense.isEmpty()) {
-								throw new Exception("Update Godown License Data!");
+								throw new Exception("No Wholesale License Data! for " + godownName);
 							}
 
 							LicenseData licenseData = optionalLicense.get();
@@ -252,7 +252,8 @@ public class GrnServiceImpl implements GrnService {
 						data.setStandardUnits(productMaster.getStandardUnits());
 						data.setSupplierGst(productMaster.getSupplierGst());
 						data.setSupplierName(productMaster.getSupplierName());
-
+						data.setCaseContains(productMaster.getCaseContains());
+						
 						SupplierInfo supplierInfo = masterService.getSupplierInfoBySupplierNameHandler(jwt,
 								productMaster.getSupplierName());
 

@@ -495,7 +495,7 @@ public class GtnServiceImpl implements GtnService {
 		if (!godownInfo.getLicense().isEmpty()) {
 			List<String> allowedTypes = transactionFor.contains("Retail")
 					? Arrays.asList("Retail Sales", "Mixture Production")
-					: Collections.singletonList("Whole Sale");
+					: Collections.singletonList("Whole Sales");
 			LicenseData licenseData = godownInfo.getLicense().stream()
 					.filter(i -> i.getLicenseFor().equals(activity) && allowedTypes.contains(i.getLicenseType()))
 					.reduce((first, second) -> second).get();
