@@ -92,7 +92,6 @@ public class OpeningStock {
 
 	private Double marginToPaccs;
 
-	private Double paccsMarginGst;
 
 //	B2cPricingTPM
 

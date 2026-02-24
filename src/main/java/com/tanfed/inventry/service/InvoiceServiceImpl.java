@@ -183,7 +183,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 									cgst = openingStock.getB2bCgst();
 									sgst = openingStock.getB2bSgst();
 									margin = openingStock.getMarginToPaccs();
-									gstOnMargin = openingStock.getPaccsMarginGst();
 									mrp = openingStock.getB2cMrp();
 									total = (basicPrice + cgst + sgst) * item.getQty();
 									updateTotals(data, basicPrice * item.getQty(), cgst * item.getQty(),

@@ -601,7 +601,8 @@ public class GrnServiceImpl implements GrnService {
 	@Override
 	public Set<String> getGodownNameList(String jwt, String officeName, String godownType) throws Exception {
 		List<ContractorInfo> contractorInfoList = masterService.getContarctorInfoByOfficeName(jwt, officeName).stream()
-				.filter(item -> "Active".equals(item.getStatus())).collect(Collectors.toList());
+				.filter(item -> "Active".equals(item.getStatus()) && item.getEmdAmount() != null)
+				.collect(Collectors.toList());
 
 		Set<String> list = contractorInfoList.stream()
 				.flatMap(item -> Stream.concat(item.getGodownName().stream(),
