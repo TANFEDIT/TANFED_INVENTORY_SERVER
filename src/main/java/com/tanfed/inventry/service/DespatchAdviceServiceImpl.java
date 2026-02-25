@@ -138,8 +138,9 @@ public class DespatchAdviceServiceImpl implements DespatchAdviceService {
 							.filter(Objects::nonNull).collect(Collectors.toList()));
 					if (godownName != null && !godownName.isEmpty()) {
 						if (nameOfInstitution != null && !nameOfInstitution.isEmpty()) {
-							BuyerFirmInfo buyerFirmInfo = masterService.getBuyerFirmByFirmNameHandler(jwt,
-									nameOfInstitution);
+							BuyerFirmInfo buyerFirmInfo = masterService.getBuyerFirmDataByOfficeNameHandler(jwt,
+									officeName).stream().filter(i -> i.getNameOfInstitution().equals(nameOfInstitution))
+									.reduce((first, second) -> second).orElse(null);
 							data.setIfmsId(buyerFirmInfo.getIfmsIdNo());
 							data.setBuyerGstNo(
 									buyerFirmInfo.getBuyerGstNo() == null ? "" : buyerFirmInfo.getBuyerGstNo());

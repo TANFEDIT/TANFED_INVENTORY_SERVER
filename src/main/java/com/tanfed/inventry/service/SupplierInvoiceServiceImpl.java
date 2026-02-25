@@ -61,8 +61,9 @@ public class SupplierInvoiceServiceImpl implements SupplierInvoiceService {
 							item -> item.getActivity().equals(activity) && item.getSupplierName().equals(supplierName))
 							.map(ProductMaster::getProductName).collect(Collectors.toList()));
 					if (productName != null && !productName.isEmpty()) {
-						ProductMaster productMaster = masterService.getProductDataByProductNameHandler(jwt,
-								productName);
+						ProductMaster productMaster = masterService.getProductDataHandler(jwt).stream()
+								.filter(i -> i.getProductName().equals(productName))
+								.reduce((first, second) -> second).orElse(null);
 						data.setProductCategory(productMaster.getProductCategory());
 						data.setProductGroup(productMaster.getProductGroup());
 						data.setPacking(productMaster.getPacking());

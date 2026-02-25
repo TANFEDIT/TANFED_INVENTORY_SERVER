@@ -65,7 +65,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 			obj.setDueDate(obj.getDate().plusDays(obj.getCreditDays()));
 			BuyerFirmInfo buyerFirmInfo;
 			try {
-				buyerFirmInfo = masterService.getBuyerFirmByFirmNameHandler(jwt, obj.getNameOfInstitution());
+				buyerFirmInfo = masterService.getBuyerFirmDataByOfficeNameHandler(jwt, obj.getOfficeName()).stream()
+						.filter(i -> i.getNameOfInstitution().equals(obj.getNameOfInstitution()))
+						.reduce((first, second) -> second).orElse(null);
 				obj.setCcbBranch(buyerFirmInfo.getBranchName());
 				obj.setFirmType(buyerFirmInfo.getFirmType());
 				if (obj.getGodownName() != "Direct Material Center") {

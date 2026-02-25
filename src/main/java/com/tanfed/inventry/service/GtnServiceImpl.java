@@ -459,7 +459,9 @@ public class GtnServiceImpl implements GtnService {
 			data.setDesignationList(new HashSet<>(masterService.getBuyerNameByOfficeNameHandler(jwt, officeName)));
 
 			if (hasText(destination)) {
-				BuyerFirmInfo buyer = masterService.getBuyerFirmByFirmNameHandler(jwt, destination);
+				BuyerFirmInfo buyer = masterService.getBuyerFirmDataByOfficeNameHandler(jwt, officeName).stream()
+						.filter(i -> i.getNameOfInstitution().equals(destination)).reduce((first, second) -> second)
+						.orElse(null);
 				data.setBuyerName(buyer.getNameOfInstitution());
 				data.setBuyerDistrict(buyer.getDistrict());
 				data.setBuyerTaluk(buyer.getTaluk());

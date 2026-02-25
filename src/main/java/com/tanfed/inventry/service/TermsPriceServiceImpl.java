@@ -130,8 +130,9 @@ public class TermsPriceServiceImpl implements TermsPriceService {
 							item -> item.getActivity().equals(activity) && item.getSupplierName().equals(supplierName))
 							.map(ProductMaster::getProductName).collect(Collectors.toList()));
 					if (!productName.isEmpty() && productName != null) {
-						ProductMaster productMaster = masterService.getProductDataByProductNameHandler(jwt,
-								productName);
+						ProductMaster productMaster = masterService.getProductDataHandler(jwt).stream()
+								.filter(i -> i.getProductName().equals(productName)).reduce((first, second) -> second)
+								.orElse(null);
 						data.setProductData(
 								new ProductData(productMaster.getSupplierGst(), productMaster.getStandardUnits(),
 										productMaster.getPacking(), productMaster.getProductCategory(),

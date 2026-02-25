@@ -75,8 +75,9 @@ public class CheckMemoGoodsServiceImpl implements CheckMemoGoodsService {
 					PurchaseBooking purchaseBooking = purchaseBookingService.getPurchaseBookedDataByCmNo(checkMemoNo);
 
 					data.setPbData(purchaseBooking);
-					ProductMaster productMaster = masterService.getProductDataByProductNameHandler(jwt,
-							purchaseBooking.getProductName());
+					ProductMaster productMaster = masterService.getProductDataHandler(jwt).stream()
+							.filter(i -> i.getProductName().equals(purchaseBooking.getProductName()))
+							.reduce((first, second) -> second).orElse(null);
 
 					logger.info("{}", productMaster);
 					data.setHsnCode(productMaster.getHsnCode());
